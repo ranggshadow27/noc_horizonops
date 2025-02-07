@@ -1,0 +1,484 @@
+<?php
+
+namespace App\Filament\Resources\TMODataResource\Pages;
+
+use App\Filament\Resources\TMODataResource;
+use App\Models\TmoData;
+use Carbon\Carbon;
+use Filament\Actions;
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Infolists\Infolist;
+use Filament\Infolists;
+use Filament\Forms;
+use Filament\Infolists\Components\Actions\Action;
+use Filament\Notifications\Notification;
+use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\FontWeight;
+use Ysfkaya\FilamentPhoneInput\Infolists\PhoneEntry;
+use Webbingbrasil\FilamentCopyActions\Pages\Actions\CopyAction;
+
+class ViewTMOData extends ViewRecord
+{
+    protected static string $resource = TMODataResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            CopyAction::make()
+                ->copyable(function () {
+                    $deviceChangeString = "-";
+                    if ($this->record->tmo_id) {
+                        // Ambil semua device yang terkait dengan tmo_id
+                        $devices = \App\Models\TMODeviceChange::where('tmo_id', $this->record->tmo_id)
+                            ->get(['device_name', 'device_sn']); // Ambil dua kolom
+
+                        // Format hasil ke dalam string
+                        if ($devices->isNotEmpty()) {
+                            $deviceChangeString = "> Pergantian Perangkat :\n" . $devices
+                                ->map(fn($device) => "Perangkat Baru	: {$device->device_sn} / {$device->device_name}")
+                                ->implode("\n");
+                        } else {
+                            $deviceChangeString = "> Pergantian Perangkat :\n-";
+                        }
+                    } else {
+                        $deviceChangeString = "> Pergantian Perangkat :\n-";
+                    }
+
+                    $data = "Req TMO RTGS MHG
+Jenis TMO		: {$this->record->tmo_type}
+No. SPMK		: -
+Tanggal TMO		: {$this->record->tmo_start_date}
+				: {$this->record->tmo_end_date}
+
+> Informasi Lokasi
+Terminal ID		: {$this->record->site_id}
+Site Name		: {$this->record->site_name}
+Provinsi			: {$this->record->site->province}
+Alamat			: {$this->record->site->address}
+Koordinat		: Lat. {$this->record->site->latitude} Long. {$this->record->site->longitude}
+
+> Informasi Kontak
+Nama Teknisi		: {$this->record->engineer_name}
+Telp.Teknisi		: {$this->record->engineer_number}
+Nama PIC		: {$this->record->pic_name}
+Telp. PIC			: {$this->record->pic_number}
+
+> Informasi Perangkat (Existing)
+SN Transceiver	: {$this->record->tmoDetail->transceiver_sn} / {$this->record->tmoDetail->transceiver_type}
+SN Feedhorn		: {$this->record->tmoDetail->feedhorn_sn}
+SN Dish Antena	: {$this->record->tmoDetail->antenna_sn}
+SN Stabillizer		: {$this->record->tmoDetail->stabillizer_sn}
+SN Modem		: {$this->record->tmoDetail->modem_sn} / {$this->record->tmoDetail->modem_type}
+SN Router		: {$this->record->tmoDetail->router_sn} / {$this->record->tmoDetail->router_type}
+SN AP 1			: {$this->record->tmoDetail->ap1_sn} / {$this->record->tmoDetail->ap1_type}
+SN AP 2			: {$this->record->tmoDetail->ap2_sn} / {$this->record->tmoDetail->ap2_type}
+SN Rack Indoor	: {$this->record->tmoDetail->rack_sn}
+
+{$deviceChangeString}
+
+> Informasi Pemeliharaan
+Fan Rack 1		: {$this->record->fan_rack1}
+Fan Rack 2		: {$this->record->fan_rack2}
+Grounding		: {$this->record->grounding}
+Kabel IFL			: {$this->record->ifl_length}
+
+Modem SQF		: {$this->record->sqf}
+Modem EsNo		: {$this->record->esno}
+
+Cuaca			: {$this->record->weather}
+Sinyal GSM		: {$this->record->signal}
+Power Source		: {$this->record->power_source}
+Backup Power	: {$this->record->power_source_backup}
+
+Problem			: {$this->record->problem}
+Action			: {$this->record->action}
+
+TMO Status		: {$this->record->approval}
+            ";
+
+                    return $data;
+                }),
+            Actions\EditAction::make()
+                ->label("Edit TMO")
+                ->icon('phosphor-plus-circle-duotone')
+                ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin')),
+        ];
+    }
+
+    public function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make('Site Information')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('site_id')
+                            ->label('Site ID')
+                            ->color('primary')
+                            ->copyable(),
+
+                        Infolists\Components\TextEntry::make('site_name')
+                            ->label('Site Name')->color('primary')
+                            ->copyable(),
+
+                        Infolists\Components\TextEntry::make('site_province')
+                            ->label('Site Province')->color('primary'),
+
+                        Infolists\Components\TextEntry::make('site_address')
+                            ->label('Site Address')->color('primary'),
+
+                        Infolists\Components\TextEntry::make('site_latitude')
+                            ->label('Latitude')->color('primary'),
+
+                        Infolists\Components\TextEntry::make('site_longitude')
+                            ->label('Longitude')->color('primary'),
+
+                    ])->collapsible()->persistCollapsed()->columns(3),
+
+                Infolists\Components\Section::make('Contact Information')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('engineer_name')
+                            ->label('Engineer Name')
+                            ->color('primary'),
+
+                        PhoneEntry::make('engineer_number')
+                            ->label('Engineer Number')
+                            ->color('primary'),
+
+                        Infolists\Components\TextEntry::make('pic_name')
+                            ->label('PIC Name')
+                            ->color('primary'),
+
+                        PhoneEntry::make('pic_number')
+                            ->label('PIC Number')
+                            ->color('primary'),
+
+                    ])->collapsible()->persistCollapsed()->columns(4),
+
+                Infolists\Components\Section::make('Maintenance Information')
+                    ->schema([
+
+                        Infolists\Components\Grid::make('4')->schema([
+
+                            Infolists\Components\TextEntry::make('tmo_type')
+                                ->label('Maintenance Type')
+                                ->color('primary'),
+
+                            Infolists\Components\TextEntry::make('tmo_start_date')
+                                ->label('Start Date')
+                                ->color('primary')->dateTime(),
+                            Infolists\Components\TextEntry::make('tmo_end_date')
+                                ->label('End Date')
+                                ->color('primary')->dateTime(),
+                        ]),
+
+
+                        Infolists\Components\Grid::make('4')->schema([
+                            Infolists\Components\TextEntry::make('sqf')
+                                ->label('Modem SQF')
+                                ->color('gray'),
+
+                            Infolists\Components\TextEntry::make('esno')
+                                ->label('Modem EsNo')
+                                ->color('gray'),
+
+                            Infolists\Components\TextEntry::make('signal')
+                                ->label('GSM Signal')->color('gray'),
+
+                            Infolists\Components\TextEntry::make('weather')
+                                ->label('Weather Condition')->color('gray'),
+                        ]),
+
+                        Infolists\Components\Grid::make('4')->schema([
+                            Infolists\Components\TextEntry::make('fan_rack1')
+                                ->label('Fan Rack 1 Condition')->color('gray'),
+
+                            Infolists\Components\TextEntry::make('fan_rack2')
+                                ->label('Fan Rack 2 Condition')->color('gray'),
+
+
+                            Infolists\Components\TextEntry::make('grounding')
+                                ->label('Grounding Condition')->color('gray'),
+
+                            Infolists\Components\TextEntry::make('ifl_length')
+                                ->label('IFL Cable Length')
+                                ->suffix('Meter')
+                                ->color('gray'),
+
+                            Infolists\Components\TextEntry::make('power_source')
+                                ->label('Power Source')
+                                ->color('gray'),
+
+                            Infolists\Components\TextEntry::make('power_source_backup')
+                                ->label('Backup Power Source')
+                                ->color('gray'),
+                        ]),
+
+                        Infolists\Components\TextEntry::make('problem')
+                            ->label('Problem'),
+
+                        Infolists\Components\TextEntry::make('action')
+                            ->label('Action')->markdown(),
+
+                    ])->collapsible()->persistCollapsed(),
+
+                Infolists\Components\Section::make('Device Information')
+                    ->relationship('tmoDetail')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('transceiver_type')
+                            ->color('gray')
+                            ->label('Transceiver Type'),
+
+                        Infolists\Components\TextEntry::make('transceiver_sn')
+                            ->color('gray')
+                            ->label('Transceiver Serial Number'),
+
+                        Infolists\Components\TextEntry::make('feedhorn_sn')
+                            ->color('gray')
+                            ->label('Feedhorn Serial Number'),
+
+                        Infolists\Components\TextEntry::make('antenna_sn')
+                            ->color('gray')
+                            ->label('Antenna'),
+
+                        Infolists\Components\TextEntry::make('stabillizer_sn')
+                            ->color('gray')
+                            ->label('Stabillizer Serial Number'),
+
+                        Infolists\Components\TextEntry::make('modem_type')
+                            ->color('gray')
+                            ->label('Modem Type'),
+
+                        Infolists\Components\TextEntry::make('modem_sn')
+                            ->color('gray')
+                            ->label('Modem Serial Number'),
+
+                        Infolists\Components\TextEntry::make('router_type')
+                            ->color('gray')
+                            ->label('Router Type'),
+
+                        Infolists\Components\TextEntry::make('router_sn')
+                            ->color('gray')
+                            ->label('Router Serial Number'),
+
+                        Infolists\Components\TextEntry::make('ap1_type')
+                            ->color('gray')
+                            ->label('Access Point 1 Type'),
+
+                        Infolists\Components\TextEntry::make('ap1_sn')
+                            ->color('gray')
+                            ->label('Access Point 1 Serial Number'),
+
+                        Infolists\Components\TextEntry::make('ap2_type')
+                            ->color('gray')
+                            ->label('Access Point 2 Type'),
+
+                        Infolists\Components\TextEntry::make('ap2_sn')
+                            ->color('gray')
+                            ->label('Access Point 2 Serial Number'),
+
+                        Infolists\Components\TextEntry::make('rack_sn')
+                            ->color('gray')
+                            ->label('Rack Serial Number'),
+                    ])
+                    ->columns(4)->collapsible()->persistCollapsed(),
+
+                Infolists\Components\Section::make('Images')
+                    ->relationship('tmoImages')
+                    ->schema([
+                        Infolists\Components\ImageEntry::make('transceiver_img')
+                            ->label('Transceiver')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('feedhorn_img')
+                            ->label('Feedhorn')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('antenna_img')
+                            ->label('Dish Antenna')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('stabillizer_img')
+                            ->label('Stabillizer')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('rack_img')
+                            ->label('Rack Indoor')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('modem_img')
+                            ->label('Modem')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('router_img')
+                            ->label('Router')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('ap1_img')
+                            ->label('Access Point 1')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('ap2_img')
+                            ->label('Access Point 2')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('modem_summary_img')
+                            ->label('Modem Summary')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('pingtest_img')
+                            ->label('Ping Test')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('speedtest_img')
+                            ->label('Speedtest')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('cm_ba_img')
+                            ->label('BA Corrective Maintenance')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('pm_ba_img')
+                            ->label('BA Preventive Maintenance')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('signplace_img')
+                            ->label('Sign')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('stabillizer_voltage_img')
+                            ->label('Stabillizer Voltage')
+                            ->width(400)->height(300),
+
+                        Infolists\Components\ImageEntry::make('power_source_voltage_img')
+                            ->label('Power Source Voltage')
+                            ->width(400)->height(300),
+                    ])
+                    ->columns(4)->collapsible()->persistCollapsed(),
+
+                Infolists\Components\Section::make('New Device')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('is_device_change')
+                            ->label('Device Change')
+                            ->formatStateUsing(function ($state) {
+                                return $state === 0 ? "No Device Replacement" : "";
+                            })
+                            ->color('gray'),
+
+                        Infolists\Components\RepeatableEntry::make('deviceChanges')
+                            ->schema([
+                                Infolists\Components\TextEntry::make('device_name')
+                                    ->label('New Device Name')->color("gray"),
+
+                                Infolists\Components\TextEntry::make('device_sn')
+                                    ->label('Serial Number')->color("gray"),
+
+                                Infolists\Components\ImageEntry::make('device_img')
+                                    ->label('Image')
+                                    ->width(400)->height(300)
+                            ])
+                            ->label('')
+                            ->grid(3) // Tampilkan dalam 2 kolom
+
+                    ])->columns(1)->collapsible()->persistCollapsed(),
+
+                Infolists\Components\Section::make('TMO Approval')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('approval')
+                            ->badge()
+                            ->color(fn(string $state): string => match ($state) {
+                                'Pending' => 'warning',
+                                'Rejected' => 'danger',
+                                'Approved' => 'success',
+                            })
+                            ->label('Approval'),
+                        Infolists\Components\TextEntry::make('cboss_tmo_code')
+                            ->label('CBOSS TMO Code')
+                            ->badge((function (TMOData $record) {
+                                $state = true;
+
+                                if ($record->approval === "Pending") {
+                                    $state = false;
+                                }
+
+                                return $state;
+                            }))
+                            ->default("Waiting For Approval")
+                            ->color((function (TMOData $record) {
+                                $state = 'primary';
+
+                                if ($record->approval === "Pending") {
+                                    $state = "gray";
+                                }
+
+                                return $state;
+                            })),
+                        Infolists\Components\TextEntry::make('updated_at')
+                            ->label('Approval Date')
+                            ->formatStateUsing(function (TMOData $record) {
+                                $state = Carbon::parse($record->updated_at)->translatedFormat('d M Y H:i');
+
+                                if ($record->approval === "Pending") {
+                                    $state = "Waiting for Approval";
+                                }
+
+                                return $state;
+                            })
+                            ->color("gray"),
+                    ])->footerActions([
+                        Infolists\Components\Actions\Action::make('Rejected')
+                            ->label('Reject')
+                            ->form([
+                                Forms\Components\Textarea::make('approval_details')
+                                    ->label('Rejection Details')
+                                    ->required(),
+                            ])
+                            ->icon('phosphor-x-duotone') // Ganti dengan icon yang diinginkan
+                            ->action(function (TmoData $record, array $data) {
+
+                                $record->approval = 'Rejected';
+                                $record->approval_details = $data['approval_details'];
+                                $record->save();
+
+                                Notification::make()
+                                    ->title('TMO Updated')
+                                    ->success()
+                                    ->body("The TMO data has been successfully rejected")
+                                    ->send();
+                            })
+                            ->requiresConfirmation() // Menambahkan konfirmasi sebelum eksekusi
+                            ->color('danger')
+                            ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin')),
+                        Infolists\Components\Actions\Action::make('Approve')
+                            ->form([
+                                Forms\Components\Textarea::make('approval_details')
+                                    ->label('Approval Details')
+                                    ->required(),
+                                Forms\Components\TextInput::make('cboss_tmo_code')
+                                    ->label('CBOSS Code')
+                                    ->required(),
+                            ])
+                            ->label('Approve')
+                            ->icon('phosphor-check-circle-duotone') // Ganti dengan icon yang diinginkan
+                            ->action(function (TmoData $record, array $data) {
+                                // Update kolom approval menjadi 'Approved'
+                                // $record->update(['approval' => 'Approved']);
+
+                                $record->approval = 'Approved';
+                                $record->cboss_tmo_code = $data['cboss_tmo_code'];
+                                $record->approval_details = $data['approval_details'];
+                                $record->save();
+
+                                Notification::make()
+                                    ->title('TMO Approved')
+                                    ->success()
+                                    ->body("The TMO data has been successfully approved")
+                                    ->send();
+                            })
+                            ->requiresConfirmation() // Menambahkan konfirmasi sebelum eksekusi
+                            ->color('primary')
+                            ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin')),
+
+                    ])->columns(3),
+            ]);
+    }
+}
