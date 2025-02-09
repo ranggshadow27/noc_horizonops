@@ -383,6 +383,9 @@ TMO Status		: {$this->record->approval}
 
                 Infolists\Components\Section::make('TMO Approval')
                     ->schema([
+                        Infolists\Components\TextEntry::make('tmo_id')
+                            ->label('TMO ID')->color("gray"),
+
                         Infolists\Components\TextEntry::make('approval')
                             ->badge()
                             ->color(fn(string $state): string => match ($state) {
@@ -478,7 +481,7 @@ TMO Status		: {$this->record->approval}
                             ->color('primary')
                             ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin')),
 
-                    ])->columns(3),
+                    ])->columns(4),
             ]);
     }
 }

@@ -43,11 +43,11 @@ class TMODataResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('site_id')
                             ->label('Site ID')
-                            // ->relationship('site', 'site_id')
+                            ->relationship(name: 'site', titleAttribute: 'site_id')
                             ->preload()
-                            ->options(SiteDetail::all()->pluck('site_id', 'site_id'))
+                            ->getOptionLabelFromRecordUsing(fn(SiteDetail $record) => "{$record->site_id} - {$record->site_name}")
                             ->reactive()
-                            ->searchable()
+                            ->searchable(['site_id', 'site_name'])
                             ->afterStateUpdated(function (callable $set, $state) {
                                 // Auto-fill data when site_id is selected
                                 $site = SiteDetail::where('site_id', $state)->first();
@@ -59,26 +59,11 @@ class TMODataResource extends Resource
                                     $set('site_longitude', $site->longitude);
                                 }
                             })
-                            ->required(),
+                            ->required()->columnSpan(2),
 
-                        Forms\Components\Select::make('site_name')
+                        Forms\Components\TextInput::make('site_name')
                             ->label('Site Name')
-                            ->options(SiteDetail::all()->pluck('site_name', 'site_name'))
-                            ->preload()
-                            ->reactive()
-                            ->searchable()
-                            ->afterStateUpdated(function (callable $set, $state) {
-                                // Auto-fill data when site_name is selected
-                                $site = SiteDetail::where('site_name', $state)->first();
-                                if ($site) {
-                                    $set('site_id', $site->site_id);
-                                    $set('site_province', $site->province);
-                                    $set('site_address', $site->address);
-                                    $set('site_latitude', $site->latitude);
-                                    $set('site_longitude', $site->longitude);
-                                }
-                            })
-                            ->required(),
+                            ->hidden()->dehydrated(false)->default("KOSONG"),
 
                         Forms\Components\TextInput::make('site_province')
                             ->label('Site Province')
