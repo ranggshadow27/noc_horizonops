@@ -76,7 +76,7 @@ class TMODeviceChangeResource extends Resource
                 Tables\Columns\TextColumn::make('tmoData.site_id')
                     ->label("Site ID")
                     ->description(fn(TMODeviceChange $record): string => $record->tmoData->site_name)
-                    ->searchable(),
+                    ->searchable(['site_id', 'site_name']),
 
                 Tables\Columns\TextColumn::make('tmoData.site_name')
                     ->label("Site Name")
