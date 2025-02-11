@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tmo_data', function (Blueprint $table) {
-            $table->json('problem')->nullable()->change();
-            $table->json('action')->nullable()->change();
+            $table->json('problem_json')->nullable()->change();
+            $table->json('action_json')->nullable()->change();
         });
     }
 
@@ -23,8 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tmo_data', function (Blueprint $table) {
-            $table->text('problem')->nullable()->change(); // Kembalikan ke tipe sebelumnya
-            $table->text('action')->nullable()->change();
+            $table->text('problem_json')->nullable()->change(); // Kembalikan ke tipe sebelumnya
+            $table->text('action_json')->nullable()->change();
         });
     }
 };
