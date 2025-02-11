@@ -256,7 +256,7 @@ class TMODataResource extends Resource
                             ->required(),
 
                         Forms\Components\Textarea::make('engineer_note')
-                            ->label('Action')->autosize(),
+                            ->label('Note')->autosize(),
 
                         Forms\Components\Grid::make('2')->schema([
                             Forms\Components\DateTimePicker::make('tmo_start_date')
