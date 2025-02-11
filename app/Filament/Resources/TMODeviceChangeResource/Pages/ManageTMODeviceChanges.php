@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Filament\Resources\TMODataResource\Pages;
+namespace App\Filament\Resources\TMODeviceChangeResource\Pages;
 
-use App\Filament\Resources\TMODataResource;
+use App\Filament\Resources\TMODeviceChangeResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\ManageRecords;
 use pxlrbt\FilamentExcel\Actions\Pages\ExportAction;
 use pxlrbt\FilamentExcel\Columns\Column;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use Filament\Actions\ActionGroup;
 
-class ListTMOData extends ListRecords
+class ManageTMODeviceChanges extends ManageRecords
 {
-    protected static string $resource = TMODataResource::class;
+    protected static string $resource = TMODeviceChangeResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -42,11 +42,9 @@ class ListTMOData extends ListRecords
                             ->withFilename(fn($resource) => $resource::getModelLabel() . '-' . date('Y-m-d'))
                             ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
                             ->withColumns([
-                                Column::make('problem_json'),
-                                Column::make('action_json'),
                                 Column::make('updated_at'),
                             ])
-
+                            ->except(['device_img'])
                     ]),
 
             ])

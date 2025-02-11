@@ -35,8 +35,9 @@ class TmoData extends Model
         'ifl_length',
         'signal',
         'weather',
-        'problem',
-        'action',
+        'problem_json',
+        'action_json',
+        'engineer_note',
         'tmo_type',
         'tmo_start_date',
         'tmo_end_date',
@@ -44,6 +45,11 @@ class TmoData extends Model
         'approval',
         'approval_details',
         'is_device_change',
+    ];
+
+    protected $casts = [
+        'problem_json' => 'array',
+        'action_json' => 'array',
     ];
 
     public static function boot()
@@ -55,7 +61,13 @@ class TmoData extends Model
             $model->tmo_id = self::generateTmoId();
         });
 
+        static::saving(function ($model) {
+            $site = SiteDetail::where('site_id', $model->site_id)->first();
 
+            if ($site) {
+                $model->site_name = $site->site_name;
+            }
+        });
     }
 
     public static function generateTmoId()
@@ -86,6 +98,8 @@ class TmoData extends Model
     {
         return $this->belongsTo(SiteDetail::class, 'site_id', 'site_id');
     }
+
+
 
     public function tmoDetail()
     {

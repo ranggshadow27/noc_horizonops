@@ -19,6 +19,7 @@ class TmoDeviceChange extends Model
         'device_name',
         'device_sn',
         'device_img',
+        'homebase_id',
         'tmo_id',
     ];
 
@@ -30,6 +31,7 @@ class TmoDeviceChange extends Model
         static::creating(function ($model) {
             $model->tmo_device_change_id = self::generateTmoDCId();
         });
+
     }
 
     public static function generateTmoDCId()
@@ -62,6 +64,10 @@ class TmoDeviceChange extends Model
         return $newId;
     }
 
+    public function homebase()
+    {
+        return $this->belongsTo(TmoHomebase::class, 'homebase_id', 'homebase_id');
+    }
 
     public function tmoData()
     {

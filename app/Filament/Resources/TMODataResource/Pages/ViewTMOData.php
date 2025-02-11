@@ -16,6 +16,7 @@ use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
 use Ysfkaya\FilamentPhoneInput\Infolists\PhoneEntry;
 use Webbingbrasil\FilamentCopyActions\Pages\Actions\CopyAction;
+use Ysfkaya\FilamentPhoneInput\PhoneInputNumberType;
 
 class ViewTMOData extends ViewRecord
 {
@@ -40,6 +41,9 @@ class ViewTMOData extends ViewRecord
                         } else {
                             $deviceChangeString = "> Pergantian Perangkat :\n-";
                         }
+
+                        $problems = $this->record->problem_json ? "\n- " . implode("\n- ", $this->record->problem_json) : "-";
+                        $actions = $this->record->action_json ? "\n- " . implode("\n- ", $this->record->action_json) : "-";
                     } else {
                         $deviceChangeString = "> Pergantian Perangkat :\n-";
                     }
@@ -90,8 +94,9 @@ Sinyal GSM		: {$this->record->signal}
 Power Source		: {$this->record->power_source}
 Backup Power	: {$this->record->power_source_backup}
 
-Problem			: {$this->record->problem}
-Action			: {$this->record->action}
+Problem			: $problems
+Action			: $actions
+Note			: {$this->record->engineer_note}
 
 TMO Status		: {$this->record->approval}
             ";
@@ -142,6 +147,7 @@ TMO Status		: {$this->record->approval}
 
                         PhoneEntry::make('engineer_number')
                             ->label('Engineer Number')
+                            ->displayFormat(PhoneInputNumberType::NATIONAL)
                             ->color('primary'),
 
                         Infolists\Components\TextEntry::make('pic_name')
@@ -213,11 +219,14 @@ TMO Status		: {$this->record->approval}
                                 ->color('gray'),
                         ]),
 
-                        Infolists\Components\TextEntry::make('problem')
-                            ->label('Problem'),
+                        Infolists\Components\TextEntry::make('problem_json')
+                            ->label('Problem')->default("-"),
 
-                        Infolists\Components\TextEntry::make('action')
-                            ->label('Action')->markdown(),
+                        Infolists\Components\TextEntry::make('action_json')
+                            ->label('Action Taken')->default("-"),
+
+                        Infolists\Components\TextEntry::make('engineer_note')
+                            ->label('Action')->markdown()->default("-"),
 
                     ])->collapsible()->persistCollapsed(),
 
@@ -355,7 +364,7 @@ TMO Status		: {$this->record->approval}
                     ])
                     ->columns(4)->collapsible()->persistCollapsed(),
 
-                Infolists\Components\Section::make('New Device')
+                Infolists\Components\Section::make('Old Device')
                     ->schema([
                         Infolists\Components\TextEntry::make('is_device_change')
                             ->label('Device Change')
@@ -367,10 +376,13 @@ TMO Status		: {$this->record->approval}
                         Infolists\Components\RepeatableEntry::make('deviceChanges')
                             ->schema([
                                 Infolists\Components\TextEntry::make('device_name')
-                                    ->label('New Device Name')->color("gray"),
+                                    ->label('Old Device Name')->color("gray"),
 
                                 Infolists\Components\TextEntry::make('device_sn')
                                     ->label('Serial Number')->color("gray"),
+
+                                Infolists\Components\TextEntry::make('homebase.location')
+                                    ->label('To Homebase')->color("gray"),
 
                                 Infolists\Components\ImageEntry::make('device_img')
                                     ->label('Image')
@@ -383,6 +395,9 @@ TMO Status		: {$this->record->approval}
 
                 Infolists\Components\Section::make('TMO Approval')
                     ->schema([
+                        Infolists\Components\TextEntry::make('tmo_id')
+                            ->label('TMO ID')->color("gray"),
+
                         Infolists\Components\TextEntry::make('approval')
                             ->badge()
                             ->color(fn(string $state): string => match ($state) {
@@ -478,7 +493,7 @@ TMO Status		: {$this->record->approval}
                             ->color('primary')
                             ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin')),
 
-                    ])->columns(3),
+                    ])->columns(4),
             ]);
     }
 }

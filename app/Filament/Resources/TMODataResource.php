@@ -7,6 +7,8 @@ use App\Filament\Resources\TMODataResource\RelationManagers;
 use App\Models\SiteDetail;
 use App\Models\TMOData;
 use App\Models\TmoDeviceChange;
+use App\Models\TmoHomebase;
+use App\Models\TmoProblem;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -43,11 +45,11 @@ class TMODataResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('site_id')
                             ->label('Site ID')
-                            // ->relationship('site', 'site_id')
+                            ->relationship(name: 'site', titleAttribute: 'site_id')
                             ->preload()
-                            ->options(SiteDetail::all()->pluck('site_id', 'site_id'))
+                            ->getOptionLabelFromRecordUsing(fn(SiteDetail $record) => "{$record->site_id} - {$record->site_name}")
                             ->reactive()
-                            ->searchable()
+                            ->searchable(['site_id', 'site_name'])
                             ->afterStateUpdated(function (callable $set, $state) {
                                 // Auto-fill data when site_id is selected
                                 $site = SiteDetail::where('site_id', $state)->first();
@@ -59,44 +61,32 @@ class TMODataResource extends Resource
                                     $set('site_longitude', $site->longitude);
                                 }
                             })
-                            ->required(),
+                            ->required()->columnSpan(2),
 
-                        Forms\Components\Select::make('site_name')
+                        Forms\Components\TextInput::make('site_name')
                             ->label('Site Name')
-                            ->options(SiteDetail::all()->pluck('site_name', 'site_name'))
-                            ->preload()
-                            ->reactive()
-                            ->searchable()
-                            ->afterStateUpdated(function (callable $set, $state) {
-                                // Auto-fill data when site_name is selected
-                                $site = SiteDetail::where('site_name', $state)->first();
-                                if ($site) {
-                                    $set('site_id', $site->site_id);
-                                    $set('site_province', $site->province);
-                                    $set('site_address', $site->address);
-                                    $set('site_latitude', $site->latitude);
-                                    $set('site_longitude', $site->longitude);
-                                }
-                            })
-                            ->required(),
+                            ->hidden(),
 
                         Forms\Components\TextInput::make('site_province')
                             ->label('Site Province')
                             ->required()
-                            ->maxLength(255)->readOnly(),
+                            ->maxLength(255)
+                            ->disabled()->dehydrated(true),
 
                         Forms\Components\TextInput::make('site_address')
                             ->label('Site Address')
                             ->required()
-                            ->readOnly(),
+                            ->disabled()->dehydrated(true),
 
                         Forms\Components\TextInput::make('site_latitude')
                             ->label('Latitude')
-                            ->maxLength(25)->readOnly(),
+                            ->maxLength(25)
+                            ->disabled()->dehydrated(true),
 
                         Forms\Components\TextInput::make('site_longitude')
                             ->label('Longitude')
-                            ->maxLength(25)->readOnly(),
+                            ->maxLength(25)
+                            ->disabled()->dehydrated(true),
 
                     ])->collapsible()->persistCollapsed()->columns(2),
 
@@ -227,14 +217,45 @@ class TMODataResource extends Resource
                                 ->required(),
                         ]),
 
+                        Forms\Components\Select::make('problem_json')
+                        ->options(
+                            TmoProblem::query()
+                                ->orderBy('problem_type') // Urutkan berdasarkan kategori
+                                ->get()
+                                ->groupBy('problem_category')
+                                ->mapWithKeys(fn ($items, $category) => [
+                                    $category => $items->pluck('problem_type', 'problem_type')->toArray()
+                                ])
+                                ->toArray()
+                        )
+                            ->afterStateUpdated(function (callable $set, $state) {
+                                if (empty($state)) {
+                                    $set('action_json', []);
+                                    return;
+                                }
 
-                        Forms\Components\Textarea::make('problem')
-                            ->label('Problem')->autosize()
+                                // Ambil semua action berdasarkan problem yang dipilih
+                                $actions = TmoProblem::whereIn('problem_type', $state)
+                                    ->pluck('action')
+                                    ->toArray();
+
+                                $set('action_json', array_unique($actions)); // Set multiple actions ke select
+                            })
+                            ->label("Problem")
+                            ->searchable()
+                            ->multiple()
+                            ->reactive()
                             ->required(),
 
-                        Forms\Components\Textarea::make('action')
-                            ->label('Action')->autosize()
+                        Forms\Components\Select::make('action_json')
+                            ->disabled()->dehydrated(true)
+                            ->label('Action Taken')
+                            ->multiple()
+                            ->reactive()
                             ->required(),
+
+                        Forms\Components\Textarea::make('engineer_note')
+                            ->label('Action')->autosize(),
 
                         Forms\Components\Grid::make('2')->schema([
                             Forms\Components\DateTimePicker::make('tmo_start_date')
@@ -537,6 +558,11 @@ class TMODataResource extends Resource
                                         'Transceiver Hughes HB220' => '(Transceiver) Hughes HB220',
                                         'Transceiver RevGo' => '(Transceiver) RevGo',
                                     ])
+                                    ->searchable()
+                                    ->required(),
+
+                                Forms\Components\Select::make('homebase_id')
+                                    ->options(TmoHomebase::all()->pluck('location', 'homebase_id'))
                                     ->searchable()
                                     ->required(),
 

@@ -28,6 +28,6 @@ class AppServiceProvider extends ServiceProvider
     {
         TmoDeviceChange::observe(TMODeviceChangeObserver::class);
         TmoData::observe(TMODataObserver::class);
-        TMOImage::observe(TMOImageObserver::class);
+        TmoImage::observe(TMOImageObserver::class);
     }
 }
