@@ -218,16 +218,7 @@ class TMODataResource extends Resource
                         ]),
 
                         Forms\Components\Select::make('problem_json')
-                        ->options(
-                            TmoProblem::query()
-                                ->orderBy('problem_type') // Urutkan berdasarkan kategori
-                                ->get()
-                                ->groupBy('problem_category')
-                                ->mapWithKeys(fn ($items, $category) => [
-                                    $category => $items->pluck('problem_type', 'problem_type')->toArray()
-                                ])
-                                ->toArray()
-                        )
+                            ->options(TmoProblem::all()->pluck('problem_type', 'problem_type'))
                             ->afterStateUpdated(function (callable $set, $state) {
                                 if (empty($state)) {
                                     $set('action_json', []);
@@ -250,6 +241,7 @@ class TMODataResource extends Resource
                         Forms\Components\Select::make('action_json')
                             ->disabled()->dehydrated(true)
                             ->label('Action Taken')
+                            ->unique()
                             ->multiple()
                             ->reactive()
                             ->required(),

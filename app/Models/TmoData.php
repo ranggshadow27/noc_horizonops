@@ -57,17 +57,11 @@ class TmoData extends Model
         parent::boot();
 
         // Event sebelum record dibuat
-        static::creating(function ($model) {
+        static::saving(function ($model) {
             $model->tmo_id = self::generateTmoId();
         });
 
-        static::saving(function ($model) {
-            $site = SiteDetail::where('site_id', $model->site_id)->first();
 
-            if ($site) {
-                $model->site_name = $site->site_name;
-            }
-        });
     }
 
     public static function generateTmoId()
