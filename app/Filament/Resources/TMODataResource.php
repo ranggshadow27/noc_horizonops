@@ -533,7 +533,8 @@ class TMODataResource extends Resource
                     ])
                     ->columns(4),
 
-                Forms\Components\Section::make('Device Replacement')
+
+                    Forms\Components\Section::make('Device Replacement')
                     ->schema([
                         Forms\Components\ToggleButtons::make('is_device_change')
                             ->boolean()
