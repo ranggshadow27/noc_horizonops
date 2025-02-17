@@ -93,7 +93,7 @@ class TMODataResource extends Resource
                 Forms\Components\Section::make('Contact Information')
                     ->schema([
                         Forms\Components\TextInput::make('engineer_name')
-                            ->label('Engineer Name')
+                            ->label('Technician Name')
                             ->required(),
 
                         Forms\Components\TextInput::make('pic_name')
@@ -101,7 +101,7 @@ class TMODataResource extends Resource
                             ->required(),
 
                         PhoneInput::make('engineer_number')
-                            ->label('Engineer Number')
+                            ->label('Technician Number')
                             ->onlyCountries(['id'])
                             ->required(),
 
@@ -534,7 +534,7 @@ class TMODataResource extends Resource
                     ->columns(4),
 
 
-                    Forms\Components\Section::make('Device Replacement')
+                Forms\Components\Section::make('Device Replacement')
                     ->schema([
                         Forms\Components\ToggleButtons::make('is_device_change')
                             ->boolean()
@@ -637,7 +637,7 @@ class TMODataResource extends Resource
                     ->formatStateUsing(function ($state) {
                         return $state === "Preventive Maintenance" ? "Preventive" : "Corrective";
                     }),
-                Tables\Columns\TextColumn::make('engineer_name')->label('Engineer Name')
+                Tables\Columns\TextColumn::make('engineer_name')->label('Technician Name')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('approval')->label('Status')
                     ->sortable()->badge()
@@ -727,7 +727,10 @@ class TMODataResource extends Resource
                     ->icon('phosphor-plus-circle-duotone'),
             ])
             ->recordUrl(
-                fn(TMOData $record): string => Pages\ViewTMOData::getUrl([$record->tmo_id]),
+                fn(TMOData $record): string =>
+                $record->tmo_start_date || $record->pic_name ?
+                    Pages\ViewTMOData::getUrl([$record->tmo_id]) :
+                    Pages\EditTMOData::getUrl([$record->tmo_id]),
             );;
     }
 

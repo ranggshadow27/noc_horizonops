@@ -62,7 +62,7 @@ class UserResource extends Resource implements HasShieldPermissions
                     ->words(5)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('roles.name')
-                    ->label('Name')
+                    ->label('Role')
                     ->badge()
                     ->searchable(),
             ])
