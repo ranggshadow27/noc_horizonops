@@ -23,6 +23,7 @@ class TmoData extends Model
         'site_longitude',
         'engineer_name',
         'engineer_number',
+        'spmk_number',
         'pic_name',
         'pic_number',
         'sqf',
