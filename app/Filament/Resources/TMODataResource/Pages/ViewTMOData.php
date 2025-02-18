@@ -128,16 +128,16 @@ TMO Status		: {$this->record->approval}
                         Infolists\Components\TextEntry::make('site_province')
                             ->label('Site Province')->color('primary'),
 
-                        Infolists\Components\TextEntry::make('site_address')
-                            ->label('Site Address')->color('primary'),
-
                         Infolists\Components\TextEntry::make('site_latitude')
-                            ->label('Latitude')->color('primary'),
+                            ->label('Coordinate')->color('primary')
+                            ->formatStateUsing(
+                                fn() => "Lat : {$this->record->site_latitude}, Long : {$this->record->site_longitude}"
+                            ),
 
-                        Infolists\Components\TextEntry::make('site_longitude')
-                            ->label('Longitude')->color('primary'),
+                        Infolists\Components\TextEntry::make('site_address')
+                            ->label('Site Address')->color('primary')->columnSpanFull(),
 
-                    ])->collapsible()->persistCollapsed()->columns(3),
+                    ])->collapsible()->persistCollapsed()->columns(4),
 
                 Infolists\Components\Section::make('Contact Information')
                     ->schema([
@@ -164,6 +164,10 @@ TMO Status		: {$this->record->approval}
                     ->schema([
 
                         Infolists\Components\Grid::make('4')->schema([
+                            Infolists\Components\TextEntry::make('spmk_number')
+                                ->label('No. SPMK')
+                                ->default("-")
+                                ->color('primary'),
 
                             Infolists\Components\TextEntry::make('tmo_type')
                                 ->label('Maintenance Type')
@@ -226,7 +230,7 @@ TMO Status		: {$this->record->approval}
                             ->label('Action Taken')->default("-"),
 
                         Infolists\Components\TextEntry::make('engineer_note')
-                            ->label('Action')->markdown()->default("-"),
+                            ->label('Note')->markdown()->default("-"),
 
                     ])->collapsible()->persistCollapsed(),
 
@@ -398,6 +402,30 @@ TMO Status		: {$this->record->approval}
                         Infolists\Components\TextEntry::make('tmo_id')
                             ->label('TMO ID')->color("gray"),
 
+                        Infolists\Components\TextEntry::make('creator.name')
+                            ->label('Created By')
+                            ->default("-")
+                            ->color("gray"),
+
+                        Infolists\Components\TextEntry::make('created_at')
+                            ->label('Created Date')
+                            ->formatStateUsing(function (TMOData $record) {
+                                $state = Carbon::parse($record->created_at)->translatedFormat('d M Y H:i');
+
+                                if ($record->approval === "Pending") {
+                                    $state = "Waiting for Approval";
+                                }
+
+                                return $state;
+                            })
+                            ->color("gray")
+                            ->columnSpan(2),
+
+                        Infolists\Components\TextEntry::make('cboss_tmo_code')
+                            ->label('CBOSS TMO Code')
+                            ->default("Waiting For Approval")
+                            ->color("gray"),
+
                         Infolists\Components\TextEntry::make('approval')
                             ->badge()
                             ->color(fn(string $state): string => match ($state) {
@@ -405,28 +433,8 @@ TMO Status		: {$this->record->approval}
                                 'Rejected' => 'danger',
                                 'Approved' => 'success',
                             })
-                            ->label('Approval'),
-                        Infolists\Components\TextEntry::make('cboss_tmo_code')
-                            ->label('CBOSS TMO Code')
-                            ->badge((function (TMOData $record) {
-                                $state = true;
+                            ->label('Status'),
 
-                                if ($record->approval === "Pending") {
-                                    $state = false;
-                                }
-
-                                return $state;
-                            }))
-                            ->default("Waiting For Approval")
-                            ->color((function (TMOData $record) {
-                                $state = 'primary';
-
-                                if ($record->approval === "Pending") {
-                                    $state = "gray";
-                                }
-
-                                return $state;
-                            })),
                         Infolists\Components\TextEntry::make('updated_at')
                             ->label('Approval Date')
                             ->formatStateUsing(function (TMOData $record) {
@@ -439,12 +447,25 @@ TMO Status		: {$this->record->approval}
                                 return $state;
                             })
                             ->color("gray"),
-                    ])->footerActions([
+
+                        Infolists\Components\TextEntry::make('approver.name')
+                            ->label('Approval By')
+                            ->default("-")
+                            ->color("gray"),
+
+                        Infolists\Components\TextEntry::make('approval_details')
+                            ->label('Note')
+                            ->default("-")
+                            ->color("gray")
+                            ->columnSpanFull(),
+                    ])
+                    ->footerActions([
                         Infolists\Components\Actions\Action::make('Rejected')
                             ->label('Reject')
                             ->form([
                                 Forms\Components\Textarea::make('approval_details')
                                     ->label('Rejection Details')
+                                    ->autofocus()
                                     ->required(),
                             ])
                             ->icon('phosphor-x-duotone') // Ganti dengan icon yang diinginkan
@@ -463,14 +484,17 @@ TMO Status		: {$this->record->approval}
                             ->requiresConfirmation() // Menambahkan konfirmasi sebelum eksekusi
                             ->color('danger')
                             ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin')),
+
                         Infolists\Components\Actions\Action::make('Approve')
                             ->form([
-                                Forms\Components\Textarea::make('approval_details')
-                                    ->label('Approval Details')
-                                    ->required(),
                                 Forms\Components\TextInput::make('cboss_tmo_code')
                                     ->label('CBOSS Code')
+                                    ->autofocus()
+                                    ->autocomplete(false)
                                     ->required(),
+
+                                Forms\Components\Textarea::make('approval_details')
+                                    ->label('Approval Details'),
                             ])
                             ->label('Approve')
                             ->icon('phosphor-check-circle-duotone') // Ganti dengan icon yang diinginkan
@@ -478,10 +502,11 @@ TMO Status		: {$this->record->approval}
                                 // Update kolom approval menjadi 'Approved'
                                 // $record->update(['approval' => 'Approved']);
 
-                                $record->approval = 'Approved';
                                 $record->cboss_tmo_code = $data['cboss_tmo_code'];
                                 $record->approval_details = $data['approval_details'];
-                                $record->save();
+                                $record->approval = "Approved";
+                                $record->approval_by = auth()->id();
+                                $record->update();
 
                                 Notification::make()
                                     ->title('TMO Approved')
@@ -492,6 +517,7 @@ TMO Status		: {$this->record->approval}
                             ->requiresConfirmation() // Menambahkan konfirmasi sebelum eksekusi
                             ->color('primary')
                             ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin')),
+
 
                     ])->columns(4),
             ]);

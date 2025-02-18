@@ -46,6 +46,8 @@ class TmoData extends Model
         'approval',
         'approval_details',
         'is_device_change',
+        'approval_by',
+        'created_by',
     ];
 
     protected $casts = [
@@ -85,6 +87,16 @@ class TmoData extends Model
 
         // Gabungkan ke ID baru
         return "TMO-MHG-$dateCode-$newNumber";
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by', 'id');
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approval_by', 'id');
     }
 
     public function site()

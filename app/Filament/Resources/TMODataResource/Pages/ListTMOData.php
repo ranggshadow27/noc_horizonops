@@ -10,6 +10,7 @@ use pxlrbt\FilamentExcel\Actions\Pages\ExportAction;
 use pxlrbt\FilamentExcel\Columns\Column;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use Filament\Actions\ActionGroup;
+use Illuminate\Database\Eloquent\Builder;
 
 class ListTMOData extends ListRecords
 {
@@ -121,6 +122,11 @@ class ListTMOData extends ListRecords
                                             ->implode(", ")
                                     ),
                             ])
+                            ->modifyQueryUsing(function (Builder $query) {
+                                if (auth()->user()->roles->pluck('name')->contains('panel_user')) {
+                                    return $query->where('engineer_name', auth()->user()->name);
+                                }
+                            })
                     ]),
 
                 ExportAction::make('xlsx')
@@ -225,7 +231,13 @@ class ListTMOData extends ListRecords
                                             ->implode(", ")
                                     ),
                             ])
-
+                            ->modifyQueryUsing(function (Builder $query) {
+                                if (auth()->user()->roles->pluck('name')->contains('panel_user')) {
+                                    return $query->where('engineer_name', auth()->user()->name);
+                                } else {
+                                    return $query;
+                                }
+                            })
                     ]),
 
             ])

@@ -6,11 +6,13 @@ use App\Filament\Resources\TmoTaskResource\Pages;
 use App\Filament\Resources\TmoTaskResource\RelationManagers;
 use App\Models\SiteDetail;
 use App\Models\TmoTask;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Ysfkaya\FilamentPhoneInput\Forms\PhoneInput;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -32,10 +34,11 @@ class TmoTaskResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Site Information')
+                Forms\Components\Section::make('Maintenance Information')
                     ->schema([
                         Forms\Components\TextInput::make('spmk_number')
                             ->required()
+                            ->label('SPMK Number')
                             ->maxLength(255),
 
                         Forms\Components\Select::make('tmo_type')
@@ -43,12 +46,13 @@ class TmoTaskResource extends Resource
                                 'Preventive Maintenance' => 'Preventive Maintenance',
                                 'Corrective Maintenance' => 'Corrective Maintenance',
                             ])
+                            ->default('Corrective Maintenance')
                             ->label('Maintenance Type')
                             ->searchable()
                             ->required(),
                     ])->collapsible()->persistCollapsed()->columns(2),
 
-                Forms\Components\Section::make('Site Information')
+                Forms\Components\Section::make('Site Assign')
                     ->schema([
                         Forms\Components\Select::make('site_id')
                             ->label('Site ID')
@@ -64,11 +68,13 @@ class TmoTaskResource extends Resource
                                     $set('site_name', $site->site_name);
                                     $set('province', $site->province);
                                     $set('address', $site->address);
+                                    $set('latitude', $site->latitude);
+                                    $set('longitude', $site->longitude);
                                 }
                             })
                             ->required()->columnSpan(2),
 
-                        Forms\Components\TextInput::make('site_name')
+                        Forms\Components\Hidden::make('site_name')
                             ->label('Site Name'),
 
                         Forms\Components\TextInput::make('province')
@@ -94,15 +100,39 @@ class TmoTaskResource extends Resource
 
                     ])->collapsible()->persistCollapsed()->columns(2),
 
-                Forms\Components\TextInput::make('engineer')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Section::make('Technician Assign')
+                    ->schema([
+                        Forms\Components\Select::make('engineer')
+                            ->label('Name')
+                            ->options(User::whereHas(
+                                'roles',
+                                function ($query) {
+                                    $query->where('name', 'panel_user');
+                                }
+                            )->pluck('name', 'name'))
+                            ->afterStateUpdated(function (callable $set, $state) {
+                                // Auto-fill data when site_id is selected
+                                $site = User::where('name', $state)->first();
+                                if ($site) {
+                                    $set('engineer', $site->name);
+                                    $set('engineer_number', $site->number);
+                                }
+                            })
+                            ->reactive()
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+
+                        PhoneInput::make('engineer_number')
+                            ->label('Phone Number')
+                            ->onlyCountries(['id'])
+                            ->required(),
+                    ])->collapsible()->persistCollapsed()->columns(2),
 
 
 
-                // Forms\Components\TextInput::make('tmo_id')
-                //     ->required()
-                //     ->maxLength(255),
+
+
             ]);
     }
 
@@ -110,24 +140,39 @@ class TmoTaskResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('spmk_number')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('site_id')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('site_name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('province')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('address')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('engineer')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('tmo_id')
+                    ->label("TMO ID")
                     ->searchable(),
+
+                Tables\Columns\TextColumn::make('spmk_number')
+                    ->label("No. SPMK")
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('site_id')
+                    ->label("Site ID")
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('site_name')
+                    ->label("Site Name")
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('province')
+                    ->label("Province")
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('engineer')
+                    ->label("Technician")
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('creator.name')
+                    ->label("Assign By")
+                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()

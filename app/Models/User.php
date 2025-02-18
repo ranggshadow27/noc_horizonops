@@ -24,8 +24,16 @@ class User extends Authenticatable implements FilamentUser
     protected $fillable = [
         'name',
         'email',
+        'number',
         'password',
     ];
+
+    // protected static function booted(): void
+    // {
+    //     static::creating(function (User $user) {
+    //         $user->number = 'number';
+    //     });
+    // }
 
     /**
      * The attributes that should be hidden for serialization.

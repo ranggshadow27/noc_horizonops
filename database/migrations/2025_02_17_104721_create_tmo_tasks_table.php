@@ -11,14 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tmo_tasks', function (Blueprint $table) {
+        Schema::create('tmo_task', function (Blueprint $table) {
             $table->id('task_id');
             $table->string('spmk_number')->unique();
             $table->string('site_id');
-            $table->string('site_name');
-            $table->string('province');
-            $table->string('address');
-            $table->string('engineer');
+            $table->string('site_name', 100);
+            $table->string('province', 50);
+            $table->text('address');
+            $table->string('engineer', 50);
+            $table->string('engineer_number', 25)->nullable();
 
             $table->string('tmo_id');
 
@@ -35,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tmo_tasks');
+        Schema::dropIfExists('tmo_task');
     }
 };

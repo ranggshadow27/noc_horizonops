@@ -19,6 +19,7 @@ use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Storage;
 use Ysfkaya\FilamentPhoneInput\Forms\PhoneInput;
@@ -114,14 +115,20 @@ class TMODataResource extends Resource
 
                 Forms\Components\Section::make('Maintenance Information')
                     ->schema([
-                        Forms\Components\Select::make('tmo_type')
-                            ->options([
-                                'Preventive Maintenance' => 'Preventive Maintenance',
-                                'Corrective Maintenance' => 'Corrective Maintenance',
-                            ])
-                            ->label('Maintenance Type')
-                            ->searchable()
-                            ->required(),
+                        Forms\Components\Grid::make('2')->schema([
+                            Forms\Components\TextInput::make('spmk_number')
+                                ->label('No. SPMK')
+                                ->required(),
+
+                            Forms\Components\Select::make('tmo_type')
+                                ->options([
+                                    'Preventive Maintenance' => 'Preventive Maintenance',
+                                    'Corrective Maintenance' => 'Corrective Maintenance',
+                                ])
+                                ->label('Maintenance Type')
+                                ->searchable()
+                                ->required(),
+                        ]),
 
                         Forms\Components\Grid::make('4')->schema([
                             Forms\Components\TextInput::make('sqf')
@@ -623,11 +630,27 @@ class TMODataResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('tmo_id')->label('TMO ID')
-                    ->sortable()->searchable()->copyable(),
+                    ->sortable()
+                    ->searchable()
+                    ->copyable(),
+
                 Tables\Columns\TextColumn::make('site_id')->label('Site ID')
-                    ->sortable()->searchable()->copyable(),
+                    ->searchable()
+                    ->copyable(),
+
                 Tables\Columns\TextColumn::make('site_name')->label('Site Name')
-                    ->sortable()->searchable(),
+                    ->limit(30)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        return $state;
+                    })
+                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('tmo_type')->label('TMO Type')
                     ->sortable()
                     ->badge()->color(fn(string $state): string => match ($state) {
@@ -637,23 +660,65 @@ class TMODataResource extends Resource
                     ->formatStateUsing(function ($state) {
                         return $state === "Preventive Maintenance" ? "Preventive" : "Corrective";
                     }),
-                Tables\Columns\TextColumn::make('engineer_name')->label('Technician Name')
+
+                Tables\Columns\TextColumn::make('engineer_name')
+                    ->label('Technician')
+                    ->limit(15)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        return $state;
+                    })
                     ->sortable(),
-                Tables\Columns\TextColumn::make('approval')->label('Status')
-                    ->sortable()->badge()
+
+                Tables\Columns\TextColumn::make('approval')
+                    ->label('Status')
+                    ->sortable()
+                    ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'Pending' => 'warning',
                         'Rejected' => 'danger',
                         'Approved' => 'success',
                     })
-                    ->tooltip(fn(TMOData $record) => $record->approval === "Pending" ? null : "At " . Carbon::parse($record->updated_at)->translatedFormat('d M Y H:i')),
-                Tables\Columns\TextColumn::make('cboss_tmo_code')->label('CBOSS TMO Code')
-                    ->sortable()->placeholder('Waiting for Approval'),
-                Tables\Columns\TextColumn::make('tmo_start_date')->label('TMO Date')
-                    ->date('d M Y H:i')->sortable(),
+                    ->tooltip(
+                        fn(TMOData $record) => $record->approval === "Pending" ?
+                            null :
+                            "At " . Carbon::parse($record->updated_at)->translatedFormat('d M Y H:i') .
+                            ($record->approver?->name ?  " by " .  $record->approver?->name : "")
+                    ),
+
+                Tables\Columns\TextColumn::make('cboss_tmo_code')
+                    ->label('CBOSS TMO Code')
+                    ->searchable()
+                    ->placeholder(
+                        fn(TMOData $record) => $record->tmo_start_date || $record->pic_name ?
+                            "Waiting for Approval" :
+                            "TMO Data not Complete"
+                    ),
+
+                Tables\Columns\TextColumn::make('tmo_start_date')
+                    ->label('TMO Date')
+                    ->date('d M Y H:i')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('creator.name')
+                    ->label('Created By')
+                    ->placeholder("Unidentified")
+                    ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('approval')
+                    ->label("TMO Approval")
+                    ->options(fn() => TmoData::query()->pluck('approval', 'approval')),
+
+                Tables\Filters\SelectFilter::make('site_province')
+                    ->label("Province")
+                    ->options(fn() => TmoData::query()->pluck('site_province', 'site_province'))
+                    ->searchable(),
             ])
             ->actions([
                 // Tables\Actions\EditAction::make(),
@@ -661,12 +726,14 @@ class TMODataResource extends Resource
                     Tables\Actions\EditAction::make('edit'),
                     Tables\Actions\Action::make('approve')
                         ->form([
-                            Forms\Components\Textarea::make('approval_details')
-                                ->label('Approval Details')
-                                ->required(),
                             Forms\Components\TextInput::make('cboss_tmo_code')
                                 ->label('CBOSS Code')
+                                ->autofocus()
+                                ->autocomplete(false)
                                 ->required(),
+
+                            Forms\Components\Textarea::make('approval_details')
+                                ->label('Approval Details'),
                         ])
                         ->label('Approve')
                         ->icon('phosphor-check-circle-duotone') // Ganti dengan icon yang diinginkan
@@ -676,7 +743,9 @@ class TMODataResource extends Resource
 
                             $record->cboss_tmo_code = $data['cboss_tmo_code'];
                             $record->approval_details = $data['approval_details'];
-                            $record->save();
+                            $record->approval = "Approved";
+                            $record->approval_by = auth()->id();
+                            $record->update();
 
                             Notification::make()
                                 ->title('TMO Approved')
@@ -692,6 +761,7 @@ class TMODataResource extends Resource
                         ->form([
                             Forms\Components\Textarea::make('approval_details')
                                 ->label('Rejection Details')
+                                ->autofocus()
                                 ->required(),
                         ])
                         ->icon('phosphor-x-duotone') // Ganti dengan icon yang diinginkan
@@ -711,7 +781,10 @@ class TMODataResource extends Resource
                         ->color('danger')
                 ])
                     ->icon('phosphor-dots-three-vertical-duotone')->dropdown()
-                    ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin'))
+                    ->visible(
+                        fn(TmoData $record) =>
+                        $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin')
+                    )
                 // ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->hasRole('super_admin'))
             ])
             ->bulkActions([
@@ -724,14 +797,20 @@ class TMODataResource extends Resource
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->label("Add New TMO")
-                    ->icon('phosphor-plus-circle-duotone'),
+                    ->icon('phosphor-plus-circle-duotone')
+                    ->visible(fn() => auth()->user()->roles->pluck('name')->contains('super_admin') ? true : false),
             ])
             ->recordUrl(
                 fn(TMOData $record): string =>
                 $record->tmo_start_date || $record->pic_name ?
                     Pages\ViewTMOData::getUrl([$record->tmo_id]) :
                     Pages\EditTMOData::getUrl([$record->tmo_id]),
-            );;
+            )->modifyQueryUsing(function (Builder $query) {
+                if (auth()->user()->roles->pluck('name')->contains('panel_user')) {
+                    return $query->where('engineer_name', auth()->user()->name);
+                }
+            })
+        ;
     }
 
     public static function getRelations(): array
@@ -749,5 +828,15 @@ class TMODataResource extends Resource
             'view' => Pages\ViewTMOData::route('/{record}'),
             'edit' => Pages\EditTMOData::route('/{record}/edit'),
         ];
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->roles->pluck('name')->contains('panel_user') ? false : true;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return $record->approval === 'Pending' ? true : false;
     }
 }

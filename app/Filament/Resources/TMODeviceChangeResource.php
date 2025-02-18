@@ -100,10 +100,7 @@ class TMODeviceChangeResource extends Resource
                     ->height(60)
                     ->width(60),
 
-
-
-
-                Tables\Columns\TextColumn::make('tmo_id')
+                    Tables\Columns\TextColumn::make('tmo_id')
                     ->label("TMO ID")
                     ->description(fn(TMODeviceChange $record): string => $record->tmoData->approval)
                     ->searchable(),

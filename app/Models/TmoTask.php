@@ -21,9 +21,16 @@ class TmoTask extends Model
         'longitude',
         'address',
         'engineer',
+        'engineer_number',
         'tmo_id',
         'tmo_type',
+        'created_by',
     ];
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by', 'id');
+    }
 
     public function tmoData()
     {

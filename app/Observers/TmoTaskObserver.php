@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\TmoData;
 use App\Models\TmoTask;
+use Illuminate\Support\Facades\Auth;
 
 class TmoTaskObserver
 {
@@ -24,13 +25,17 @@ class TmoTaskObserver
             'site_province' => $task->province,
             'site_address'  => $task->address,
             'engineer_name' => $task->engineer,
+            'engineer_number' => $task->engineer_number,
             'tmo_type' => $task->tmo_type,
             'site_latitude' => $task->latitude,
             'site_longitude' => $task->longitude,
+            'spmk_number' => $task->spmk_number,
+            'created_by' => Auth::id(),
         ]);
 
         // Ambil tmo_id yang baru dibuat dan set ke task
         $task->tmo_id = $tmoData->tmo_id;
+        $task->created_by = auth()->id();
     }
 
     /**
@@ -46,7 +51,12 @@ class TmoTaskObserver
      */
     public function deleted(TmoTask $tmoTask): void
     {
-        //
+        TmoData::where('tmo_id', $tmoTask->tmo_id)->delete();
+    }
+
+    public function deleting(TmoTask $tmoTask)
+    {
+       //
     }
 
     /**

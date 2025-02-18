@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\EditProfile;
+use App\Filament\Resources\MahagaResource\Pages\Auth\Register;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -28,7 +30,8 @@ class MahagaPanelProvider extends PanelProvider
             ->id('mahaga')
             ->path('mahaga')
             ->login()
-            ->registration()
+            ->registration(Register::class)
+            ->profile(EditProfile::class)
             ->colors([
                 'primary' => '#80b918',
                 'secondary' => '#6b7280'

@@ -9,8 +9,8 @@ return new class extends Migration {
     {
         Schema::table('tmo_task', function (Blueprint $table) {
             $table->enum('tmo_type', ['Preventive Maintenance', 'Corrective Maintenance'])->default('Preventive Maintenance');
-            $table->string('latitude')->nullable();
-            $table->string('longitude')->nullable();
+            $table->string('latitude', 15)->nullable();
+            $table->string('longitude', 15)->nullable();
         });
 
         Schema::table('tmo_data', function (Blueprint $table) {

@@ -45,7 +45,7 @@ class UserResource extends Resource implements HasShieldPermissions
                 Forms\Components\Select::make('roles')
                     ->relationship('roles', 'name')
                     ->required()
-                    ->label('Email'),
+                    ->label('Role'),
             ]);
     }
 
