@@ -21,7 +21,7 @@ class TMODataPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, TMOData $tMOData): bool
+    public function view(User $user, TmoData $TmoData): bool
     {
         return $user->can('view_t::m::o::data');
     }
@@ -37,7 +37,7 @@ class TMODataPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, TMOData $tMOData): bool
+    public function update(User $user, TmoData $TmoData): bool
     {
         return $user->can('update_t::m::o::data');
     }
@@ -45,7 +45,7 @@ class TMODataPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, TMOData $tMOData): bool
+    public function delete(User $user, TmoData $TmoData): bool
     {
         return $user->can('delete_t::m::o::data');
     }
@@ -61,7 +61,7 @@ class TMODataPolicy
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, TMOData $tMOData): bool
+    public function forceDelete(User $user, TmoData $TmoData): bool
     {
         return $user->can('force_delete_t::m::o::data');
     }
@@ -77,7 +77,7 @@ class TMODataPolicy
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, TMOData $tMOData): bool
+    public function restore(User $user, TmoData $TmoData): bool
     {
         return $user->can('restore_t::m::o::data');
     }
@@ -93,7 +93,7 @@ class TMODataPolicy
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, TMOData $tMOData): bool
+    public function replicate(User $user, TmoData $TmoData): bool
     {
         return $user->can('replicate_t::m::o::data');
     }
