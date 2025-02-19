@@ -6,7 +6,6 @@ use App\Filament\Resources\SiteDetailResource\Pages\ListSiteDetails;
 use App\Models\SiteDetail;
 use App\Models\Device;
 use App\Models\DeviceNetwork;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
