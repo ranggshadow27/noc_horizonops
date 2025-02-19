@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\TMODeviceChange;
+use App\Models\TmoDeviceChange;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class TMODeviceChangePolicy

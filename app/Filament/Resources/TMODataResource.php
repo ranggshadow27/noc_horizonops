@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\TMODataResource\Pages;
 use App\Filament\Resources\TMODataResource\RelationManagers;
 use App\Models\SiteDetail;
-use App\Models\TMOData;
+use App\Models\TmoData;
 use App\Models\TmoDeviceChange;
 use App\Models\TmoHomebase;
 use App\Models\TmoProblem;

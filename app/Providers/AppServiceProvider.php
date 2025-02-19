@@ -4,9 +4,9 @@ namespace App\Providers;
 
 use App\Models\TmoData;
 use App\Models\TmoDeviceChange;
-use App\Observers\TMODataObserver;
 use App\Models\TmoImage;
 use App\Models\TmoTask;
+use App\Observers\TMODataObserver;
 use App\Observers\TMODeviceChangeObserver;
 use App\Observers\TMOImageObserver;
 use App\Observers\TmoTaskObserver;

@@ -2,7 +2,7 @@
 
 namespace App\Observers;
 
-use App\Models\TMOData;
+use App\Models\TmoData;
 use Illuminate\Support\Facades\Storage;
 
 class TMODataObserver

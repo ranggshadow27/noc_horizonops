@@ -3,7 +3,7 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\TMOData;
+use App\Models\TmoData;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class TMODataPolicy

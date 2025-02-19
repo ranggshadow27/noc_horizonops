@@ -2,7 +2,7 @@
 
 namespace App\Observers;
 
-use App\Models\TMOImage;
+use App\Models\TmoImage;
 use Illuminate\Support\Facades\Storage;
 
 class TMOImageObserver

@@ -2,7 +2,7 @@
 
 namespace App\Observers;
 
-use App\Models\TMODeviceChange;
+use App\Models\TmoDeviceChange;
 use Illuminate\Support\Facades\Storage;
 
 class TMODeviceChangeObserver
