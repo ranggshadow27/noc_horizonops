@@ -6961,7 +6961,13 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (21,	'2025_02_11_174519_create_tmo_problems_table',	13),
 (22,	'2025_02_11_185402_add_json_fields_to_tmo_data',	14),
 (23,	'2025_02_11_191954_add_note_fields_to_tmo_data',	15),
-(24,	'2025_02_11_192240_add_action_fields_to_tmo_problems',	16);
+(24,	'2025_02_11_192240_add_action_fields_to_tmo_problems',	16),
+(25,	'2025_02_11_184641_alter_tmo_data_add_json_fields',	17),
+(26,	'2025_02_17_104720_create_tmo_tasks_table',	17),
+(27,	'2025_02_17_104721_create_tmo_tasks_table',	18),
+(28,	'2025_02_17_123603_add_tmo_type_to_tmo_task_and_spmk_number_to_tmo_data',	18),
+(29,	'2025_02_17_205247_add_engineer_number_to_users_table',	19),
+(30,	'2025_02_18_214239_add_created_by_and_approval_by_to_tmo_task_and_tmo_data',	20);
 
 DROP TABLE IF EXISTS `model_has_permissions`;
 CREATE TABLE `model_has_permissions` (
@@ -6986,7 +6992,11 @@ CREATE TABLE `model_has_roles` (
 
 INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
 (1,	'App\\Models\\User',	1),
-(2,	'App\\Models\\User',	2);
+(2,	'App\\Models\\User',	2),
+(2,	'App\\Models\\User',	3),
+(2,	'App\\Models\\User',	4),
+(3,	'App\\Models\\User',	5),
+(2,	'App\\Models\\User',	6);
 
 DROP TABLE IF EXISTS `password_reset_tokens`;
 CREATE TABLE `password_reset_tokens` (
@@ -7062,7 +7072,55 @@ INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at
 (51,	'replicate_user',	'web',	'2025-01-27 15:44:56',	'2025-01-27 15:44:56'),
 (52,	'reorder_user',	'web',	'2025-01-27 15:44:56',	'2025-01-27 15:44:56'),
 (53,	'force_delete_user',	'web',	'2025-01-27 15:44:56',	'2025-01-27 15:44:56'),
-(54,	'force_delete_any_user',	'web',	'2025-01-27 15:44:56',	'2025-01-27 15:44:56');
+(54,	'force_delete_any_user',	'web',	'2025-01-27 15:44:56',	'2025-01-27 15:44:56'),
+(55,	'view_t::m::o::device::change',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(56,	'view_any_t::m::o::device::change',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(57,	'create_t::m::o::device::change',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(58,	'update_t::m::o::device::change',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(59,	'restore_t::m::o::device::change',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(60,	'restore_any_t::m::o::device::change',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(61,	'replicate_t::m::o::device::change',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(62,	'reorder_t::m::o::device::change',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(63,	'delete_t::m::o::device::change',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(64,	'delete_any_t::m::o::device::change',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(65,	'force_delete_t::m::o::device::change',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(66,	'force_delete_any_t::m::o::device::change',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(67,	'view_tmo::homebase',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(68,	'view_any_tmo::homebase',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(69,	'create_tmo::homebase',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(70,	'update_tmo::homebase',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(71,	'restore_tmo::homebase',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(72,	'restore_any_tmo::homebase',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(73,	'replicate_tmo::homebase',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(74,	'reorder_tmo::homebase',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(75,	'delete_tmo::homebase',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(76,	'delete_any_tmo::homebase',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(77,	'force_delete_tmo::homebase',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(78,	'force_delete_any_tmo::homebase',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(79,	'view_tmo::problem',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(80,	'view_any_tmo::problem',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(81,	'create_tmo::problem',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(82,	'update_tmo::problem',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(83,	'restore_tmo::problem',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(84,	'restore_any_tmo::problem',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(85,	'replicate_tmo::problem',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(86,	'reorder_tmo::problem',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(87,	'delete_tmo::problem',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(88,	'delete_any_tmo::problem',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(89,	'force_delete_tmo::problem',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(90,	'force_delete_any_tmo::problem',	'web',	'2025-02-13 05:35:29',	'2025-02-13 05:35:29'),
+(91,	'view_tmo::task',	'web',	'2025-02-17 15:31:47',	'2025-02-17 15:31:47'),
+(92,	'view_any_tmo::task',	'web',	'2025-02-17 15:31:47',	'2025-02-17 15:31:47'),
+(93,	'create_tmo::task',	'web',	'2025-02-17 15:31:47',	'2025-02-17 15:31:47'),
+(94,	'update_tmo::task',	'web',	'2025-02-17 15:31:47',	'2025-02-17 15:31:47'),
+(95,	'restore_tmo::task',	'web',	'2025-02-17 15:31:47',	'2025-02-17 15:31:47'),
+(96,	'restore_any_tmo::task',	'web',	'2025-02-17 15:31:47',	'2025-02-17 15:31:47'),
+(97,	'replicate_tmo::task',	'web',	'2025-02-17 15:31:47',	'2025-02-17 15:31:47'),
+(98,	'reorder_tmo::task',	'web',	'2025-02-17 15:31:47',	'2025-02-17 15:31:47'),
+(99,	'delete_tmo::task',	'web',	'2025-02-17 15:31:47',	'2025-02-17 15:31:47'),
+(100,	'delete_any_tmo::task',	'web',	'2025-02-17 15:31:47',	'2025-02-17 15:31:47'),
+(101,	'force_delete_tmo::task',	'web',	'2025-02-17 15:31:47',	'2025-02-17 15:31:47'),
+(102,	'force_delete_any_tmo::task',	'web',	'2025-02-17 15:31:47',	'2025-02-17 15:31:47');
 
 DROP TABLE IF EXISTS `personal_access_tokens`;
 CREATE TABLE `personal_access_tokens` (
@@ -7147,6 +7205,54 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (52,	1),
 (53,	1),
 (54,	1),
+(55,	1),
+(56,	1),
+(57,	1),
+(58,	1),
+(59,	1),
+(60,	1),
+(61,	1),
+(62,	1),
+(63,	1),
+(64,	1),
+(65,	1),
+(66,	1),
+(67,	1),
+(68,	1),
+(69,	1),
+(70,	1),
+(71,	1),
+(72,	1),
+(73,	1),
+(74,	1),
+(75,	1),
+(76,	1),
+(77,	1),
+(78,	1),
+(79,	1),
+(80,	1),
+(81,	1),
+(82,	1),
+(83,	1),
+(84,	1),
+(85,	1),
+(86,	1),
+(87,	1),
+(88,	1),
+(89,	1),
+(90,	1),
+(91,	1),
+(92,	1),
+(93,	1),
+(94,	1),
+(95,	1),
+(96,	1),
+(97,	1),
+(98,	1),
+(99,	1),
+(100,	1),
+(101,	1),
+(102,	1),
 (7,	2),
 (8,	2),
 (13,	2),
@@ -7154,7 +7260,36 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (37,	2),
 (38,	2),
 (39,	2),
-(40,	2);
+(40,	2),
+(37,	3),
+(38,	3),
+(55,	3),
+(56,	3),
+(58,	3),
+(67,	3),
+(68,	3),
+(69,	3),
+(70,	3),
+(71,	3),
+(72,	3),
+(73,	3),
+(74,	3),
+(75,	3),
+(76,	3),
+(77,	3),
+(78,	3),
+(91,	3),
+(92,	3),
+(93,	3),
+(94,	3),
+(95,	3),
+(96,	3),
+(97,	3),
+(98,	3),
+(99,	3),
+(100,	3),
+(101,	3),
+(102,	3);
 
 DROP TABLE IF EXISTS `roles`;
 CREATE TABLE `roles` (
@@ -7169,7 +7304,8 @@ CREATE TABLE `roles` (
 
 INSERT INTO `roles` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
 (1,	'super_admin',	'web',	'2025-01-25 12:11:31',	'2025-01-25 12:11:31'),
-(2,	'panel_user',	'web',	'2025-01-25 12:12:31',	'2025-01-25 12:12:31');
+(2,	'panel_user',	'web',	'2025-01-25 12:12:31',	'2025-01-25 12:12:31'),
+(3,	'nso_team',	'web',	'2025-02-17 15:41:12',	'2025-02-17 15:41:12');
 
 DROP TABLE IF EXISTS `site_details`;
 CREATE TABLE `site_details` (
@@ -14101,43 +14237,54 @@ CREATE TABLE `tmo_data` (
   `site_longitude` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `engineer_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `engineer_number` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `pic_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `pic_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `pic_number` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `sqf` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `esno` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `power_source` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `power_source_backup` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `fan_rack1` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `fan_rack2` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `grounding` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ifl_length` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `signal` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `weather` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sqf` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `esno` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `power_source` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `power_source_backup` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `fan_rack1` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `fan_rack2` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `grounding` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ifl_length` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `signal` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `weather` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `tmo_type` enum('Preventive Maintenance','Corrective Maintenance') COLLATE utf8mb4_unicode_ci NOT NULL,
   `action_json` json DEFAULT NULL,
   `problem_json` json DEFAULT NULL,
   `engineer_note` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `tmo_start_date` datetime NOT NULL,
-  `tmo_end_date` datetime NOT NULL,
+  `tmo_start_date` datetime DEFAULT NULL,
+  `tmo_end_date` datetime DEFAULT NULL,
   `cboss_tmo_code` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  `approval` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Pending',
+  `approval` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Pending',
   `approval_details` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `is_device_change` tinyint(1) NOT NULL DEFAULT '0',
+  `is_device_change` tinyint(1) DEFAULT '0',
+  `spmk_number` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` bigint unsigned DEFAULT NULL,
+  `approval_by` bigint unsigned DEFAULT NULL,
   PRIMARY KEY (`tmo_id`),
+  UNIQUE KEY `tmo_data_spmk_number_unique` (`spmk_number`),
   KEY `tmo_data_site_id_foreign` (`site_id`),
+  KEY `tmo_data_created_by_foreign` (`created_by`),
+  KEY `tmo_data_approval_by_foreign` (`approval_by`),
+  CONSTRAINT `tmo_data_approval_by_foreign` FOREIGN KEY (`approval_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tmo_data_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `tmo_data_site_id_foreign` FOREIGN KEY (`site_id`) REFERENCES `site_details` (`site_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `tmo_data` (`tmo_id`, `site_id`, `site_name`, `site_province`, `site_address`, `site_latitude`, `site_longitude`, `engineer_name`, `engineer_number`, `pic_name`, `pic_number`, `sqf`, `esno`, `power_source`, `power_source_backup`, `fan_rack1`, `fan_rack2`, `grounding`, `ifl_length`, `signal`, `weather`, `tmo_type`, `action_json`, `problem_json`, `engineer_note`, `tmo_start_date`, `tmo_end_date`, `cboss_tmo_code`, `created_at`, `updated_at`, `approval`, `approval_details`, `is_device_change`) VALUES
-('TMO-MHG-250127-001',	'AM16202042586308N',	'PONPES UMMUL QURA AMUNTAI',	'Kalimantan Selatan',	'Desa Bayur Rt 04, Kecamatan Haur Gading, Kabupaten Hulu Sungai Utara\n',	'-2.407291',	'115.246125',	'Kamisato Ayato',	'123124',	'Kamisato Ayaka',	'123124123',	'123',	'112',	'PLN',	'Genset',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Corrective Maintenance',	NULL,	NULL,	NULL,	'2025-01-26 14:48:46',	'2025-01-27 14:48:51',	NULL,	'2025-01-27 07:51:30',	'2025-01-30 06:17:58',	'Rejected',	'Galengkap cuy',	0),
-('TMO-MHG-250127-002',	'AM16577166651218N',	'YAYASAN PENDIDIKAN RAUDHATUL ATHFAL NURUL IKHLAS',	'Sumatera Utara',	'Desa Penggalian Dusun Vi Naga Raya Kecamatan Tebing Syahbandar Kabupaten Serdang Bedagai',	'3.275603',	'99.172343',	'Kamisato Ayato',	'123124',	'Kamisato Ayaka',	'412313123',	'123',	'112',	'PLN',	'PLTA',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Cerah',	'Preventive Maintenance',	NULL,	NULL,	NULL,	'2025-01-27 06:05:01',	'2025-01-27 18:05:10',	NULL,	'2025-01-27 11:08:26',	'2025-01-27 11:08:26',	'Pending',	NULL,	0),
-('TMO-MHG-250127-003',	'AM16224574777210N',	'SD BK PEANA',	'Sulawesi Tengah',	'Desa Peana Kecamatan Pipikoko Sulawesi Tengah',	'-1.76955',	'119.922357',	'Kamisato Ayato',	'+62123124',	'Kamisato Ayaka',	'+621231513213',	'123',	'112',	'PLN',	'None',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Preventive Maintenance',	'[\"PERGANTIAN PERANGKAT FAIL\", \"REPOINTING \", \"PREVENTIVE MAINTENANCE\"]',	'[\"MODEM HUGHES HT2010\", \"PREVENTIVE MAINTENANCE\", \"MISS POINTING\"]',	'Test notee',	'2025-01-27 17:24:08',	'2025-01-27 20:24:14',	NULL,	'2025-01-27 13:25:29',	'2025-02-11 14:10:46',	'Pending',	NULL,	0),
-('TMO-MHG-250127-004',	'AO16224664495307N',	'KANTOR KEPALA DESA KOLIDETUNG',	'Nusa Tenggara Timur',	'Nanga, Kecamatan Lela, Kabupaten Sikka',	'-8.722942',	'122.127645',	'Jose Mariano',	'8123',	'Faustina Yopita Da Onang',	'82',	'112',	'133',	'PLN',	'None',	'Normal',	'Normal',	'Normal',	'25',	'4G',	'Mendung',	'Preventive Maintenance',	NULL,	NULL,	NULL,	'2025-01-27 14:20:34',	'2025-01-27 21:20:42',	'3OM1PFWB',	'2025-01-27 14:30:27',	'2025-01-29 14:37:58',	'Approved',	NULL,	0),
-('TMO-MHG-250203-001',	'AM16568573441201N',	'SMP N 2 SATU ATAP KOLANG',	'Sumatera Utara',	'Desa Sipakpahi, Kec Kolang, Tapanuli Tengah',	'1.90394',	'98.740858',	'Kamisato Ayato',	'+62123124',	'Kamisato Ayaka',	'+6212312412',	'123',	'112',	'PLN',	'Genset',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Corrective Maintenance',	'[\"Pergantian Perangkat Fail\", \"Menyalakan Perangkat\", \"Repointing \"]',	'[\"ADAPTOR MODEM\", \"MISS POINTING\", \"MASALAH BAHAN BAKAR MINYAK\"]',	NULL,	'2025-02-03 11:17:36',	'2025-02-03 23:17:55',	NULL,	'2025-02-03 16:23:03',	'2025-02-11 17:18:19',	'Pending',	NULL,	1),
-('TMO-MHG-250204-001',	'AM16926928316107N',	'POS KOUT JAGOI BABANG (LAMA)',	'Kalimantan Barat',	'Jl. Paralel Trans Kalimantan, Kec. Jagoi Babang, Kab. Bengkayang, Kalimantan Barat',	'1.510737',	'109.692213',	'Thoma',	'+6281354678999',	'Kujou Sara',	'+628765433231',	'104',	'122',	'Solar Panel',	'None',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Preventive Maintenance',	NULL,	NULL,	NULL,	'2025-02-04 11:51:07',	'2025-02-04 15:51:12',	'XFG6712',	'2025-02-04 10:56:11',	'2025-02-05 05:35:32',	'Approved',	'NOC : Rangga',	1),
-('TMO-MHG-250206-001',	'AM16224736717310N',	'KANTOR DESA TAMANGAPA',	'Sulawesi Selatan',	'Balombang Jl. Poros Mks - Pare Desa Tamangapa',	'-4.668308',	'119.573445',	'Muhammad Luthfi Fauzan',	'+6285776155093',	'Yuliana',	'+6281228559693',	'102',	'142',	'PLN',	'None',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Preventive Maintenance',	'[\"PERGANTIAN PERANGKAT FAIL\", \"REINSTALL MODEM\"]',	'[\"MODEM TIDAK TRANSMIT\", \"MODEM HUGHES HT2010\"]',	NULL,	'2025-02-05 05:28:58',	'2025-02-06 07:29:09',	NULL,	'2025-02-06 00:29:55',	'2025-02-11 15:51:32',	'Pending',	NULL,	1);
+INSERT INTO `tmo_data` (`tmo_id`, `site_id`, `site_name`, `site_province`, `site_address`, `site_latitude`, `site_longitude`, `engineer_name`, `engineer_number`, `pic_name`, `pic_number`, `sqf`, `esno`, `power_source`, `power_source_backup`, `fan_rack1`, `fan_rack2`, `grounding`, `ifl_length`, `signal`, `weather`, `tmo_type`, `action_json`, `problem_json`, `engineer_note`, `tmo_start_date`, `tmo_end_date`, `cboss_tmo_code`, `created_at`, `updated_at`, `approval`, `approval_details`, `is_device_change`, `spmk_number`, `created_by`, `approval_by`) VALUES
+('TMO-MHG-250127-001',	'AM16202042586308N',	'PONPES UMMUL QURA AMUNTAI',	'Kalimantan Selatan',	'Desa Bayur Rt 04, Kecamatan Haur Gading, Kabupaten Hulu Sungai Utara\n',	'-2.407291',	'115.246125',	'Kamisato Ayato',	'123124',	'Kamisato Ayaka',	'123124123',	'123',	'112',	'PLN',	'Genset',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Corrective Maintenance',	NULL,	NULL,	NULL,	'2025-01-26 14:48:46',	'2025-01-27 14:48:51',	NULL,	'2025-01-27 07:51:30',	'2025-01-30 06:17:58',	'Rejected',	'Galengkap cuy',	0,	NULL,	NULL,	NULL),
+('TMO-MHG-250127-002',	'AM16577166651218N',	'YAYASAN PENDIDIKAN RAUDHATUL ATHFAL NURUL IKHLAS',	'Sumatera Utara',	'Desa Penggalian Dusun Vi Naga Raya Kecamatan Tebing Syahbandar Kabupaten Serdang Bedagai',	'3.275603',	'99.172343',	'Kamisato Ayato',	'123124',	'Kamisato Ayaka',	'412313123',	'123',	'112',	'PLN',	'PLTA',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Cerah',	'Preventive Maintenance',	NULL,	NULL,	NULL,	'2025-01-27 06:05:01',	'2025-01-27 18:05:10',	NULL,	'2025-01-27 11:08:26',	'2025-01-27 11:08:26',	'Pending',	NULL,	0,	NULL,	NULL,	NULL),
+('TMO-MHG-250127-003',	'AM16224574777210N',	'SD BK PEANA',	'Sulawesi Tengah',	'Desa Peana Kecamatan Pipikoko Sulawesi Tengah',	'-1.76955',	'119.922357',	'Kamisato Ayato',	'+62123124',	'Kamisato Ayaka',	'+621231513213',	'123',	'112',	'PLN',	'None',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Preventive Maintenance',	'[\"PERGANTIAN PERANGKAT FAIL\", \"REPOINTING \", \"PREVENTIVE MAINTENANCE\"]',	'[\"MODEM HUGHES HT2010\", \"PREVENTIVE MAINTENANCE\", \"MISS POINTING\"]',	'Test notee',	'2025-01-27 17:24:08',	'2025-01-27 20:24:14',	NULL,	'2025-01-27 13:25:29',	'2025-02-11 14:10:46',	'Pending',	NULL,	0,	NULL,	NULL,	NULL),
+('TMO-MHG-250127-004',	'AO16224664495307N',	'KANTOR KEPALA DESA KOLIDETUNG',	'Nusa Tenggara Timur',	'Nanga, Kecamatan Lela, Kabupaten Sikka',	'-8.722942',	'122.127645',	'Jose Mariano',	'8123',	'Faustina Yopita Da Onang',	'82',	'112',	'133',	'PLN',	'None',	'Normal',	'Normal',	'Normal',	'25',	'4G',	'Mendung',	'Preventive Maintenance',	NULL,	NULL,	NULL,	'2025-01-27 14:20:34',	'2025-01-27 21:20:42',	'3OM1PFWB',	'2025-01-27 14:30:27',	'2025-01-29 14:37:58',	'Approved',	NULL,	0,	NULL,	NULL,	NULL),
+('TMO-MHG-250203-001',	'AM16568573441201N',	'SMP N 2 SATU ATAP KOLANG',	'Sumatera Utara',	'Desa Sipakpahi, Kec Kolang, Tapanuli Tengah',	'1.90394',	'98.740858',	'Kamisato Ayato',	'+62123124',	'Kamisato Ayaka',	'+6212312412',	'123',	'112',	'PLN',	'Genset',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Corrective Maintenance',	'[\"Pergantian Perangkat Fail\", \"Menyalakan Perangkat\", \"Repointing \"]',	'[\"ADAPTOR MODEM\", \"MISS POINTING\", \"MASALAH BAHAN BAKAR MINYAK\"]',	NULL,	'2025-02-03 11:17:36',	'2025-02-03 23:17:55',	'BMI8N5B2',	'2025-02-03 16:23:03',	'2025-02-18 16:05:03',	'Approved',	NULL,	1,	NULL,	NULL,	1),
+('TMO-MHG-250204-001',	'AM16926928316107N',	'POS KOUT JAGOI BABANG (LAMA)',	'Kalimantan Barat',	'Jl. Paralel Trans Kalimantan, Kec. Jagoi Babang, Kab. Bengkayang, Kalimantan Barat',	'1.510737',	'109.692213',	'Xilonen',	'+6281354678999',	'Kujou Sara',	'+628765433231',	'104',	'122',	'Solar Panel',	'None',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Preventive Maintenance',	NULL,	NULL,	NULL,	'2025-02-04 11:51:07',	'2025-02-04 15:51:12',	'XFG6712',	'2025-02-04 10:56:11',	'2025-02-05 05:35:32',	'Approved',	'NOC : Rangga',	1,	NULL,	NULL,	NULL),
+('TMO-MHG-250206-001',	'AM16224736717310N',	'KANTOR DESA TAMANGAPA',	'Sulawesi Selatan',	'Balombang Jl. Poros Mks - Pare Desa Tamangapa',	'-4.668308',	'119.573445',	'Muhammad Luthfi Fauzan',	'+6285776155093',	'Yuliana',	'+6281228559693',	'102',	'142',	'PLN',	'None',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Preventive Maintenance',	'[\"PERGANTIAN PERANGKAT FAIL\", \"REINSTALL MODEM\"]',	'[\"MODEM TIDAK TRANSMIT\", \"MODEM HUGHES HT2010\"]',	NULL,	'2025-02-05 05:28:58',	'2025-02-06 07:29:09',	NULL,	'2025-02-06 00:29:55',	'2025-02-11 15:51:32',	'Pending',	NULL,	1,	NULL,	NULL,	NULL),
+('TMO-MHG-250218-001',	'AM16566717727606N',	'SDN KECIL KALUBIBING',	'Sulawesi Barat',	'Budong-Budong Kecamatan Tapoyo Kabupaten Mamuju Tengah Sulawesi Barat\n',	'-2.086803',	'119.236073',	'Xilonen',	'+6281344210300',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Corrective Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-02-18 14:50:43',	'2025-02-18 14:50:43',	'Pending',	NULL,	0,	'NA1-MHG/NOM/2502/CKR-00900',	1,	NULL),
+('TMO-MHG-250218-002',	'AM16224576037210N',	'SMP SATU ATAP NEGERI 19 SIGI',	'Sulawesi Tengah',	'Jl. M. Supubaja Sidondo Ii',	'-1.089198',	'119.890057',	'Kaedahara Kazuha',	'+6289682381239',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Preventive Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-02-18 14:54:29',	'2025-02-18 14:54:29',	'Pending',	NULL,	0,	'SPMK-NA1-MHG/NOM/2502/CKR-00943',	1,	NULL),
+('TMO-MHG-250218-003',	'AM16926927815321N',	'POS PAMTAS AILALA',	'Nusa Tenggara Timur',	'Desa Alas Utara, Kecamatan Koba Lima Timur, Kabupaten Malaka',	'-9.335747',	'125.030134',	'Xilonen',	'+6281344210300',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Corrective Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-02-18 15:20:32',	'2025-02-18 15:20:32',	'Pending',	NULL,	0,	'SPMK-NA1-MHG/NOM/2502/CKR-00955',	1,	NULL);
 
 DROP TABLE IF EXISTS `tmo_details`;
 CREATE TABLE `tmo_details` (
@@ -14799,10 +14946,42 @@ INSERT INTO `tmo_problems` (`problem_id`, `problem_classification`, `problem_typ
 ('MHG-PRB-036',	'Rekonfigurasi',	'Miss Pointing',	'Teknis',	'Repointing ',	'2025-02-11 16:25:00',	NULL),
 ('MHG-PRB-037',	'Maintenance',	'Preventive Maintenance',	'Teknis',	'Preventive Maintenance',	'2025-02-11 16:25:00',	NULL);
 
+DROP TABLE IF EXISTS `tmo_task`;
+CREATE TABLE `tmo_task` (
+  `task_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `spmk_number` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `site_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `site_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `province` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `engineer` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `engineer_number` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tmo_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `tmo_type` enum('Preventive Maintenance','Corrective Maintenance') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Preventive Maintenance',
+  `latitude` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `longitude` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` bigint unsigned DEFAULT NULL,
+  PRIMARY KEY (`task_id`),
+  UNIQUE KEY `tmo_task_spmk_number_unique` (`spmk_number`),
+  KEY `tmo_task_site_id_foreign` (`site_id`),
+  KEY `tmo_task_tmo_id_foreign` (`tmo_id`),
+  KEY `tmo_task_created_by_foreign` (`created_by`),
+  CONSTRAINT `tmo_task_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `tmo_task_site_id_foreign` FOREIGN KEY (`site_id`) REFERENCES `site_details` (`site_id`) ON DELETE CASCADE,
+  CONSTRAINT `tmo_task_tmo_id_foreign` FOREIGN KEY (`tmo_id`) REFERENCES `tmo_data` (`tmo_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `tmo_task` (`task_id`, `spmk_number`, `site_id`, `site_name`, `province`, `address`, `engineer`, `engineer_number`, `tmo_id`, `created_at`, `updated_at`, `tmo_type`, `latitude`, `longitude`, `created_by`) VALUES
+(3,	'SPMK-NA1-MHG/NOM/2502/CKR-00943',	'AM16224576037210N',	'SMP SATU ATAP NEGERI 19 SIGI',	'Sulawesi Tengah',	'Jl. M. Supubaja Sidondo Ii',	'Kaedahara Kazuha',	'+6289682381239',	'TMO-MHG-250218-002',	'2025-02-18 14:54:29',	'2025-02-18 14:54:29',	'Preventive Maintenance',	'-1.089198',	'119.890057',	NULL),
+(4,	'SPMK-NA1-MHG/NOM/2502/CKR-00955',	'AM16926927815321N',	'POS PAMTAS AILALA',	'Nusa Tenggara Timur',	'Desa Alas Utara, Kecamatan Koba Lima Timur, Kabupaten Malaka',	'Xilonen',	'+6281344210300',	'TMO-MHG-250218-003',	'2025-02-18 15:20:32',	'2025-02-18 15:20:32',	'Corrective Maintenance',	'-9.335747',	'125.030134',	1);
+
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `number` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
   `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -14813,8 +14992,11 @@ CREATE TABLE `users` (
   UNIQUE KEY `users_email_unique` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1,	'NOC Mahaga',	'noc@mahaga-pratama.co.id',	NULL,	'$2y$12$uI2pqYRrtS2MExJEPwdLGO1pWWHCoiAdXbuwsRXlLApRWuG8b1N1K',	NULL,	'2025-01-11 04:15:23',	'2025-01-11 04:15:23'),
-(2,	'Kamisato Ayato',	'ayato@mahaga-pratama.co.id',	NULL,	'$2y$12$8dHVnuEC2SCoLv5Jf/9yLevT0I7G7azrhc1POLO/.BTNYTG8wEmxK',	NULL,	'2025-01-25 10:50:38',	'2025-01-25 10:50:38');
+INSERT INTO `users` (`id`, `name`, `number`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
+(1,	'NOC Mahaga',	NULL,	'noc@mahaga-pratama.co.id',	NULL,	'$2y$12$uI2pqYRrtS2MExJEPwdLGO1pWWHCoiAdXbuwsRXlLApRWuG8b1N1K',	NULL,	'2025-01-11 04:15:23',	'2025-01-11 04:15:23'),
+(2,	'Kamisato Ayato',	NULL,	'ayato@mahaga-pratama.co.id',	NULL,	'$2y$12$8dHVnuEC2SCoLv5Jf/9yLevT0I7G7azrhc1POLO/.BTNYTG8wEmxK',	NULL,	'2025-01-25 10:50:38',	'2025-01-25 10:50:38'),
+(3,	'Xilonen',	'+6281344210300',	'xilonen@mahaga-pratama.co.id',	NULL,	'$2y$12$Y2du3byFSl4YKw7.2FuwiurS8AYbMc57r5TReyc0pzVSZYVvNxbCm',	NULL,	'2025-02-17 12:58:59',	'2025-02-18 14:18:58'),
+(5,	'Yelan',	'+6281313920301',	'yelan@mahaga-pratama.co.id',	NULL,	'$2y$12$7Y9kpIPcVxScURxtqNLq4OWwvTf5HMXOt8vnjZpsyrWBMgH9w2cJm',	NULL,	'2025-02-17 14:20:47',	'2025-02-17 14:20:47'),
+(6,	'Kaedahara Kazuha',	'+6289682381239',	'kaedahara.kazuha@mahaga-pratama.co.id',	NULL,	'$2y$12$Xgb0qjBxWqpkJxsqlq5WIOSeGzIB30M92RCGoIAtSY6/EyZY0WPda',	NULL,	'2025-02-17 14:42:20',	'2025-02-17 14:42:20');
 
--- 2025-02-13 00:32:30
+-- 2025-02-19 00:06:01
