@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\TMODeviceChangeResource\Pages;
 use App\Filament\Resources\TMODeviceChangeResource\RelationManagers;
 use App\Models\TmoData;
-use App\Models\TMODeviceChange;
+use App\Models\TmoDeviceChange;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -75,7 +75,7 @@ class TMODeviceChangeResource extends Resource
 
                 Tables\Columns\TextColumn::make('tmoData.site_id')
                     ->label("Site ID")
-                    ->description(fn(TMODeviceChange $record): string => $record->tmoData->site_name)
+                    ->description(fn(TmoDeviceChange $record): string => $record->tmoData->site_name)
                     ->searchable(['site_id', 'site_name']),
 
                 Tables\Columns\TextColumn::make('tmoData.site_name')
@@ -102,7 +102,7 @@ class TMODeviceChangeResource extends Resource
 
                     Tables\Columns\TextColumn::make('tmo_id')
                     ->label("TMO ID")
-                    ->description(fn(TMODeviceChange $record): string => $record->tmoData->approval)
+                    ->description(fn(TmoDeviceChange $record): string => $record->tmoData->approval)
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('created_at')

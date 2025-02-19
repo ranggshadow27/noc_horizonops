@@ -10,7 +10,7 @@ class TMODataObserver
     /**
      * Handle the TMOData "created" event.
      */
-    public function created(TMOData $tMOData): void
+    public function created(TmoData $tMOData): void
     {
         //
     }
@@ -18,7 +18,7 @@ class TMODataObserver
     /**
      * Handle the TMOData "updated" event.
      */
-    public function updated(TMOData $tmoData)
+    public function updated(TmoData $tmoData)
     {
         if ($tmoData->is_device_change == false) {
             // Ambil semua data yang akan dihapus
@@ -39,7 +39,7 @@ class TMODataObserver
     /**
      * Handle the TMOData "deleted" event.
      */
-    public function deleted(TMOData $tMOData): void
+    public function deleted(TmoData $tMOData): void
     {
         //
     }
@@ -47,7 +47,7 @@ class TMODataObserver
     /**
      * Handle the TMOData "restored" event.
      */
-    public function restored(TMOData $tMOData): void
+    public function restored(TmoData $tMOData): void
     {
         //
     }

@@ -30,7 +30,7 @@ class ViewTMOData extends ViewRecord
                     $deviceChangeString = "-";
                     if ($this->record->tmo_id) {
                         // Ambil semua device yang terkait dengan tmo_id
-                        $devices = \App\Models\TMODeviceChange::where('tmo_id', $this->record->tmo_id)
+                        $devices = \App\Models\TmoDeviceChange::where('tmo_id', $this->record->tmo_id)
                             ->get(['device_name', 'device_sn']); // Ambil dua kolom
 
                         // Format hasil ke dalam string
@@ -409,7 +409,7 @@ TMO Status		: {$this->record->approval}
 
                         Infolists\Components\TextEntry::make('created_at')
                             ->label('Created Date')
-                            ->formatStateUsing(function (TMOData $record) {
+                            ->formatStateUsing(function (TmoData $record) {
                                 $state = Carbon::parse($record->created_at)->translatedFormat('d M Y H:i');
 
                                 if ($record->approval === "Pending") {
@@ -437,7 +437,7 @@ TMO Status		: {$this->record->approval}
 
                         Infolists\Components\TextEntry::make('updated_at')
                             ->label('Approval Date')
-                            ->formatStateUsing(function (TMOData $record) {
+                            ->formatStateUsing(function (TmoData $record) {
                                 $state = Carbon::parse($record->updated_at)->translatedFormat('d M Y H:i');
 
                                 if ($record->approval === "Pending") {

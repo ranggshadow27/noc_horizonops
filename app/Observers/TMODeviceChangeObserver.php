@@ -10,7 +10,7 @@ class TMODeviceChangeObserver
     /**
      * Handle the TMODeviceChange "created" event.
      */
-    public function created(TMODeviceChange $tMODeviceChange): void
+    public function created(TmoDeviceChange $tMODeviceChange): void
     {
         //
     }
@@ -18,7 +18,7 @@ class TMODeviceChangeObserver
     /**
      * Handle the TMODeviceChange "updated" event.
      */
-    public function updated(TMODeviceChange $tMODeviceChange): void
+    public function updated(TmoDeviceChange $tMODeviceChange): void
     {
         // Cek jika gambar baru diunggah
         if ($tMODeviceChange->isDirty('device_img')) { // Cek apakah gambar berubah
@@ -34,7 +34,7 @@ class TMODeviceChangeObserver
     /**
      * Handle the TMODeviceChange "deleted" event.
      */
-    public function deleted(TMODeviceChange $tMODeviceChange): void
+    public function deleted(TmoDeviceChange $tMODeviceChange): void
     {
         if ($tMODeviceChange->device_img) {
             Storage::disk('public')->delete($tMODeviceChange->device_img);
@@ -44,7 +44,7 @@ class TMODeviceChangeObserver
     /**
      * Handle the TMODeviceChange "restored" event.
      */
-    public function restored(TMODeviceChange $tMODeviceChange): void
+    public function restored(TmoDeviceChange $tMODeviceChange): void
     {
         //
     }
@@ -52,7 +52,7 @@ class TMODeviceChangeObserver
     /**
      * Handle the TMODeviceChange "force deleted" event.
      */
-    public function forceDeleted(TMODeviceChange $tMODeviceChange): void
+    public function forceDeleted(TmoDeviceChange $tMODeviceChange): void
     {
         //
     }

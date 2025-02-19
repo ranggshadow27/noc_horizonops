@@ -30,7 +30,7 @@ class TMOImageObserver
     /**
      * Handle the TMOImage "created" event.
      */
-    public function created(TMOImage $tMOImage): void
+    public function created(TmoImage $tMOImage): void
     {
         //
     }
@@ -42,12 +42,12 @@ class TMOImageObserver
     /**
      * Handle the TMOImage "deleted" event.
      */
-    public function deleted(TMOImage $tmoImage): void
+    public function deleted(TmoImage $tmoImage): void
     {
         //
     }
 
-    public function deleting(TMOImage $tmoImage)
+    public function deleting(TmoImage $tmoImage)
     {
         foreach ($this->imageFields as $field) {
             if ($tmoImage->$field) {
@@ -56,7 +56,7 @@ class TMOImageObserver
         }
     }
 
-    public function updated(TMOImage $tmoImage)
+    public function updated(TmoImage $tmoImage)
     {
         foreach ($this->imageFields as $field) {
             if ($tmoImage->isDirty($field)) { // Cek apakah kolom ini berubah
@@ -71,7 +71,7 @@ class TMOImageObserver
     /**
      * Handle the TMOImage "restored" event.
      */
-    public function restored(TMOImage $tMOImage): void
+    public function restored(TmoImage $tMOImage): void
     {
         //
     }
@@ -79,7 +79,7 @@ class TMOImageObserver
     /**
      * Handle the TMOImage "force deleted" event.
      */
-    public function forceDeleted(TMOImage $tMOImage): void
+    public function forceDeleted(TmoImage $tMOImage): void
     {
         //
     }
