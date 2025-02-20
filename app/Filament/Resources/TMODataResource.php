@@ -38,6 +38,21 @@ class TMODataResource extends Resource
     protected static ?string $navigationIcon = 'phosphor-hand-withdraw-duotone';
     protected static ?int $navigationSort = 1;
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('approval', 'Pending')->count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+{
+    return 'TMO Pending';
+}
+
     public static function form(Form $form): Form
     {
         return $form
@@ -685,7 +700,7 @@ class TMODataResource extends Resource
                         'Approved' => 'success',
                     })
                     ->tooltip(
-                        fn(TMOData $record) => $record->approval === "Pending" ?
+                        fn(TmoData $record) => $record->approval === "Pending" ?
                             null :
                             "At " . Carbon::parse($record->updated_at)->translatedFormat('d M Y H:i') .
                             ($record->approver?->name ?  " by " .  $record->approver?->name : "")
@@ -695,7 +710,7 @@ class TMODataResource extends Resource
                     ->label('CBOSS TMO Code')
                     ->searchable()
                     ->placeholder(
-                        fn(TMOData $record) => $record->tmo_start_date || $record->pic_name ?
+                        fn(TmoData $record) => $record->tmo_start_date || $record->pic_name ?
                             "Waiting for Approval" :
                             "TMO Data not Complete"
                     ),
@@ -801,7 +816,7 @@ class TMODataResource extends Resource
                     ->visible(fn() => auth()->user()->roles->pluck('name')->contains('super_admin') ? true : false),
             ])
             ->recordUrl(
-                fn(TMOData $record): string =>
+                fn(TmoData $record): string =>
                 $record->tmo_start_date || $record->pic_name ?
                     Pages\ViewTMOData::getUrl([$record->tmo_id]) :
                     Pages\EditTMOData::getUrl([$record->tmo_id]),

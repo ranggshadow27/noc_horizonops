@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Resources\MahagaResource\Pages\Auth\Register;
+use App\Filament\Resources\MahagaResource\Widgets\TmoDataChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -11,6 +12,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Resources\Resource;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
 use Filament\Widgets;
@@ -20,6 +22,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 
 class MahagaPanelProvider extends PanelProvider
 {
@@ -39,6 +42,7 @@ class MahagaPanelProvider extends PanelProvider
             ->font('Inter')
             ->sidebarWidth('15em')
             ->sidebarCollapsibleOnDesktop()
+            // ->topNavigation()
             ->collapsedSidebarWidth('15em')
             ->maxContentWidth(MaxWidth::Full)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -50,6 +54,10 @@ class MahagaPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+                // TmoDataChart::class,
+            ])
+            ->plugins([
+                FilamentApexChartsPlugin::make()
             ])
             ->middleware([
                 EncryptCookies::class,
