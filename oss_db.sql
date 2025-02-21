@@ -10,6 +10,48 @@ SET NAMES utf8mb4;
 CREATE DATABASE `oss_db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `oss_db`;
 
+DROP TABLE IF EXISTS `area_list`;
+CREATE TABLE `area_list` (
+  `province` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `area` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`province`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `area_list` (`province`, `area`, `created_at`, `updated_at`) VALUES
+('Aceh',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Bali',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Banten',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Bengkulu',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('DIY',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('DKI Jakarta',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Gorontalo',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Jambi',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Jawa Barat',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Jawa Tengah',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Jawa Timur',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Kalimantan Barat',	'Area 2',	'2025-02-20 17:10:00',	NULL),
+('Kalimantan Selatan',	'Area 2',	'2025-02-20 17:10:00',	NULL),
+('Kalimantan Tengah',	'Area 2',	'2025-02-20 17:10:00',	NULL),
+('Kalimantan Timur',	'Area 2',	'2025-02-20 17:10:00',	NULL),
+('Kalimantan Utara',	'Area 2',	'2025-02-20 17:10:00',	NULL),
+('Kepulauan Riau',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Lampung',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Maluku',	'Area 3',	'2025-02-20 17:10:00',	NULL),
+('Maluku Utara',	'Area 3',	'2025-02-20 17:10:00',	NULL),
+('Nusa Tenggara Barat',	'Area 3',	'2025-02-20 17:10:00',	NULL),
+('Nusa Tenggara Timur',	'Area 3',	'2025-02-20 17:10:00',	NULL),
+('Riau',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Sulawesi Barat',	'Area 2',	'2025-02-20 17:10:00',	NULL),
+('Sulawesi Selatan',	'Area 2',	'2025-02-20 17:10:00',	NULL),
+('Sulawesi Tengah',	'Area 2',	'2025-02-20 17:10:00',	NULL),
+('Sulawesi Tenggara',	'Area 2',	'2025-02-20 17:10:00',	NULL),
+('Sulawesi Utara',	'Area 2',	'2025-02-20 17:10:00',	NULL),
+('Sumatera Barat',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Sumatera Selatan',	'Area 1',	'2025-02-20 17:10:00',	NULL),
+('Sumatera Utara',	'Area 1',	'2025-02-20 17:10:00',	NULL);
+
 DROP TABLE IF EXISTS `device_networks`;
 CREATE TABLE `device_networks` (
   `device_network_id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -6967,7 +7009,9 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (28,	'2025_02_17_123603_add_tmo_type_to_tmo_task_and_spmk_number_to_tmo_data',	18),
 (29,	'2025_02_17_205247_add_engineer_number_to_users_table',	19),
 (30,	'2025_02_18_214239_add_created_by_and_approval_by_to_tmo_task_and_tmo_data',	20),
-(31,	'2025_01_25_172821_create_permission_tables',	21);
+(31,	'2025_01_25_172821_create_permission_tables',	21),
+(32,	'2025_02_21_000157_create_area_lists_table',	22),
+(33,	'2025_02_21_000158_create_area_lists_table',	23);
 
 DROP TABLE IF EXISTS `model_has_permissions`;
 CREATE TABLE `model_has_permissions` (
@@ -14184,7 +14228,7 @@ CREATE TABLE `tmo_data` (
   `tmo_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `site_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `site_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `site_province` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `site_province` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `site_address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `site_latitude` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `site_longitude` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -14222,9 +14266,11 @@ CREATE TABLE `tmo_data` (
   KEY `tmo_data_site_id_foreign` (`site_id`),
   KEY `tmo_data_created_by_foreign` (`created_by`),
   KEY `tmo_data_approval_by_foreign` (`approval_by`),
+  KEY `tmo_data_site_province_foreign` (`site_province`),
   CONSTRAINT `tmo_data_approval_by_foreign` FOREIGN KEY (`approval_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `tmo_data_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `tmo_data_site_id_foreign` FOREIGN KEY (`site_id`) REFERENCES `site_details` (`site_id`) ON DELETE CASCADE
+  CONSTRAINT `tmo_data_site_id_foreign` FOREIGN KEY (`site_id`) REFERENCES `site_details` (`site_id`) ON DELETE CASCADE,
+  CONSTRAINT `tmo_data_site_province_foreign` FOREIGN KEY (`site_province`) REFERENCES `area_list` (`province`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `tmo_data` (`tmo_id`, `site_id`, `site_name`, `site_province`, `site_address`, `site_latitude`, `site_longitude`, `engineer_name`, `engineer_number`, `pic_name`, `pic_number`, `sqf`, `esno`, `power_source`, `power_source_backup`, `fan_rack1`, `fan_rack2`, `grounding`, `ifl_length`, `signal`, `weather`, `tmo_type`, `action_json`, `problem_json`, `engineer_note`, `tmo_start_date`, `tmo_end_date`, `cboss_tmo_code`, `created_at`, `updated_at`, `approval`, `approval_details`, `is_device_change`, `spmk_number`, `created_by`, `approval_by`) VALUES
@@ -14952,4 +14998,4 @@ INSERT INTO `users` (`id`, `name`, `number`, `email`, `email_verified_at`, `pass
 (5,	'Yelan',	'+6281313920301',	'yelan@mahaga-pratama.co.id',	NULL,	'$2y$12$7Y9kpIPcVxScURxtqNLq4OWwvTf5HMXOt8vnjZpsyrWBMgH9w2cJm',	NULL,	'2025-02-17 14:20:47',	'2025-02-17 14:20:47'),
 (6,	'Kaedahara Kazuha',	'+6289682381239',	'kaedahara.kazuha@mahaga-pratama.co.id',	NULL,	'$2y$12$Xgb0qjBxWqpkJxsqlq5WIOSeGzIB30M92RCGoIAtSY6/EyZY0WPda',	NULL,	'2025-02-17 14:42:20',	'2025-02-17 14:42:20');
 
--- 2025-02-20 05:00:19
+-- 2025-02-21 05:06:16

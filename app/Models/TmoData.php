@@ -89,6 +89,11 @@ class TmoData extends Model
         return "TMO-MHG-$dateCode-$newNumber";
     }
 
+    public function area()
+    {
+        return $this->belongsTo(AreaList::class, 'site_province', 'province');
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by', 'id');

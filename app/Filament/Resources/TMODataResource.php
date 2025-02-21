@@ -706,7 +706,7 @@ class TMODataResource extends Resource
                             ($record->approver?->name ?  " by " .  $record->approver?->name : "")
                     ),
 
-                Tables\Columns\TextColumn::make('cboss_tmo_code')
+                Tables\Columns\TextColumn::make('area.area')
                     ->label('CBOSS TMO Code')
                     ->searchable()
                     ->placeholder(
