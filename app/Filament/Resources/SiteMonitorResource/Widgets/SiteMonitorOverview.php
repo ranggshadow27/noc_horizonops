@@ -8,6 +8,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class SiteMonitorOverview extends BaseWidget
 {
+    protected static ?string $pollingInterval = '10m';
+
     protected function getStats(): array
     {
         $totalSites = SiteMonitor::count();
