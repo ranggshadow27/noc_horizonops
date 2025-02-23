@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TMODataResource\Pages;
 use App\Filament\Resources\TMODataResource\RelationManagers;
+use App\Models\AreaList;
 use App\Models\SiteDetail;
 use App\Models\TmoData;
 use App\Models\TmoDeviceChange;
@@ -40,7 +41,16 @@ class TMODataResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('approval', 'Pending')->count();
+
+        $data = static::getModel()::where('approval', 'Pending')->count();
+
+        if (auth()->user()->roles->pluck('id')->contains(2)) {
+            $data = TmoData::where('engineer_name', auth()->user()->name)
+                ->where('approval', 'Pending')
+                ->count();
+        }
+
+        return $data;
     }
 
     public static function getNavigationBadgeColor(): ?string
@@ -49,9 +59,9 @@ class TMODataResource extends Resource
     }
 
     public static function getNavigationBadgeTooltip(): ?string
-{
-    return 'TMO Pending';
-}
+    {
+        return 'TMO Pending';
+    }
 
     public static function form(Form $form): Form
     {
@@ -649,6 +659,14 @@ class TMODataResource extends Resource
                     ->searchable()
                     ->copyable(),
 
+                Tables\Columns\TextColumn::make('spmk_number')->label('No. SPMK')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable()
+                    ->toggledHiddenByDefault(true)
+                    ->placeholder('No SPMK Found')
+                    ->copyable(),
+
                 Tables\Columns\TextColumn::make('site_id')->label('Site ID')
                     ->searchable()
                     ->copyable(),
@@ -706,18 +724,20 @@ class TMODataResource extends Resource
                             ($record->approver?->name ?  " by " .  $record->approver?->name : "")
                     ),
 
-                Tables\Columns\TextColumn::make('area.area')
-                    ->label('CBOSS TMO Code')
+                Tables\Columns\TextColumn::make('cboss_tmo_code')
+                    ->label('TMO Notes')
                     ->searchable()
                     ->placeholder(
                         fn(TmoData $record) => $record->tmo_start_date || $record->pic_name ?
                             "Waiting for Approval" :
-                            "TMO Data not Complete"
+                            "Data not Complete"
                     ),
 
                 Tables\Columns\TextColumn::make('tmo_start_date')
                     ->label('TMO Date')
                     ->date('d M Y H:i')
+                    ->toggleable()
+                    ->toggledHiddenByDefault(true)
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('creator.name')
@@ -734,6 +754,16 @@ class TMODataResource extends Resource
                     ->label("Province")
                     ->options(fn() => TmoData::query()->pluck('site_province', 'site_province'))
                     ->searchable(),
+
+                Tables\Filters\SelectFilter::make('area')
+                    ->label("Area")
+                    ->options(fn() => AreaList::all()->pluck('area', 'area')) //you probably want to limit this in some way?
+                    ->modifyQueryUsing(function (Builder $query, $state) {
+                        if (! $state['value']) {
+                            return $query;
+                        }
+                        return $query->whereHas('area', fn($query) => $query->where('area', $state['value']));
+                    }),
             ])
             ->actions([
                 // Tables\Actions\EditAction::make(),
@@ -798,7 +828,7 @@ class TMODataResource extends Resource
                     ->icon('phosphor-dots-three-vertical-duotone')->dropdown()
                     ->visible(
                         fn(TmoData $record) =>
-                        $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin')
+                        $record->approval === 'Pending' && auth()->user()->roles->pluck('id')->contains(1)
                     )
                 // ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->hasRole('super_admin'))
             ])
@@ -813,15 +843,16 @@ class TMODataResource extends Resource
                 Tables\Actions\CreateAction::make()
                     ->label("Add New TMO")
                     ->icon('phosphor-plus-circle-duotone')
-                    ->visible(fn() => auth()->user()->roles->pluck('name')->contains('super_admin') ? true : false),
+                    ->visible(fn() => auth()->user()->roles->pluck('id')->contains(1) ? true : false),
             ])
             ->recordUrl(
                 fn(TmoData $record): string =>
-                $record->tmo_start_date || $record->pic_name ?
+                $record->update_at || $record->pic_name || $record->pic_name ?
                     Pages\ViewTMOData::getUrl([$record->tmo_id]) :
                     Pages\EditTMOData::getUrl([$record->tmo_id]),
-            )->modifyQueryUsing(function (Builder $query) {
-                if (auth()->user()->roles->pluck('name')->contains('panel_user')) {
+            )
+            ->modifyQueryUsing(function (Builder $query) {
+                if (auth()->user()->roles->pluck('id')->contains(2)) {
                     return $query->where('engineer_name', auth()->user()->name);
                 }
             })
@@ -847,7 +878,7 @@ class TMODataResource extends Resource
 
     public static function canCreate(): bool
     {
-        return auth()->user()->roles->pluck('name')->contains('panel_user') ? false : true;
+        return auth()->user()->roles->pluck('id')->contains(2) ? false : true;
     }
 
     public static function canEdit(Model $record): bool

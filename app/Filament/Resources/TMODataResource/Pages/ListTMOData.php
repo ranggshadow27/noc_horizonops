@@ -123,7 +123,7 @@ class ListTMOData extends ListRecords
                                     ),
                             ])
                             ->modifyQueryUsing(function (Builder $query) {
-                                if (auth()->user()->roles->pluck('name')->contains('panel_user')) {
+                                if (auth()->user()->roles->pluck('id')->contains(2)) {
                                     return $query->where('engineer_name', auth()->user()->name);
                                 }
                             })
@@ -232,7 +232,7 @@ class ListTMOData extends ListRecords
                                     ),
                             ])
                             ->modifyQueryUsing(function (Builder $query) {
-                                if (auth()->user()->roles->pluck('name')->contains('panel_user')) {
+                                if (auth()->user()->roles->pluck('id')->contains(2)) {
                                     return $query->where('engineer_name', auth()->user()->name);
                                 } else {
                                     return $query;

@@ -106,7 +106,7 @@ TMO Status		: {$this->record->approval}
             Actions\EditAction::make()
                 ->label("Edit TMO")
                 ->icon('phosphor-plus-circle-duotone')
-                ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin')),
+                ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('id')->contains(1)),
         ];
     }
 
@@ -483,7 +483,7 @@ TMO Status		: {$this->record->approval}
                             })
                             ->requiresConfirmation() // Menambahkan konfirmasi sebelum eksekusi
                             ->color('danger')
-                            ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin')),
+                            ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('id')->contains(1)),
 
                         Infolists\Components\Actions\Action::make('Approve')
                             ->form([
@@ -516,7 +516,7 @@ TMO Status		: {$this->record->approval}
                             })
                             ->requiresConfirmation() // Menambahkan konfirmasi sebelum eksekusi
                             ->color('primary')
-                            ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('name')->contains('super_admin')),
+                            ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('id')->contains(1)),
 
 
                     ])->columns(4),

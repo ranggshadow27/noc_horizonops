@@ -128,11 +128,6 @@ class TmoTaskResource extends Resource
                             ->onlyCountries(['id'])
                             ->required(),
                     ])->collapsible()->persistCollapsed()->columns(2),
-
-
-
-
-
             ]);
     }
 
@@ -188,6 +183,19 @@ class TmoTaskResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->modifyQueryUsing(function (Builder $query) {
+                if (auth()->user()->roles->pluck('id')->contains(2)) {
+                    return $query->where('created_by', auth()->id());
+                }
+            })
+            ->heading('TMO RTGS')
+            ->description('List of TMO Maintenance Task.')
+            ->headerActions([
+                Tables\Actions\CreateAction::make()
+                    ->label("Add TMO Task")
+                    ->icon('phosphor-plus-circle-duotone'),
+                // ->visible(fn() => auth()->user()->roles->pluck('name')->contains('super_admin') ? true : false),
             ]);
     }
 
