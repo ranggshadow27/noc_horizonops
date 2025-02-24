@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Resources\MahagaResource\Pages\Auth\Register;
 use App\Filament\Resources\MahagaResource\Widgets\TmoDataChart;
+use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -42,6 +43,9 @@ class MahagaPanelProvider extends PanelProvider
             ->font('Inter')
             ->sidebarWidth('15em')
             ->sidebarCollapsibleOnDesktop()
+            ->favicon(asset('images/favicon.png'))
+            ->brandLogo(asset('images/logo.png'))
+            ->defaultThemeMode(ThemeMode::Dark)
             // ->topNavigation()
             ->collapsedSidebarWidth('15em')
             ->maxContentWidth(MaxWidth::Full)

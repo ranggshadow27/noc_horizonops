@@ -768,7 +768,31 @@ class TMODataResource extends Resource
             ->actions([
                 // Tables\Actions\EditAction::make(),
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\EditAction::make('edit'),
+                    // Tables\Actions\EditAction::make('edit'),
+
+                    Tables\Actions\Action::make('add_note')
+                        ->label('Add Note')
+                        ->form([
+                            Forms\Components\Textarea::make('approval_details')
+                                ->label('Note')
+                                ->autofocus()
+                                ->required(),
+                        ])
+                        ->icon('phosphor-note-pencil-duotone') // Ganti dengan icon yang diinginkan
+                        ->action(function (TmoData $record, array $data) {
+
+                            $record->approval_details = $data['approval_details'];
+                            $record->save();
+
+                            Notification::make()
+                                ->title('TMO Updated')
+                                ->success()
+                                ->body("The TMO data has been successfully updated")
+                                ->send();
+                        })
+                        ->requiresConfirmation() // Menambahkan konfirmasi sebelum eksekusi
+                        ->color('gray'),
+
                     Tables\Actions\Action::make('approve')
                         ->form([
                             Forms\Components\TextInput::make('cboss_tmo_code')

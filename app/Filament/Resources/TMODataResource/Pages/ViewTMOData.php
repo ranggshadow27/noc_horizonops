@@ -299,72 +299,55 @@ TMO Status		: {$this->record->approval}
                     ->relationship('tmoImages')
                     ->schema([
                         Infolists\Components\ImageEntry::make('transceiver_img')
-                            ->label('Transceiver')
-                            ->width(400)->height(300),
+                            ->label('Transceiver'),
 
                         Infolists\Components\ImageEntry::make('feedhorn_img')
-                            ->label('Feedhorn')
-                            ->width(400)->height(300),
+                            ->label('Feedhorn'),
 
                         Infolists\Components\ImageEntry::make('antenna_img')
-                            ->label('Dish Antenna')
-                            ->width(400)->height(300),
+                            ->label('Dish Antenna'),
 
                         Infolists\Components\ImageEntry::make('stabillizer_img')
-                            ->label('Stabillizer')
-                            ->width(400)->height(300),
+                            ->label('Stabillizer'),
 
                         Infolists\Components\ImageEntry::make('rack_img')
-                            ->label('Rack Indoor')
-                            ->width(400)->height(300),
+                            ->label('Rack Indoor'),
 
                         Infolists\Components\ImageEntry::make('modem_img')
-                            ->label('Modem')
-                            ->width(400)->height(300),
+                            ->label('Modem'),
 
                         Infolists\Components\ImageEntry::make('router_img')
-                            ->label('Router')
-                            ->width(400)->height(300),
+                            ->label('Router'),
 
                         Infolists\Components\ImageEntry::make('ap1_img')
-                            ->label('Access Point 1')
-                            ->width(400)->height(300),
+                            ->label('Access Point 1'),
 
                         Infolists\Components\ImageEntry::make('ap2_img')
-                            ->label('Access Point 2')
-                            ->width(400)->height(300),
+                            ->label('Access Point 2'),
 
                         Infolists\Components\ImageEntry::make('modem_summary_img')
-                            ->label('Modem Summary')
-                            ->width(400)->height(300),
+                            ->label('Modem Summary'),
 
                         Infolists\Components\ImageEntry::make('pingtest_img')
-                            ->label('Ping Test')
-                            ->width(400)->height(300),
+                            ->label('Ping Test'),
 
                         Infolists\Components\ImageEntry::make('speedtest_img')
-                            ->label('Speedtest')
-                            ->width(400)->height(300),
+                            ->label('Speedtest'),
 
                         Infolists\Components\ImageEntry::make('cm_ba_img')
-                            ->label('BA Corrective Maintenance')
-                            ->width(400)->height(300),
+                            ->label('BA Corrective Maintenance'),
 
                         Infolists\Components\ImageEntry::make('pm_ba_img')
-                            ->label('BA Preventive Maintenance')
-                            ->width(400)->height(300),
+                            ->label('BA Preventive Maintenance'),
 
                         Infolists\Components\ImageEntry::make('signplace_img')
-                            ->label('Sign')
-                            ->width(400)->height(300),
+                            ->label('Sign'),
 
                         Infolists\Components\ImageEntry::make('stabillizer_voltage_img')
-                            ->label('Stabillizer Voltage')
-                            ->width(400)->height(300),
+                            ->label('Stabillizer Voltage'),
 
                         Infolists\Components\ImageEntry::make('power_source_voltage_img')
-                            ->label('Power Source Voltage')
-                            ->width(400)->height(300),
+                            ->label('Power Source Voltage'),
                     ])
                     ->columns(4)->collapsible()->persistCollapsed(),
 
@@ -390,7 +373,7 @@ TMO Status		: {$this->record->approval}
 
                                 Infolists\Components\ImageEntry::make('device_img')
                                     ->label('Image')
-                                    ->width(400)->height(300)
+
                             ])
                             ->label('')
                             ->grid(3) // Tampilkan dalam 2 kolom
@@ -483,6 +466,30 @@ TMO Status		: {$this->record->approval}
                             })
                             ->requiresConfirmation() // Menambahkan konfirmasi sebelum eksekusi
                             ->color('danger')
+                            ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('id')->contains(1)),
+
+                        Infolists\Components\Actions\Action::make('add_note')
+                            ->label('Add Note')
+                            ->form([
+                                Forms\Components\Textarea::make('approval_details')
+                                    ->label('Note')
+                                    ->autofocus()
+                                    ->required(),
+                            ])
+                            ->icon('phosphor-note-pencil-duotone') // Ganti dengan icon yang diinginkan
+                            ->action(function (TmoData $record, array $data) {
+
+                                $record->approval_details = $data['approval_details'];
+                                $record->save();
+
+                                Notification::make()
+                                    ->title('TMO Updated')
+                                    ->success()
+                                    ->body("The TMO data has been successfully updated")
+                                    ->send();
+                            })
+                            ->requiresConfirmation() // Menambahkan konfirmasi sebelum eksekusi
+                            ->color('gray')
                             ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('id')->contains(1)),
 
                         Infolists\Components\Actions\Action::make('Approve')
