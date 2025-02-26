@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\EditProfile;
+use App\Filament\Pages\Auth\Login;
 use App\Filament\Resources\MahagaResource\Pages\Auth\Register;
 use App\Filament\Resources\MahagaResource\Widgets\TmoDataChart;
 use Filament\Enums\ThemeMode;
@@ -33,13 +34,14 @@ class MahagaPanelProvider extends PanelProvider
             ->default()
             ->id('mahaga')
             ->path('mahaga')
-            ->login()
+            ->login(Login::class)
             ->registration(Register::class)
             ->profile(EditProfile::class)
             ->colors([
                 'primary' => '#80b918',
                 'secondary' => '#6b7280'
             ])
+            ->spa()
             ->font('Inter')
             ->sidebarWidth('15em')
             ->sidebarCollapsibleOnDesktop()
