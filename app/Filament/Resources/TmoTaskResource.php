@@ -28,7 +28,7 @@ class TmoTaskResource extends Resource
     protected static ?string $modelLabel = 'TMO Task';
 
     protected static ?string $navigationIcon = 'phosphor-clipboard-text-duotone';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {

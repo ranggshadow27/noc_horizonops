@@ -26,7 +26,7 @@ class TMODeviceChangeResource extends Resource
     protected static bool $hasTitleCaseModelLabel = false;
     protected static ?string $pluralModelLabel = 'TMO Device Change';
     protected static ?string $modelLabel = 'TMO Device Change';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 3;
 
 
     public static function form(Form $form): Form

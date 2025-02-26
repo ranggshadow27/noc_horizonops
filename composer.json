@@ -9,6 +9,7 @@
         "bezhansalleh/filament-shield": "^3.3",
         "codeat3/blade-phosphor-icons": "^2.2",
         "filament/filament": "v3.2.130",
+        "filament/notifications": "^3.2",
         "flowframe/laravel-trend": "^0.1.5",
         "guzzlehttp/guzzle": "^7.2",
         "joshembling/image-optimizer": "v1.3",

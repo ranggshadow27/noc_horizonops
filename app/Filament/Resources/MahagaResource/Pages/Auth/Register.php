@@ -22,6 +22,7 @@ class Register extends BaseRegister
                     ->schema([
                         $this->getNameFormComponent(),
                         $this->getPhoneFormComponent(),
+                        $this->getUsernameFormComponent(),
                         $this->getEmailFormComponent(),
                         $this->getPasswordFormComponent(),
                         $this->getPasswordConfirmationFormComponent(),
@@ -42,13 +43,22 @@ class Register extends BaseRegister
     protected function getNameFormComponent(): Component
     {
         return TextInput::make('name')
-            // ->label(__('filament-panels::pages/auth/register.form.name.label'))
             ->label("Your Name")
             ->required()
             ->live(true) // Memungkinkan auto-update di field lain
             ->afterStateUpdated(
                 function ($state, callable $set) {
-                    $set('email', Str::slug($state, '.') . '@mahaga-pratama.co.id');
+                    // Ambil hanya dua kata pertama dari input
+                    $words = explode(' ', trim($state));
+                    $firstTwoWords = array_slice($words, 0, 2);
+
+                    // Gabungkan dengan titik, buat slug, dan tambahkan domain email
+                    $formatName = Str::slug(implode(' ', $firstTwoWords), '.');
+
+                    // Set nilai email dan format nama jadi kapital di awal kata
+                    $set('email', $formatName . '@mahaga-pratama.co.id');
+                    $set('username', $formatName);
+
                     $set('name', ucwords(strtolower($state)));
                 }
             )
@@ -62,6 +72,17 @@ class Register extends BaseRegister
             // ->label(__('filament-panels::pages/auth/register.form.email.label'))
             ->email()
             ->label("Email Address")
+            // ->suffix('@mahaga-pratama.co.id')
+            ->required()
+            ->maxLength(255)
+            ->unique($this->getUserModel());
+    }
+
+    protected function getUsernameFormComponent(): Component
+    {
+        return TextInput::make('username')
+            // ->label(__('filament-panels::pages/auth/register.form.email.label'))
+            ->label("Username")
             // ->suffix('@mahaga-pratama.co.id')
             ->required()
             ->maxLength(255)

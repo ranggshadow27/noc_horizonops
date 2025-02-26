@@ -10,10 +10,12 @@ use App\Models\TmoData;
 use App\Models\TmoDeviceChange;
 use App\Models\TmoHomebase;
 use App\Models\TmoProblem;
+use App\Models\User;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists;
+use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
@@ -653,6 +655,7 @@ class TMODataResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(static::getEloquentQuery()->orderByDesc('created_at'))
             ->columns([
                 Tables\Columns\TextColumn::make('tmo_id')->label('TMO ID')
                     ->sortable()
@@ -784,8 +787,31 @@ class TMODataResource extends Resource
                             $record->approval_details = $data['approval_details'];
                             $record->save();
 
+                            $user = User::where('name', $record->engineer_name)->first();
+                            $currentUser = auth()->user()->name;
+
                             Notification::make()
-                                ->title('TMO Updated')
+                                ->title($record->tmo_id . ' Updated')
+                                ->info()
+                                ->body(
+                                    "{$record->site_id} - {$record->site_name}<br><br>
+                                    <strong>Note from {$currentUser} :</strong><br>
+                                    {$data['approval_details']}<br>
+                                    "
+                                )
+                                ->actions([
+                                    Action::make('progress')
+                                        ->link()
+                                        ->markAsRead()
+                                        ->label('Update TMO')
+                                        ->icon('phosphor-hand-withdraw-duotone')
+                                        ->url(route('filament.mahaga.resources.t-m-o-datas.edit', $record->tmo_id), true)
+                                        ->openUrlInNewTab(false) // Redirect ke halaman edit
+                                ])
+                                ->sendToDatabase($user);
+
+                            Notification::make()
+                                ->title('TMO Update')
                                 ->success()
                                 ->body("The TMO data has been successfully updated")
                                 ->send();
@@ -816,6 +842,28 @@ class TMODataResource extends Resource
                             $record->approval_by = auth()->id();
                             $record->update();
 
+                            $user = User::where('name', $record->engineer_name)->first();
+                            $currentUser = auth()->user()->name;
+
+                            Notification::make()
+                                ->title($record->tmo_id . ' Approved')
+                                ->success()
+                                ->body(
+                                    "{$record->site_id} - {$record->site_name}<br><br>
+                                    Kode Lapor : <strong>{$data['cboss_tmo_code']}</strong><br>
+                                    Approved by: <strong>{$currentUser}</strong>"
+                                )
+                                ->actions([
+                                    Action::make('view')
+                                        ->link()
+                                        ->markAsRead()
+                                        ->label('View TMO')
+                                        ->icon('phosphor-hand-withdraw-duotone')
+                                        ->url(route('filament.mahaga.resources.t-m-o-datas.view', $record->tmo_id), true)
+                                        ->openUrlInNewTab(false) // Redirect ke halaman edit
+                                ])
+                                ->sendToDatabase($user);
+
                             Notification::make()
                                 ->title('TMO Approved')
                                 ->success()
@@ -840,8 +888,31 @@ class TMODataResource extends Resource
                             $record->approval_details = $data['approval_details'];
                             $record->save();
 
+                            $user = User::where('name', $record->engineer_name)->first();
+                            $currentUser = auth()->user()->name;
+
                             Notification::make()
-                                ->title('TMO Updated')
+                                ->title($record->tmo_id . ' Rejected')
+                                ->danger()
+                                ->body(
+                                    "{$record->site_id} - {$record->site_name}<br><br>
+                                    <strong>Reason :</strong><br>
+                                    {$data['approval_details']}<br>
+                                    Rejected by: <strong>{$currentUser}</strong>"
+                                )
+                                ->actions([
+                                    Action::make('view')
+                                        ->link()
+                                        ->markAsRead()
+                                        ->label('View TMO')
+                                        ->icon('phosphor-hand-withdraw-duotone')
+                                        ->url(route('filament.mahaga.resources.t-m-o-datas.view', $record->tmo_id), true)
+                                        ->openUrlInNewTab(false) // Redirect ke halaman edit
+                                ])
+                                ->sendToDatabase($user);
+
+                            Notification::make()
+                                ->title('TMO Rejected')
                                 ->success()
                                 ->body("The TMO data has been successfully rejected")
                                 ->send();
@@ -880,6 +951,9 @@ class TMODataResource extends Resource
                     return $query->where('engineer_name', auth()->user()->name);
                 }
             })
+            ->emptyStateHeading('No Assigned TMO yet')
+            ->emptyStateDescription('Once you have been assign your first TMO, it will appear here.')
+            ->emptyStateIcon('phosphor-hand-withdraw-duotone')
         ;
     }
 

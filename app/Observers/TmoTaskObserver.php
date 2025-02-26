@@ -4,6 +4,9 @@ namespace App\Observers;
 
 use App\Models\TmoData;
 use App\Models\TmoTask;
+use App\Models\User;
+use Filament\Notifications\Actions\Action;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 
 class TmoTaskObserver
@@ -11,9 +14,35 @@ class TmoTaskObserver
     /**
      * Handle the TmoTask "created" event.
      */
-    public function created(TmoTask $tmoTask): void
+    public function created(TmoTask $task): void
     {
-        //
+        $engineer = User::where('name', $task->engineer)->first();
+        $currentUser = auth()->user()->name;
+
+        Notification::make()
+            ->title('New TMO : ' . $task->tmo_id)
+            ->warning()
+            ->body(
+                "{$task->site_id} - {$task->site_name}<br><br>
+                SPMK : <strong>{$task->spmk_number}</strong>
+                Assign by : <strong>{$currentUser}</strong>"
+            )
+            ->actions([
+                Action::make('progress')
+                    ->link()
+                    ->markAsRead()
+                    ->label('Progress Task')
+                    ->icon('phosphor-hand-withdraw-duotone')
+                    ->url(route('filament.mahaga.resources.t-m-o-datas.edit', $task->tmo_id), true)
+                    ->openUrlInNewTab(false) // Redirect ke halaman edit
+            ])
+            ->sendToDatabase($engineer);
+
+        Notification::make()
+            ->title('Task Assign')
+            ->success()
+            ->body("The Task has been successfully assign")
+            ->send();
     }
 
     public function creating(TmoTask $task)
@@ -56,7 +85,7 @@ class TmoTaskObserver
 
     public function deleting(TmoTask $tmoTask)
     {
-       //
+        //
     }
 
     /**

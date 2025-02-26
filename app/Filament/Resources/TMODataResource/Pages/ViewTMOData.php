@@ -4,6 +4,7 @@ namespace App\Filament\Resources\TMODataResource\Pages;
 
 use App\Filament\Resources\TMODataResource;
 use App\Models\TmoData;
+use App\Models\User;
 use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
@@ -11,6 +12,7 @@ use Filament\Infolists\Infolist;
 use Filament\Infolists;
 use Filament\Forms;
 use Filament\Infolists\Components\Actions\Action;
+use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
@@ -373,7 +375,6 @@ TMO Status		: {$this->record->approval}
 
                                 Infolists\Components\ImageEntry::make('device_img')
                                     ->label('Image')
-
                             ])
                             ->label('')
                             ->grid(3) // Tampilkan dalam 2 kolom
@@ -458,6 +459,29 @@ TMO Status		: {$this->record->approval}
                                 $record->approval_details = $data['approval_details'];
                                 $record->save();
 
+                                $user = User::where('name', $record->engineer_name)->first();
+                                $currentUser = auth()->user()->name;
+
+                                Notification::make()
+                                    ->title($record->tmo_id . ' Rejected')
+                                    ->danger()
+                                    ->body(
+                                        "{$record->site_id} - {$record->site_name}<br><br>
+                                    <strong>Reason :</strong><br>
+                                    {$data['approval_details']}<br>
+                                    Rejected by: <strong>{$currentUser}</strong>"
+                                    )
+                                    ->actions([
+                                        NotificationAction::make('view')
+
+                                            ->markAsRead()
+                                            ->label('View TMO')
+                                            ->icon('phosphor-hand-withdraw-duotone')
+                                            ->url(route('filament.mahaga.resources.t-m-o-datas.view', $record->tmo_id), true)
+                                            ->openUrlInNewTab(false) // Redirect ke halaman edit
+                                    ])
+                                    ->sendToDatabase($user);
+
                                 Notification::make()
                                     ->title('TMO Updated')
                                     ->success()
@@ -481,6 +505,28 @@ TMO Status		: {$this->record->approval}
 
                                 $record->approval_details = $data['approval_details'];
                                 $record->save();
+
+                                $user = User::where('name', $record->engineer_name)->first();
+                                $currentUser = auth()->user()->name;
+
+                                Notification::make()
+                                    ->title($record->tmo_id . ' Updated')
+                                    ->info()
+                                    ->body(
+                                        "{$record->site_id} - {$record->site_name}<br><br>
+                                    <strong>Update with Note :</strong><br>
+                                    {$data['approval_details']}<br>
+                                    Update by: <strong>{$currentUser}</strong>"
+                                    )
+                                    ->actions([
+                                        NotificationAction::make('progress')
+                                            ->markAsRead()
+                                            ->label('Update TMO')
+                                            ->icon('phosphor-hand-withdraw-duotone')
+                                            ->url(route('filament.mahaga.resources.t-m-o-datas.edit', $record->tmo_id), true)
+                                            ->openUrlInNewTab(false) // Redirect ke halaman edit
+                                    ])
+                                    ->sendToDatabase($user);
 
                                 Notification::make()
                                     ->title('TMO Updated')
@@ -514,6 +560,28 @@ TMO Status		: {$this->record->approval}
                                 $record->approval = "Approved";
                                 $record->approval_by = auth()->id();
                                 $record->update();
+
+                                $user = User::where('name', $record->engineer_name)->first();
+                                $currentUser = auth()->user()->name;
+
+                                Notification::make()
+                                    ->title($record->tmo_id . ' Approved')
+                                    ->success()
+                                    ->body(
+                                        "{$record->site_id} - {$record->site_name}<br><br>
+                                    Kode Lapor : <strong>{$data['cboss_tmo_code']}</strong><br>
+                                    Approved by: <strong>{$currentUser}</strong>"
+                                    )
+                                    ->actions([
+                                        Action::make('view')
+
+                                            ->markAsRead()
+                                            ->label('View TMO')
+                                            ->icon('phosphor-hand-withdraw-duotone')
+                                            ->url(route('filament.mahaga.resources.t-m-o-datas.view', $record->tmo_id), true)
+                                            ->openUrlInNewTab(false) // Redirect ke halaman edit
+                                    ])
+                                    ->sendToDatabase($user);
 
                                 Notification::make()
                                     ->title('TMO Approved')

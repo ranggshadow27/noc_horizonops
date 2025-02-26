@@ -8,9 +8,11 @@ use Illuminate\Support\Carbon;
 use Flowframe\Trend\TrendValue;
 use Filament\Forms\Components\DatePicker;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
 class TmoDataFilterChart extends ApexChartWidget
 {
+    use HasWidgetShield;
     /**
      * Chart Id
      *

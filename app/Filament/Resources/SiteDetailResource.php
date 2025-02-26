@@ -152,8 +152,16 @@ class SiteDetailResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('site_name')
                     ->label('Site Name')
-                    ->sortable()
-                    ->words(5)
+                    ->limit(40)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        return $state;
+                    })
                     ->searchable(),
                 Tables\Columns\TextColumn::make('province')
                     ->label('Province')

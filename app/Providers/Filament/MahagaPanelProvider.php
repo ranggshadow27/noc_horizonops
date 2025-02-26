@@ -80,6 +80,7 @@ class MahagaPanelProvider extends PanelProvider
                 Authenticate::class,
             ])->plugins([
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
-            ]);
+            ])
+            ->databaseNotifications();
     }
 }

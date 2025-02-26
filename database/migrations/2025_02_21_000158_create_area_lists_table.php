@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Schema::create('area_list', function (Blueprint $table) {
-        //     $table->string('province')->primary(); // ID pakai nama provinsi
-        //     $table->string('area'); // Nama Area, misalnya "Sumatera", "Jawa", dll.
-        //     $table->timestamps();
-        // });
+        Schema::create('area_list', function (Blueprint $table) {
+            $table->string('province')->primary(); // ID pakai nama provinsi
+            $table->string('area'); // Nama Area, misalnya "Sumatera", "Jawa", dll.
+            $table->timestamps();
+        });
 
         Schema::table('tmo_data', function (Blueprint $table) {
             $table->string('site_province')->nullable()->change(); // Pastikan kolom bisa menampung FK

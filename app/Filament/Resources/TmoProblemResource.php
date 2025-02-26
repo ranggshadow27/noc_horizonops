@@ -25,7 +25,7 @@ class TmoProblemResource extends Resource
     protected static bool $hasTitleCaseModelLabel = false;
     protected static ?string $pluralModelLabel = 'Problem List';
     protected static ?string $modelLabel = 'Problem List';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 5;
 
     public static function form(Form $form): Form
     {

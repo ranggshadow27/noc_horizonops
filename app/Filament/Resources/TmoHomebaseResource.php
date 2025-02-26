@@ -25,7 +25,7 @@ class TmoHomebaseResource extends Resource
     protected static bool $hasTitleCaseModelLabel = false;
     protected static ?string $pluralModelLabel = 'Homebases';
     protected static ?string $modelLabel = 'Homebase';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form
     {
