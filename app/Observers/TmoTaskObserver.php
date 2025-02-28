@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\TmoData;
+use App\Models\TmoImage;
 use App\Models\TmoTask;
 use App\Models\User;
 use Filament\Notifications\Actions\Action;
@@ -59,7 +60,12 @@ class TmoTaskObserver
             'site_latitude' => $task->latitude,
             'site_longitude' => $task->longitude,
             'spmk_number' => $task->spmk_number,
+            'is_device_change' => NULL,
             'created_by' => Auth::id(),
+        ]);
+
+        $tmoImage = TmoImage::create([
+            'tmo_id' => $tmoData->tmo_id,
         ]);
 
         // Ambil tmo_id yang baru dibuat dan set ke task

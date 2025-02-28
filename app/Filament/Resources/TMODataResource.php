@@ -397,7 +397,7 @@ class TMODataResource extends Resource
                     ->schema([
                         Forms\Components\FileUpload::make('transceiver_img')
                             ->label('Transceiver')
-                            ->directory('tmo-images/transceiver')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/transceiver")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -407,7 +407,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('feedhorn_img')
                             ->label('Feedhorn')
-                            ->directory('tmo-images/feedhorn')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/feedhorn")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -417,7 +417,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('antenna_img')
                             ->label('Dish Antenna')
-                            ->directory('tmo-images/antenna')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/antenna")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -429,7 +429,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('stabillizer_img')
                             ->label('Stabillizer')
-                            ->directory('tmo-images/stabillizer')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/stabillizer")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -439,7 +439,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('rack_img')
                             ->label('Rack Indoor')
-                            ->directory('tmo-images/rack')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/rack")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -449,7 +449,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('modem_img')
                             ->label('Modem')
-                            ->directory('tmo-images/modem')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/modem")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -459,7 +459,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('router_img')
                             ->label('Router')
-                            ->directory('tmo-images/router')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/router")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -469,7 +469,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('ap1_img')
                             ->label('Access Point 1')
-                            ->directory('tmo-images/ap1')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/ap1")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -479,7 +479,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('ap2_img')
                             ->label('Access Point 2')
-                            ->directory('tmo-images/ap2')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/ap2")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -489,7 +489,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('modem_summary_img')
                             ->label('Modem Summary')
-                            ->directory('tmo-images/modem_summary')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/modem_summary")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -499,7 +499,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('pingtest_img')
                             ->label('Ping Test')
-                            ->directory('tmo-images/pingtest')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/pingtest")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -509,7 +509,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('speedtest_img')
                             ->label('Speedtest')
-                            ->directory('tmo-images/speedtest')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/speedtest")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -519,7 +519,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('cm_ba_img')
                             ->label('BA Corrective Maintenance')
-                            ->directory('tmo-images/cm_ba')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/cm_ba")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -528,7 +528,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('pm_ba_img')
                             ->label('BA Preventive Maintenance')
-                            ->directory('tmo-images/pm_ba')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/pm_ba")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -537,7 +537,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('signplace_img')
                             ->label('Sign')
-                            ->directory('tmo-images/signplace')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/signplace")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -547,7 +547,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('stabillizer_voltage_img')
                             ->label('Stabillizer Voltage')
-                            ->directory('tmo-images/stabillizer_voltage')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/stabillizer_voltage")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
@@ -557,7 +557,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\FileUpload::make('power_source_voltage_img')
                             ->label('Power Source Voltage')
-                            ->directory('tmo-images/power_source_voltage')
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/power_source_voltage")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
