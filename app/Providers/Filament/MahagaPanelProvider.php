@@ -34,9 +34,9 @@ class MahagaPanelProvider extends PanelProvider
             ->default()
             ->id('mahaga')
             ->path('mahaga')
-            ->login()
-            ->registration()
-            ->profile()
+            ->login(Login::class)
+            ->registration(Register::class)
+            ->profile(EditProfile::class)
             ->colors([
                 'primary' => '#80b918',
                 'secondary' => '#6b7280'
