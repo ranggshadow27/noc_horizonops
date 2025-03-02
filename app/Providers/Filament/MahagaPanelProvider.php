@@ -2,10 +2,9 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\Auth\EditProfile;
-use App\Filament\Pages\Auth\Login;
+use App\Filament\Resources\MahagaResource\Pages\Auth\Login;
 use App\Filament\Resources\MahagaResource\Pages\Auth\Register;
-use App\Filament\Resources\MahagaResource\Widgets\TmoDataChart;
+use App\Filament\Resources\MahagaResource\Pages\Auth\EditProfile;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Pages\Auth;
+namespace App\Filament\Resources\MahagaResource\Pages\Auth;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
