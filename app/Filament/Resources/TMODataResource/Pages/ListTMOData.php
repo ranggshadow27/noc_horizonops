@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\TMODataResource\Pages;
 
 use App\Filament\Resources\TMODataResource;
+use App\Filament\Resources\TMODataResource\Widgets\TMODataOverview;
 use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
@@ -15,6 +16,13 @@ use Illuminate\Database\Eloquent\Builder;
 class ListTMOData extends ListRecords
 {
     protected static string $resource = TMODataResource::class;
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            TMODataOverview::class
+        ];
+    }
 
     protected function getHeaderActions(): array
     {
@@ -123,7 +131,11 @@ class ListTMOData extends ListRecords
                                     ),
                             ])
                             ->modifyQueryUsing(function (Builder $query) {
-                                if (auth()->user()->roles->pluck('id')->contains(2)) {
+                                if (auth()->user()->roles->pluck('id')->contains(4)) {
+                                    return $query->where('created_by', auth()->id());
+                                }
+
+                                if (auth()->user()->roles->pluck('id')->some(fn($id) => $id > 4)) {
                                     return $query->where('engineer_name', auth()->user()->name);
                                 }
                             })
@@ -141,6 +153,9 @@ class ListTMOData extends ListRecords
                             ->withColumns([
                                 Column::make('tmo_id')
                                     ->heading('TMO ID'),
+
+                                Column::make('spmk_number')
+                                    ->heading('No. SPMK'),
 
                                 Column::make('cboss_tmo_code')
                                     ->heading('CBOSS TMO'),
@@ -185,9 +200,17 @@ class ListTMOData extends ListRecords
 
                                 Column::make('problem_json')
                                     ->heading('Site Problems'),
+
                                 Column::make('action_json')
                                     ->heading('Engineer Actions'),
+
                                 Column::make('updated_at'),
+
+                                Column::make('creator.name')
+                                    ->heading('Creator'),
+
+                                Column::make('approver.name')
+                                    ->heading('Approver'),
 
                                 Column::make('tmoDetail.transceiver_sn')
                                     ->heading('Transceiver SN'),
@@ -232,10 +255,16 @@ class ListTMOData extends ListRecords
                                     ),
                             ])
                             ->modifyQueryUsing(function (Builder $query) {
-                                if (auth()->user()->roles->pluck('id')->contains(2)) {
-                                    return $query->where('engineer_name', auth()->user()->name);
-                                } else {
+                                if (auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4)) {
                                     return $query;
+                                }
+
+                                if (auth()->user()->roles->pluck('id')->contains(4)) {
+                                    return $query->where('created_by', auth()->id());
+                                }
+
+                                if (auth()->user()->roles->pluck('id')->some(fn($id) => $id > 4)) {
+                                    return $query->where('engineer_name', auth()->user()->name);
                                 }
                             })
                     ]),

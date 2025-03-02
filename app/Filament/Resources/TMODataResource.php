@@ -3,22 +3,18 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TMODataResource\Pages;
-use App\Filament\Resources\TMODataResource\RelationManagers;
 use App\Models\AreaList;
 use App\Models\SiteDetail;
 use App\Models\TmoData;
-use App\Models\TmoDeviceChange;
 use App\Models\TmoHomebase;
 use App\Models\TmoProblem;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Infolists;
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -46,7 +42,13 @@ class TMODataResource extends Resource
 
         $data = static::getModel()::where('approval', 'Pending')->count();
 
-        if (auth()->user()->roles->pluck('id')->contains(2)) {
+        if (auth()->user()->roles->pluck('id')->contains(4)) {
+            $data = TmoData::where('created_by', auth()->id())
+                ->where('approval', 'Pending')
+                ->count();
+        }
+
+        if (auth()->user()->roles->pluck('id')->some(fn($id) => $id > 4)) {
             $data = TmoData::where('engineer_name', auth()->user()->name)
                 ->where('approval', 'Pending')
                 ->count();
@@ -87,13 +89,20 @@ class TMODataResource extends Resource
                                     $set('site_address', $site->address);
                                     $set('site_latitude', $site->latitude);
                                     $set('site_longitude', $site->longitude);
+                                    $set('coordinate', "{$site->latitude} / " . "{$site->longitude}");
                                 }
                             })
-                            ->required()->columnSpan(2),
+                            // ->disabled()->dehydrated(true)
+                            ->required()->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('site_name')
-                            ->label('Site Name')
-                            ->hidden(),
+                        Forms\Components\Hidden::make('site_name')
+                            ->label('Site Name'),
+
+                        Forms\Components\Hidden::make('site_latitude')
+                            ->label('Longitude'),
+
+                        Forms\Components\Hidden::make('site_longitude')
+                            ->label('Latitude'),
 
                         Forms\Components\TextInput::make('site_province')
                             ->label('Site Province')
@@ -101,20 +110,17 @@ class TMODataResource extends Resource
                             ->maxLength(255)
                             ->disabled()->dehydrated(true),
 
-                        Forms\Components\TextInput::make('site_address')
+                        Forms\Components\TextInput::make('coordinate')
+                            ->label('Coordinate (Lat/Long)')
+                            ->formatStateUsing(fn($record) => "{$record->site_latitude} / " . "{$record->site_longitude}")
+                            ->maxLength(50)
+                            ->disabled(),
+
+                        Forms\Components\Textarea::make('site_address')
                             ->label('Site Address')
+                            ->autosize()
                             ->required()
-                            ->disabled()->dehydrated(true),
-
-                        Forms\Components\TextInput::make('site_latitude')
-                            ->label('Latitude')
-                            ->maxLength(25)
-                            ->disabled()->dehydrated(true),
-
-                        Forms\Components\TextInput::make('site_longitude')
-                            ->label('Longitude')
-                            ->maxLength(25)
-                            ->disabled()->dehydrated(true),
+                            ->disabled()->dehydrated(true)->columnSpanFull(),
 
                     ])->collapsible()->persistCollapsed()->columns(2),
 
@@ -122,15 +128,19 @@ class TMODataResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('engineer_name')
                             ->label('Technician Name')
-                            ->required(),
-
-                        Forms\Components\TextInput::make('pic_name')
-                            ->label('PIC Name')
+                            ->disabled()
+                            ->dehydrated(false)
                             ->required(),
 
                         PhoneInput::make('engineer_number')
                             ->label('Technician Number')
+                            ->disabled()
+                            ->dehydrated(false)
                             ->onlyCountries(['id'])
+                            ->required(),
+
+                        Forms\Components\TextInput::make('pic_name')
+                            ->label('PIC Name')
                             ->required(),
 
                         PhoneInput::make('pic_number')
@@ -145,6 +155,7 @@ class TMODataResource extends Resource
                         Forms\Components\Grid::make('2')->schema([
                             Forms\Components\TextInput::make('spmk_number')
                                 ->label('No. SPMK')
+                                ->disabled()->dehydrated(true)
                                 ->required(),
 
                             Forms\Components\Select::make('tmo_type')
@@ -320,6 +331,7 @@ class TMODataResource extends Resource
 
                         Forms\Components\TextInput::make('transceiver_sn')
                             ->label('Transceiver Serial Number')
+                            // ->default(fn($record) => Device::where('site_id', $record->site_id))
                             ->required(),
 
                         Forms\Components\TextInput::make('feedhorn_sn')
@@ -339,7 +351,6 @@ class TMODataResource extends Resource
                             ->options([
                                 'Hughes HT2010' => 'Hughes HT2010',
                                 'Hughes HT2300' => 'Hughes HT2300',
-
                             ])
                             ->searchable()
                             ->required(),
@@ -570,6 +581,8 @@ class TMODataResource extends Resource
 
                 Forms\Components\Section::make('Device Replacement')
                     ->schema([
+                        // Forms\Components\TextInput::make('tmo_id'),
+
                         Forms\Components\ToggleButtons::make('is_device_change')
                             ->boolean()
                             ->label("Change Device")
@@ -614,7 +627,7 @@ class TMODataResource extends Resource
                                     ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                                     ->image()->optimize('jpg')
                                     ->openable()->downloadable()
-                                    ->directory('device-images') // Folder penyimpanan
+                                    ->directory(fn($get) => 'device-change/' . ($get('../../tmo_id') ?? 'default'))
                                     ->nullable()
                             ])
                             // ->columns(2) // Tampilkan dalam 2 kolom
@@ -630,6 +643,15 @@ class TMODataResource extends Resource
                             ->deletable(false)
                     ])->columns(1)
             ]);
+    }
+
+    public static function mutateFormDataBeforeCreate(array $data): array
+    {
+        if (isset($data['tmo_id'])) {
+            $data['device_img'] = 'device-change/' . $data['tmo_id'];
+        }
+
+        return $data;
     }
 
     protected function saved($record): void
@@ -675,7 +697,7 @@ class TMODataResource extends Resource
                     ->copyable(),
 
                 Tables\Columns\TextColumn::make('site_name')->label('Site Name')
-                    ->limit(30)
+                    ->limit(35)
                     ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
                         $state = $column->getState();
 
@@ -686,6 +708,20 @@ class TMODataResource extends Resource
                         return $state;
                     })
                     ->searchable(),
+
+                Tables\Columns\TextColumn::make('site_province')->label('Province')
+                    ->searchable()
+                    ->sortable()
+                    ->limit(15)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        return $state;
+                    }),
 
                 Tables\Columns\TextColumn::make('tmo_type')->label('TMO Type')
                     ->sortable()
@@ -728,23 +764,35 @@ class TMODataResource extends Resource
                     ),
 
                 Tables\Columns\TextColumn::make('cboss_tmo_code')
-                    ->label('TMO Notes')
+                    ->label('TMO Note')
                     ->searchable()
                     ->placeholder(
-                        fn(TmoData $record) => $record->tmo_start_date || $record->pic_name ?
-                            "Waiting for Approval" :
-                            "Data not Complete"
+                        fn(TmoData $record) =>
+                        $record->tmo_end_date || $record->pic_name ||
+                        $record->action_json || $record->problem_json ?
+                            "Waiting Approval" :
+                            "Data Unfinished"
                     ),
 
-                Tables\Columns\TextColumn::make('tmo_start_date')
-                    ->label('TMO Date')
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('TMO Created Date')
                     ->date('d M Y H:i')
                     ->toggleable()
                     ->toggledHiddenByDefault(true)
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('creator.name')
-                    ->label('Created By')
+                    ->label('Assign By')
+                    ->limit(15)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        return $state;
+                    })
                     ->placeholder("Unidentified")
                     ->sortable(),
             ])
@@ -755,7 +803,17 @@ class TMODataResource extends Resource
 
                 Tables\Filters\SelectFilter::make('site_province')
                     ->label("Province")
-                    ->options(fn() => TmoData::query()->pluck('site_province', 'site_province'))
+                    ->options(
+                        function () {
+                            if (auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4)) {
+                                return TmoData::query()
+                                    ->where('created_by', auth()->id())
+                                    ->pluck('site_province', 'site_province');
+                            }
+
+                            return TmoData::query()->pluck('site_province', 'site_province');
+                        }
+                    )
                     ->searchable(),
 
                 Tables\Filters\SelectFilter::make('area')
@@ -767,6 +825,26 @@ class TMODataResource extends Resource
                         }
                         return $query->whereHas('area', fn($query) => $query->where('area', $state['value']));
                     }),
+
+                Tables\Filters\Filter::make('tmo_created')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')->label("Created Date"),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            );
+                    })->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['created_from'] ?? null) {
+                            $indicators['created_from'] = 'TMO Created Date : ' . Carbon::parse($data['created_from'])->toFormattedDateString();
+                        }
+
+                        return $indicators;
+                    })
             ])
             ->actions([
                 // Tables\Actions\EditAction::make(),
@@ -811,12 +889,15 @@ class TMODataResource extends Resource
                                 ->sendToDatabase($user);
 
                             Notification::make()
-                                ->title('TMO Update')
+                                ->title('TMO Updated')
                                 ->success()
                                 ->body("The TMO data has been successfully updated")
                                 ->send();
                         })
                         ->requiresConfirmation() // Menambahkan konfirmasi sebelum eksekusi
+                        ->modalHeading("Add TMO Note")
+                        ->modalDescription("Please fill the column below first to sent your note")
+                        ->modalSubmitActionLabel("Sent Note")
                         ->color('gray'),
 
                     Tables\Actions\Action::make('approve')
@@ -828,9 +909,9 @@ class TMODataResource extends Resource
                                 ->required(),
 
                             Forms\Components\Textarea::make('approval_details')
-                                ->label('Approval Details'),
+                                ->label('Approval Note'),
                         ])
-                        ->label('Approve')
+                        ->label('Approvez')
                         ->icon('phosphor-check-circle-duotone') // Ganti dengan icon yang diinginkan
                         ->action(function (TmoData $record, array $data) {
                             // Update kolom approval menjadi 'Approved'
@@ -842,27 +923,35 @@ class TMODataResource extends Resource
                             $record->approval_by = auth()->id();
                             $record->update();
 
-                            $user = User::where('name', $record->engineer_name)->first();
+                            $engineer = User::where('name', $record->engineer_name)->first();
+                            $creator = User::where('id', $record->created_by)->first();
+
+                            $users = [$engineer, $creator];
+
                             $currentUser = auth()->user()->name;
 
-                            Notification::make()
-                                ->title($record->tmo_id . ' Approved')
-                                ->success()
-                                ->body(
-                                    "{$record->site_id} - {$record->site_name}<br><br>
-                                    Kode Lapor : <strong>{$data['cboss_tmo_code']}</strong><br>
-                                    Approved by: <strong>{$currentUser}</strong>"
-                                )
-                                ->actions([
-                                    Action::make('view')
-                                        ->link()
-                                        ->markAsRead()
-                                        ->label('View TMO')
-                                        ->icon('phosphor-hand-withdraw-duotone')
-                                        ->url(route('filament.mahaga.resources.t-m-o-datas.view', $record->tmo_id), true)
-                                        ->openUrlInNewTab(false) // Redirect ke halaman edit
-                                ])
-                                ->sendToDatabase($user);
+                            foreach ($users as $user) {
+                                if ($user) {
+                                    Notification::make()
+                                        ->title($record->tmo_id . ' Approved')
+                                        ->success()
+                                        ->body(
+                                            "{$record->site_id} - {$record->site_name}<br><br>
+                                        Kode Lapor : <strong>{$data['cboss_tmo_code']}</strong><br>
+                                        Approved by: <strong>{$currentUser}</strong>"
+                                        )
+                                        ->actions([
+                                            Action::make('view')
+                                                ->link()
+                                                ->markAsRead()
+                                                ->label('View TMO')
+                                                ->icon('phosphor-hand-withdraw-duotone')
+                                                ->url(route('filament.mahaga.resources.t-m-o-datas.view', $record->tmo_id), true)
+                                                ->openUrlInNewTab(false) // Redirect ke halaman edit
+                                        ])
+                                        ->sendToDatabase($user);
+                                }
+                            }
 
                             Notification::make()
                                 ->title('TMO Approved')
@@ -870,6 +959,9 @@ class TMODataResource extends Resource
                                 ->body("The TMO data has been successfully approved")
                                 ->send();
                         })
+                        ->modalHeading("TMO Approval")
+                        ->modalDescription("Are you sure want to Approve this TMO?")
+                        ->modalSubmitActionLabel("Approve TMO")
                         ->requiresConfirmation() // Menambahkan konfirmasi sebelum eksekusi
                         ->color('primary'),
 
@@ -888,28 +980,36 @@ class TMODataResource extends Resource
                             $record->approval_details = $data['approval_details'];
                             $record->save();
 
-                            $user = User::where('name', $record->engineer_name)->first();
+                            $engineer = User::where('name', $record->engineer_name)->first();
+                            $creator = User::where('id', $record->created_by)->first();
+
+                            $users = [$engineer, $creator];
+
                             $currentUser = auth()->user()->name;
 
-                            Notification::make()
-                                ->title($record->tmo_id . ' Rejected')
-                                ->danger()
-                                ->body(
-                                    "{$record->site_id} - {$record->site_name}<br><br>
+                            foreach ($users as $user) {
+                                if ($user) {
+                                    Notification::make()
+                                        ->title($record->tmo_id . ' Rejected')
+                                        ->danger()
+                                        ->body(
+                                            "{$record->site_id} - {$record->site_name}<br><br>
                                     <strong>Reason :</strong><br>
                                     {$data['approval_details']}<br>
                                     Rejected by: <strong>{$currentUser}</strong>"
-                                )
-                                ->actions([
-                                    Action::make('view')
-                                        ->link()
-                                        ->markAsRead()
-                                        ->label('View TMO')
-                                        ->icon('phosphor-hand-withdraw-duotone')
-                                        ->url(route('filament.mahaga.resources.t-m-o-datas.view', $record->tmo_id), true)
-                                        ->openUrlInNewTab(false) // Redirect ke halaman edit
-                                ])
-                                ->sendToDatabase($user);
+                                        )
+                                        ->actions([
+                                            Action::make('view')
+                                                ->link()
+                                                ->markAsRead()
+                                                ->label('View TMO')
+                                                ->icon('phosphor-hand-withdraw-duotone')
+                                                ->url(route('filament.mahaga.resources.t-m-o-datas.view', $record->tmo_id), true)
+                                                ->openUrlInNewTab(false) // Redirect ke halaman edit
+                                        ])
+                                        ->sendToDatabase($user);
+                                }
+                            }
 
                             Notification::make()
                                 ->title('TMO Rejected')
@@ -918,12 +1018,15 @@ class TMODataResource extends Resource
                                 ->send();
                         })
                         ->requiresConfirmation() // Menambahkan konfirmasi sebelum eksekusi
+                        ->modalHeading("TMO Rejection")
+                        ->modalDescription("Are you sure want to reject this TMO?")
+                        ->modalSubmitActionLabel("Reject")
                         ->color('danger')
                 ])
                     ->icon('phosphor-dots-three-vertical-duotone')->dropdown()
                     ->visible(
                         fn(TmoData $record) =>
-                        $record->approval === 'Pending' && auth()->user()->roles->pluck('id')->contains(1)
+                        $record->approval === 'Pending' && auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4)
                     )
                 // ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->hasRole('super_admin'))
             ])
@@ -933,21 +1036,25 @@ class TMODataResource extends Resource
                 ]),
             ])
             ->heading('TMO RTGS')
-            ->description('Manage all Mahaga TMO RTGS Maintenance - Network Operation Center.')
+            ->description('Mahaga TMO RTGS Maintenance - Network Operation Center.')
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->label("Add New TMO")
                     ->icon('phosphor-plus-circle-duotone')
-                    ->visible(fn() => auth()->user()->roles->pluck('id')->contains(1) ? true : false),
+                    ->visible(fn() => auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4) ? true : false),
             ])
             ->recordUrl(
                 fn(TmoData $record): string =>
-                $record->update_at || $record->pic_name || $record->pic_name ?
+                $record->update_at || $record->pic_name || $record->pic_name || auth()->user()->roles->pluck('id')->some(fn($id) => $id < 5) ?
                     Pages\ViewTMOData::getUrl([$record->tmo_id]) :
                     Pages\EditTMOData::getUrl([$record->tmo_id]),
             )
             ->modifyQueryUsing(function (Builder $query) {
-                if (auth()->user()->roles->pluck('id')->contains(2)) {
+                if (auth()->user()->roles->pluck('id')->contains(4)) {
+                    return $query->where('created_by', auth()->id());
+                }
+
+                if (auth()->user()->roles->pluck('id')->some(fn($id) => $id > 4)) {
                     return $query->where('engineer_name', auth()->user()->name);
                 }
             })
@@ -955,6 +1062,11 @@ class TMODataResource extends Resource
             ->emptyStateDescription('Once you have been assign your first TMO, it will appear here.')
             ->emptyStateIcon('phosphor-hand-withdraw-duotone')
         ;
+    }
+
+    protected function getTablePollingInterval(): ?string
+    {
+        return '60s';
     }
 
     public static function getRelations(): array
@@ -976,7 +1088,7 @@ class TMODataResource extends Resource
 
     public static function canCreate(): bool
     {
-        return auth()->user()->roles->pluck('id')->contains(2) ? false : true;
+        return auth()->user()->roles->pluck('id')->some(fn($id) => $id > 3) ? false : true;
     }
 
     public static function canEdit(Model $record): bool

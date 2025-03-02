@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\TmoDeviceChange;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class TMODeviceChangePolicy
+class TmoDeviceChangePolicy
 {
     use HandlesAuthorization;
 
@@ -21,7 +21,7 @@ class TMODeviceChangePolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, TmoDeviceChange $TmoDeviceChange): bool
+    public function view(User $user, TmoDeviceChange $tmoDeviceChange): bool
     {
         return $user->can('view_t::m::o::device::change');
     }
@@ -37,7 +37,7 @@ class TMODeviceChangePolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, TmoDeviceChange $TmoDeviceChange): bool
+    public function update(User $user, TmoDeviceChange $tmoDeviceChange): bool
     {
         return $user->can('update_t::m::o::device::change');
     }
@@ -45,7 +45,7 @@ class TMODeviceChangePolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, TmoDeviceChange $TmoDeviceChange): bool
+    public function delete(User $user, TmoDeviceChange $tmoDeviceChange): bool
     {
         return $user->can('delete_t::m::o::device::change');
     }
@@ -61,7 +61,7 @@ class TMODeviceChangePolicy
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, TmoDeviceChange $TmoDeviceChange): bool
+    public function forceDelete(User $user, TmoDeviceChange $tmoDeviceChange): bool
     {
         return $user->can('force_delete_t::m::o::device::change');
     }
@@ -77,7 +77,7 @@ class TMODeviceChangePolicy
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, TmoDeviceChange $TmoDeviceChange): bool
+    public function restore(User $user, TmoDeviceChange $tmoDeviceChange): bool
     {
         return $user->can('restore_t::m::o::device::change');
     }
@@ -93,7 +93,7 @@ class TMODeviceChangePolicy
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, TmoDeviceChange $TmoDeviceChange): bool
+    public function replicate(User $user, TmoDeviceChange $tmoDeviceChange): bool
     {
         return $user->can('replicate_t::m::o::device::change');
     }

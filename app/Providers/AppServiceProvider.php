@@ -11,6 +11,8 @@ use App\Observers\TMODeviceChangeObserver;
 use App\Observers\TMOImageObserver;
 use App\Observers\TmoTaskObserver;
 use Illuminate\Support\ServiceProvider;
+use Filament\Facades\Filament;
+use Filament\Navigation\NavigationGroup;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,5 +33,16 @@ class AppServiceProvider extends ServiceProvider
         TmoData::observe(TMODataObserver::class);
         TmoImage::observe(TMOImageObserver::class);
         TmoTask::observe(TmoTaskObserver::class);
+
+        Filament::serving(function () {
+            Filament::registerNavigationGroups([
+                NavigationGroup::make()
+                     ->label('Site Management')
+                     ->icon('phosphor-stack-duotone'),
+                NavigationGroup::make()
+                    ->label('TMO')
+                    ->icon('phosphor-hand-withdraw-duotone'),
+            ]);
+        });
     }
 }

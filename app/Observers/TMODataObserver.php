@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\TmoData;
+use App\Models\TmoTask;
 use Illuminate\Support\Facades\Storage;
 
 class TMODataObserver
@@ -34,6 +35,19 @@ class TMODataObserver
             // Hapus data di tabel tmo_device_change
             $tmoData->deviceChanges()->delete();
         }
+
+        TmoTask::where('tmo_id', $tmoData->tmo_id)->update([
+            'site_id'  => $tmoData->site_id,
+            'site_name' => $tmoData->site_name,
+            'province' => $tmoData->site_province,
+            'address'  => $tmoData->site_address,
+            // 'engineer_name' => $tmoData->engineer,
+            // 'engineer_number' => $tmoData->engineer_number,
+            'tmo_type' => $tmoData->tmo_type,
+            'latitude' => $tmoData->site_latitude,
+            'longitude' => $tmoData->site_longitude,
+            // 'spmk_number' => $tmoData->spmk_number,
+        ]);
     }
 
     /**
@@ -50,6 +64,11 @@ class TMODataObserver
     public function restored(TmoData $tMOData): void
     {
         //
+    }
+
+    public function saved(TmoData $tMOData): void
+    {
+
     }
 
     /**

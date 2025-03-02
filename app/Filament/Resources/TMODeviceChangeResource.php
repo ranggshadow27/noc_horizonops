@@ -13,6 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Carbon;
 
 class TMODeviceChangeResource extends Resource
 {
@@ -52,7 +53,7 @@ class TMODeviceChangeResource extends Resource
                 Forms\Components\FileUpload::make('device_img')
                     ->label("Image")
                     ->openable()->downloadable()
-                    ->directory('device-images'),
+                    ->directory(fn($record) => "device-changes-img/{$record->tmo_id}"),
 
                 Forms\Components\TextInput::make('homebase')
                     ->label("Homebase")
@@ -68,6 +69,7 @@ class TMODeviceChangeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(static::getEloquentQuery()->orderByDesc('created_at'))
             ->columns([
                 Tables\Columns\TextColumn::make('tmo_device_change_id')
                     ->label("Device Change ID")
@@ -100,7 +102,7 @@ class TMODeviceChangeResource extends Resource
                     ->height(60)
                     ->width(60),
 
-                    Tables\Columns\TextColumn::make('tmo_id')
+                Tables\Columns\TextColumn::make('tmo_id')
                     ->label("TMO ID")
                     ->description(fn(TmoDeviceChange $record): string => $record->tmoData->approval)
                     ->searchable(),
@@ -126,6 +128,26 @@ class TMODeviceChangeResource extends Resource
                         }
                         return $query->whereHas('tmoData', fn($query) => $query->where('approval', $state['value']));
                     }),
+
+                Tables\Filters\Filter::make('tmo_created')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')->label("Created Date"),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            );
+                    })->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['created_from'] ?? null) {
+                            $indicators['created_from'] = 'Created Date : ' . Carbon::parse($data['created_from'])->toFormattedDateString();
+                        }
+
+                        return $indicators;
+                    })
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -139,6 +161,11 @@ class TMODeviceChangeResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    protected function getTablePollingInterval(): ?string
+    {
+        return '60s';
     }
 
     public static function getPages(): array

@@ -64,7 +64,7 @@ class TmoTaskObserver
             'created_by' => Auth::id(),
         ]);
 
-        $tmoImage = TmoImage::create([
+        TmoImage::create([
             'tmo_id' => $tmoData->tmo_id,
         ]);
 
@@ -78,7 +78,18 @@ class TmoTaskObserver
      */
     public function updated(TmoTask $tmoTask): void
     {
-        //
+        TmoData::where('tmo_id', $tmoTask->tmo_id)->update([
+            'site_id'  => $tmoTask->site_id,
+            'site_name' => $tmoTask->site_name,
+            'site_province' => $tmoTask->province,
+            'site_address'  => $tmoTask->address,
+            'engineer_name' => $tmoTask->engineer,
+            'engineer_number' => $tmoTask->engineer_number,
+            'tmo_type' => $tmoTask->tmo_type,
+            'site_latitude' => $tmoTask->latitude,
+            'site_longitude' => $tmoTask->longitude,
+            'spmk_number' => $tmoTask->spmk_number,
+        ]);
     }
 
     /**

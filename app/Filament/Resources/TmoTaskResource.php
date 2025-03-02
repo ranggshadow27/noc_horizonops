@@ -15,6 +15,7 @@ use Filament\Tables\Table;
 use Ysfkaya\FilamentPhoneInput\Forms\PhoneInput;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Carbon;
 
 class TmoTaskResource extends Resource
 {
@@ -107,7 +108,7 @@ class TmoTaskResource extends Resource
                             ->options(User::whereHas(
                                 'roles',
                                 function ($query) {
-                                    $query->where('name', 'panel_user');
+                                    $query->where('name', 'field_technician');
                                 }
                             )->pluck('name', 'name'))
                             ->afterStateUpdated(function (callable $set, $state) {
@@ -134,6 +135,8 @@ class TmoTaskResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(static::getEloquentQuery()->orderByDesc('created_at'))
+            ->searchPlaceholder('Search (SPMK, Site ID, Site Name, Province)')
             ->columns([
                 Tables\Columns\TextColumn::make('tmo_id')
                     ->label("TMO ID")
@@ -154,6 +157,22 @@ class TmoTaskResource extends Resource
                 Tables\Columns\TextColumn::make('province')
                     ->label("Province")
                     ->searchable(),
+
+                Tables\Columns\TextColumn::make('tmoData.approval')
+                    ->label('Status')
+                    ->sortable()
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'Pending' => 'warning',
+                        'Rejected' => 'danger',
+                        'Approved' => 'success',
+                    })
+                    ->tooltip(
+                        fn($record) => $record->approval === "Pending" ?
+                            null :
+                            "At " . Carbon::parse($record->updated_at)->translatedFormat('d M Y H:i') .
+                            ($record->approver?->name ?  " by " .  $record->approver?->name : "")
+                    ),
 
                 Tables\Columns\TextColumn::make('engineer')
                     ->label("Technician")
@@ -185,7 +204,7 @@ class TmoTaskResource extends Resource
                 ]),
             ])
             ->modifyQueryUsing(function (Builder $query) {
-                if (auth()->user()->roles->pluck('id')->contains(2)) {
+                if (auth()->user()->roles->pluck('id')->some(fn($id) => $id > 3)) {
                     return $query->where('created_by', auth()->id());
                 }
             })
@@ -196,7 +215,15 @@ class TmoTaskResource extends Resource
                     ->label("Add TMO Task")
                     ->icon('phosphor-plus-circle-duotone'),
                 // ->visible(fn() => auth()->user()->roles->pluck('name')->contains('super_admin') ? true : false),
-            ]);
+            ])
+            ->emptyStateHeading('No Task TMO yet')
+            ->emptyStateDescription('Once you have been create your first Task, it will appear here.')
+            ->emptyStateIcon('phosphor-clipboard-text-duotone');
+    }
+
+    protected function getTablePollingInterval(): ?string
+    {
+        return '60s';
     }
 
     public static function getRelations(): array

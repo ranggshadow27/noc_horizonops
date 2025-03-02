@@ -48,7 +48,7 @@ class MahagaPanelProvider extends PanelProvider
             ->favicon(asset('images/favicon.png'))
             ->brandLogo(asset('images/logo.png'))
             ->defaultThemeMode(ThemeMode::Dark)
-            // ->topNavigation()
+            ->topNavigation()
             ->collapsedSidebarWidth('15em')
             ->maxContentWidth(MaxWidth::Full)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
