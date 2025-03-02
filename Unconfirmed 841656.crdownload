@@ -7009,11 +7009,11 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (28,	'2025_02_17_123603_add_tmo_type_to_tmo_task_and_spmk_number_to_tmo_data',	18),
 (29,	'2025_02_17_205247_add_engineer_number_to_users_table',	19),
 (30,	'2025_02_18_214239_add_created_by_and_approval_by_to_tmo_task_and_tmo_data',	20),
-(31,	'2025_01_25_172821_create_permission_tables',	21),
 (32,	'2025_02_21_000157_create_area_lists_table',	22),
 (33,	'2025_02_21_000158_create_area_lists_table',	23),
 (34,	'2025_02_17_205249_add_engineer_number_to_users_table',	24),
-(35,	'2025_02_26_165426_create_notifications_table',	25);
+(35,	'2025_02_26_165426_create_notifications_table',	25),
+(37,	'2025_01_25_172821_create_permission_tables',	26);
 
 DROP TABLE IF EXISTS `model_has_permissions`;
 CREATE TABLE `model_has_permissions` (
@@ -7038,13 +7038,12 @@ CREATE TABLE `model_has_roles` (
 
 INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
 (1,	'App\\Models\\User',	1),
-(2,	'App\\Models\\User',	2),
-(5,	'App\\Models\\User',	3),
-(2,	'App\\Models\\User',	5),
-(2,	'App\\Models\\User',	6),
-(2,	'App\\Models\\User',	7),
-(6,	'App\\Models\\User',	8),
-(6,	'App\\Models\\User',	9);
+(5,	'App\\Models\\User',	9),
+(4,	'App\\Models\\User',	10),
+(3,	'App\\Models\\User',	11),
+(5,	'App\\Models\\User',	12),
+(4,	'App\\Models\\User',	13),
+(5,	'App\\Models\\User',	14);
 
 DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE `notifications` (
@@ -7061,12 +7060,19 @@ CREATE TABLE `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `notifications` (`id`, `type`, `notifiable_type`, `notifiable_id`, `data`, `read_at`, `created_at`, `updated_at`) VALUES
+('1352f209-5153-43da-88ba-3ab15c8e3b1b',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	14,	'{\"actions\":[{\"name\":\"view\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"View TMO\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"https:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250302-001\",\"view\":\"filament-actions::link-action\"}],\"body\":\"AO16491369985316N - KANTOR DESA RENDUWAWO<br><br>\\n                                        Kode Lapor : <strong>83JFON36<\\/strong><br>\\n                                        Approved by: <strong>NOC Team<\\/strong>\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"TMO-MHG-250302-001 Approved\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	NULL,	'2025-03-02 09:56:54',	'2025-03-02 09:56:54'),
+('1e119cd4-e707-4d8e-adc7-f2bcb0194d89',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	14,	'{\"actions\":[{\"name\":\"progress\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"Update TMO\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"https:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250302-001\\/edit\",\"view\":\"filament-actions::link-action\"}],\"body\":\"AO16491369985316N - KANTOR DESA RENDUWAWO<br><br>\\n                                    <strong>Note from NOC Team :<\\/strong><br>\\n                                    Otw Approve Om<br>\\n                                    \",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-information-circle\",\"iconColor\":\"info\",\"status\":\"info\",\"title\":\"TMO-MHG-250302-001 Updated\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	'2025-03-02 09:44:10',	'2025-03-02 09:42:46',	'2025-03-02 09:44:10'),
 ('3140e027-d75b-4431-9e20-d151a003a1dd',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	7,	'{\"actions\":[{\"name\":\"progress\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"Update TMO\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"http:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250226-005\\/edit\",\"view\":\"filament-actions::link-action\"}],\"body\":\"AM17236103961109N - KANTOR KEPALA DESA LEUBANG HULU<br><br>\\n                                    <strong>Note from NOC Mahaga :<\\/strong><br>\\n                                    murung wajah pribumi \\nterdengar wajah hewan bernyanyi<br>\\n                                    \",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-information-circle\",\"iconColor\":\"info\",\"status\":\"info\",\"title\":\"TMO-MHG-250226-005 Updated\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	NULL,	'2025-02-26 16:22:09',	'2025-02-26 16:22:09'),
 ('44ac876f-8767-4bf2-9afc-746eb0fdc789',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	7,	'{\"actions\":[{\"name\":\"progress\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"Update TMO\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"http:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250226-003\\/edit\",\"view\":\"filament-actions::button-action\"}],\"body\":\"AO16224642065311N - SDM TAWAKIHU<br><br>\\n                                    <strong>Update with Note :<\\/strong><br>\\n                                    dashboardcuy<br>\\n                                    Update by: <strong>NOC Mahaga<\\/strong>\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-information-circle\",\"iconColor\":\"info\",\"status\":\"info\",\"title\":\"TMO-MHG-250226-003 Updated\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	'2025-02-26 16:14:07',	'2025-02-26 16:12:39',	'2025-02-26 16:14:07'),
+('5383b230-34f8-41d8-9383-7a7f94cbaa4c',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	14,	'{\"actions\":[{\"name\":\"progress\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"Progress Task\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"https:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250302-001\\/edit\",\"view\":\"filament-actions::link-action\"}],\"body\":\"AO16491369985316N - KANTOR DESA RENDUWAWO<br><br>\\n                SPMK : <strong>SPMK-NA1-MHG\\/NOM\\/2502\\/CKR-01305<\\/strong>\\n                Assign by : <strong>Nico Robin<\\/strong>\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-exclamation-circle\",\"iconColor\":\"warning\",\"status\":\"warning\",\"title\":\"New TMO : TMO-MHG-250302-001\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	'2025-03-02 08:41:21',	'2025-03-02 08:39:27',	'2025-03-02 08:41:21'),
 ('5c5ae0ce-9526-46a0-907f-d09b9c92ef6c',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	3,	'{\"actions\":[{\"name\":\"progress\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"Progress Task\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"http:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250301-001\\/edit\",\"view\":\"filament-actions::link-action\"}],\"body\":\"AM16566487147207N - SDN 2 INPRES OKUMEL<br><br>\\n                SPMK : <strong>SPMK-NA1-MHG\\/NOM\\/2502\\/CKR-01248<\\/strong>\\n                Assign by : <strong>NOC Mahaga<\\/strong>\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-exclamation-circle\",\"iconColor\":\"warning\",\"status\":\"warning\",\"title\":\"New TMO : TMO-MHG-250301-001\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	NULL,	'2025-03-01 12:02:17',	'2025-03-01 12:02:17'),
+('63fb9df8-e4cd-496c-bc9a-4e9d6cb91008',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	13,	'{\"actions\":[{\"name\":\"view\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"View TMO\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"https:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250302-001\",\"view\":\"filament-actions::link-action\"}],\"body\":\"AO16491369985316N - KANTOR DESA RENDUWAWO<br><br>\\n                                        Kode Lapor : <strong>83JFON36<\\/strong><br>\\n                                        Approved by: <strong>NOC Team<\\/strong>\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"TMO-MHG-250302-001 Approved\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	NULL,	'2025-03-02 09:56:54',	'2025-03-02 09:56:54'),
 ('9cdc6582-1117-46aa-b5d3-e602210b989d',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	7,	'{\"actions\":[{\"name\":\"progress\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"Update TMO\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"http:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250226-004\\/edit\",\"view\":\"filament-actions::link-action\"}],\"body\":\"AM16493097481410N - KANTOR DESA NIPAH SENDANU<br><br>\\n                                    <strong>Note from NOC Mahaga :<\\/strong><br>\\n                                    Pak Coba di Perbaiki Kembali Yooo\\n* Tambahkan SN Modem\\n* XCek SN Router<br>\\n                                    \",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-information-circle\",\"iconColor\":\"info\",\"status\":\"info\",\"title\":\"TMO-MHG-250226-004 Updated\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	NULL,	'2025-02-26 16:33:13',	'2025-02-26 16:33:13'),
+('b0173fed-4923-458d-8ef3-464f1e6f6f39',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	12,	'{\"actions\":[{\"name\":\"progress\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"Progress Task\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"https:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250301-001\\/edit\",\"view\":\"filament-actions::link-action\"}],\"body\":\"AM16224619331104N - KANTOR DESA ARUL KUMER BARAT<br><br>\\n                SPMK : <strong>SPMK-NA1-MHG\\/NOM\\/2502\\/CKR-01248<\\/strong>\\n                Assign by : <strong>NSO Team<\\/strong>\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-exclamation-circle\",\"iconColor\":\"warning\",\"status\":\"warning\",\"title\":\"New TMO : TMO-MHG-250301-001\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	NULL,	'2025-03-01 16:04:22',	'2025-03-01 16:04:22'),
+('c8016496-c255-4343-a521-2d2db91e244c',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	9,	'{\"actions\":[{\"name\":\"progress\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"Progress Task\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"https:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250301-003\\/edit\",\"view\":\"filament-actions::link-action\"}],\"body\":\"AM16902768046401N - MADRASAH TSANAWIYAH ANWARUS SALAF<br><br>\\n                SPMK : <strong>SPMK-NA1-MHG\\/NOM\\/2502\\/CKR-01299<\\/strong>\\n                Assign by : <strong>Nico Robin<\\/strong>\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-exclamation-circle\",\"iconColor\":\"warning\",\"status\":\"warning\",\"title\":\"New TMO : TMO-MHG-250301-003\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	NULL,	'2025-03-01 16:25:39',	'2025-03-01 16:25:39'),
 ('ebe30238-b6b2-4cc9-b735-7dc9273dd5eb',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	7,	'{\"actions\":[{\"name\":\"Progress Task\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"Progress task\",\"shouldClose\":false,\"shouldMarkAsRead\":false,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":true,\"size\":\"sm\",\"tooltip\":null,\"url\":\"http:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250226-005\\/edit\",\"view\":\"filament-actions::button-action\"}],\"body\":\"AM17236103961109N - KANTOR KEPALA DESA LEUBANG HULU<br><br>\\n                SPMK : <strong>SPMK-NA1-MHG\\/NOM\\/2502\\/CKR-01146<\\/strong>\\n                Assign by : <strong>NOC Mahaga<\\/strong>\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-exclamation-circle\",\"iconColor\":\"warning\",\"status\":\"warning\",\"title\":\"New TMO : TMO-MHG-250226-005\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	NULL,	'2025-02-26 15:52:58',	'2025-02-26 15:52:58'),
-('fa09e0f1-8a5c-4aab-aa2c-55170dd8c149',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	3,	'{\"actions\":[{\"name\":\"view\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"View TMO\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"http:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250204-001\",\"view\":\"filament-actions::button-action\"}],\"body\":\"AM16926928316107N - POS KOUT JAGOI BABANG (LAMA)<br><br>\\n                                    Kode Lapor : <strong>XFG918<\\/strong><br>\\n                                    Approved by: <strong>NOC Mahaga<\\/strong>\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"TMO-MHG-250204-001 Approved\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	'2025-02-26 16:07:15',	'2025-02-26 16:06:18',	'2025-02-26 16:07:15');
+('fa09e0f1-8a5c-4aab-aa2c-55170dd8c149',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	3,	'{\"actions\":[{\"name\":\"view\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"View TMO\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"http:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250204-001\",\"view\":\"filament-actions::button-action\"}],\"body\":\"AM16926928316107N - POS KOUT JAGOI BABANG (LAMA)<br><br>\\n                                    Kode Lapor : <strong>XFG918<\\/strong><br>\\n                                    Approved by: <strong>NOC Mahaga<\\/strong>\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-check-circle\",\"iconColor\":\"success\",\"status\":\"success\",\"title\":\"TMO-MHG-250204-001 Approved\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	'2025-02-26 16:07:15',	'2025-02-26 16:06:18',	'2025-02-26 16:07:15'),
+('fc15241d-d116-47b7-b97a-009ab07f6119',	'Filament\\Notifications\\DatabaseNotification',	'App\\Models\\User',	14,	'{\"actions\":[{\"name\":\"progress\",\"color\":null,\"event\":null,\"eventData\":[],\"dispatchDirection\":false,\"dispatchToComponent\":null,\"extraAttributes\":[],\"icon\":\"phosphor-hand-withdraw-duotone\",\"iconPosition\":\"before\",\"iconSize\":null,\"isOutlined\":false,\"isDisabled\":false,\"label\":\"Progress Task\",\"shouldClose\":false,\"shouldMarkAsRead\":true,\"shouldMarkAsUnread\":false,\"shouldOpenUrlInNewTab\":false,\"size\":\"sm\",\"tooltip\":null,\"url\":\"https:\\/\\/noc-horizonops.test\\/mahaga\\/t-m-o-datas\\/TMO-MHG-250301-002\\/edit\",\"view\":\"filament-actions::link-action\"}],\"body\":\"AM16577166891218N - RAUDHATUL ATHFAL (RA) AMAL SARIAH<br><br>\\n                SPMK : <strong>SPMK-NA1-MHG\\/NOM\\/2502\\/CKR-00937<\\/strong>\\n                Assign by : <strong>NSO Team<\\/strong>\",\"color\":null,\"duration\":\"persistent\",\"icon\":\"heroicon-o-exclamation-circle\",\"iconColor\":\"warning\",\"status\":\"warning\",\"title\":\"New TMO : TMO-MHG-250301-002\",\"view\":\"filament-notifications::notification\",\"viewData\":[],\"format\":\"filament\"}',	NULL,	'2025-03-01 16:24:24',	'2025-03-01 16:24:24');
 
 DROP TABLE IF EXISTS `password_reset_tokens`;
 CREATE TABLE `password_reset_tokens` (
@@ -7089,102 +7095,110 @@ CREATE TABLE `permissions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
-(1,	'view_role',	'web',	'2025-02-19 00:41:17',	'2025-02-19 00:41:17'),
-(2,	'view_any_role',	'web',	'2025-02-19 00:41:17',	'2025-02-19 00:41:17'),
-(3,	'create_role',	'web',	'2025-02-19 00:41:17',	'2025-02-19 00:41:17'),
-(4,	'update_role',	'web',	'2025-02-19 00:41:17',	'2025-02-19 00:41:17'),
-(5,	'delete_role',	'web',	'2025-02-19 00:41:17',	'2025-02-19 00:41:17'),
-(6,	'delete_any_role',	'web',	'2025-02-19 00:41:17',	'2025-02-19 00:41:17'),
-(7,	'view_site::detail',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(8,	'view_any_site::detail',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(9,	'create_site::detail',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(10,	'update_site::detail',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(11,	'restore_site::detail',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(12,	'restore_any_site::detail',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(13,	'replicate_site::detail',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(14,	'reorder_site::detail',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(15,	'delete_site::detail',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(16,	'delete_any_site::detail',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(17,	'force_delete_site::detail',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(18,	'force_delete_any_site::detail',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(19,	'view_site::monitor',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(20,	'view_any_site::monitor',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(21,	'create_site::monitor',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(22,	'update_site::monitor',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(23,	'restore_site::monitor',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(24,	'restore_any_site::monitor',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(25,	'replicate_site::monitor',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(26,	'reorder_site::monitor',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(27,	'delete_site::monitor',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(28,	'delete_any_site::monitor',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(29,	'force_delete_site::monitor',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(30,	'force_delete_any_site::monitor',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(31,	'view_t::m::o::data',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(32,	'view_any_t::m::o::data',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(33,	'create_t::m::o::data',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(34,	'update_t::m::o::data',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(35,	'restore_t::m::o::data',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(36,	'restore_any_t::m::o::data',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(37,	'replicate_t::m::o::data',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(38,	'reorder_t::m::o::data',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(39,	'delete_t::m::o::data',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(40,	'delete_any_t::m::o::data',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(41,	'force_delete_t::m::o::data',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(42,	'force_delete_any_t::m::o::data',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(43,	'view_t::m::o::device::change',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(44,	'view_any_t::m::o::device::change',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(45,	'create_t::m::o::device::change',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(46,	'update_t::m::o::device::change',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(47,	'restore_t::m::o::device::change',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(48,	'restore_any_t::m::o::device::change',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(49,	'replicate_t::m::o::device::change',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(50,	'reorder_t::m::o::device::change',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(51,	'delete_t::m::o::device::change',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(52,	'delete_any_t::m::o::device::change',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(53,	'force_delete_t::m::o::device::change',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(54,	'force_delete_any_t::m::o::device::change',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(55,	'view_tmo::homebase',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(56,	'view_any_tmo::homebase',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(57,	'create_tmo::homebase',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(58,	'update_tmo::homebase',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(59,	'restore_tmo::homebase',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(60,	'restore_any_tmo::homebase',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(61,	'replicate_tmo::homebase',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(62,	'reorder_tmo::homebase',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(63,	'delete_tmo::homebase',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(64,	'delete_any_tmo::homebase',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(65,	'force_delete_tmo::homebase',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(66,	'force_delete_any_tmo::homebase',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(67,	'view_tmo::problem',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(68,	'view_any_tmo::problem',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(69,	'create_tmo::problem',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(70,	'update_tmo::problem',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(71,	'restore_tmo::problem',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(72,	'restore_any_tmo::problem',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(73,	'replicate_tmo::problem',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(74,	'reorder_tmo::problem',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(75,	'delete_tmo::problem',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(76,	'delete_any_tmo::problem',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(77,	'force_delete_tmo::problem',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(78,	'force_delete_any_tmo::problem',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(79,	'view_tmo::task',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(80,	'view_any_tmo::task',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(81,	'create_tmo::task',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(82,	'update_tmo::task',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(83,	'restore_tmo::task',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(84,	'restore_any_tmo::task',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(85,	'replicate_tmo::task',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(86,	'reorder_tmo::task',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(87,	'delete_tmo::task',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(88,	'delete_any_tmo::task',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(89,	'force_delete_tmo::task',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(90,	'force_delete_any_tmo::task',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(91,	'view_user',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(92,	'view_any_user',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(93,	'create_user',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(94,	'update_user',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(95,	'delete_user',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37'),
-(96,	'delete_any_user',	'web',	'2025-02-19 00:41:37',	'2025-02-19 00:41:37');
+(1,	'view_role',	'web',	'2025-03-01 15:22:47',	'2025-03-01 15:22:47'),
+(2,	'view_any_role',	'web',	'2025-03-01 15:22:47',	'2025-03-01 15:22:47'),
+(3,	'create_role',	'web',	'2025-03-01 15:22:47',	'2025-03-01 15:22:47'),
+(4,	'update_role',	'web',	'2025-03-01 15:22:47',	'2025-03-01 15:22:47'),
+(5,	'delete_role',	'web',	'2025-03-01 15:22:47',	'2025-03-01 15:22:47'),
+(6,	'delete_any_role',	'web',	'2025-03-01 15:22:47',	'2025-03-01 15:22:47'),
+(7,	'view_site::detail',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(8,	'view_any_site::detail',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(9,	'create_site::detail',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(10,	'update_site::detail',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(11,	'restore_site::detail',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(12,	'restore_any_site::detail',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(13,	'replicate_site::detail',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(14,	'reorder_site::detail',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(15,	'delete_site::detail',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(16,	'delete_any_site::detail',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(17,	'force_delete_site::detail',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(18,	'force_delete_any_site::detail',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(19,	'view_site::monitor',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(20,	'view_any_site::monitor',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(21,	'create_site::monitor',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(22,	'update_site::monitor',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(23,	'restore_site::monitor',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(24,	'restore_any_site::monitor',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(25,	'replicate_site::monitor',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(26,	'reorder_site::monitor',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(27,	'delete_site::monitor',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(28,	'delete_any_site::monitor',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(29,	'force_delete_site::monitor',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(30,	'force_delete_any_site::monitor',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(31,	'view_t::m::o::data',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(32,	'view_any_t::m::o::data',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(33,	'create_t::m::o::data',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(34,	'update_t::m::o::data',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(35,	'restore_t::m::o::data',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(36,	'restore_any_t::m::o::data',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(37,	'replicate_t::m::o::data',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(38,	'reorder_t::m::o::data',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(39,	'delete_t::m::o::data',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(40,	'delete_any_t::m::o::data',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(41,	'force_delete_t::m::o::data',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(42,	'force_delete_any_t::m::o::data',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(43,	'view_t::m::o::device::change',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(44,	'view_any_t::m::o::device::change',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(45,	'create_t::m::o::device::change',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(46,	'update_t::m::o::device::change',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(47,	'restore_t::m::o::device::change',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(48,	'restore_any_t::m::o::device::change',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(49,	'replicate_t::m::o::device::change',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(50,	'reorder_t::m::o::device::change',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(51,	'delete_t::m::o::device::change',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(52,	'delete_any_t::m::o::device::change',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(53,	'force_delete_t::m::o::device::change',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(54,	'force_delete_any_t::m::o::device::change',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(55,	'view_tmo::homebase',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(56,	'view_any_tmo::homebase',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(57,	'create_tmo::homebase',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(58,	'update_tmo::homebase',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(59,	'restore_tmo::homebase',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(60,	'restore_any_tmo::homebase',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(61,	'replicate_tmo::homebase',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(62,	'reorder_tmo::homebase',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(63,	'delete_tmo::homebase',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(64,	'delete_any_tmo::homebase',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(65,	'force_delete_tmo::homebase',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(66,	'force_delete_any_tmo::homebase',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(67,	'view_tmo::problem',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(68,	'view_any_tmo::problem',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(69,	'create_tmo::problem',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(70,	'update_tmo::problem',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(71,	'restore_tmo::problem',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(72,	'restore_any_tmo::problem',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(73,	'replicate_tmo::problem',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(74,	'reorder_tmo::problem',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(75,	'delete_tmo::problem',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(76,	'delete_any_tmo::problem',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(77,	'force_delete_tmo::problem',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(78,	'force_delete_any_tmo::problem',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(79,	'view_tmo::task',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(80,	'view_any_tmo::task',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(81,	'create_tmo::task',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(82,	'update_tmo::task',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(83,	'restore_tmo::task',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(84,	'restore_any_tmo::task',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(85,	'replicate_tmo::task',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(86,	'reorder_tmo::task',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(87,	'delete_tmo::task',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(88,	'delete_any_tmo::task',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(89,	'force_delete_tmo::task',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(90,	'force_delete_any_tmo::task',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(91,	'view_user',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(92,	'view_any_user',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(93,	'create_user',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(94,	'update_user',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(95,	'restore_user',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(96,	'restore_any_user',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(97,	'replicate_user',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(98,	'reorder_user',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(99,	'delete_user',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(100,	'delete_any_user',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(101,	'force_delete_user',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(102,	'force_delete_any_user',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(103,	'widget_TMOAreaChart',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57'),
+(104,	'widget_TmoDataFilterChart',	'web',	'2025-03-01 15:23:57',	'2025-03-01 15:23:57');
 
 DROP TABLE IF EXISTS `personal_access_tokens`;
 CREATE TABLE `personal_access_tokens` (
@@ -7311,43 +7325,16 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (94,	1),
 (95,	1),
 (96,	1),
-(7,	2),
-(8,	2),
-(10,	2),
-(15,	2),
-(19,	2),
-(20,	2),
-(31,	2),
-(32,	2),
-(33,	2),
-(34,	2),
-(39,	2),
-(43,	2),
-(44,	2),
-(45,	2),
-(46,	2),
-(51,	2),
-(55,	2),
-(56,	2),
-(57,	2),
-(58,	2),
-(63,	2),
-(64,	2),
-(67,	2),
-(68,	2),
-(69,	2),
-(70,	2),
-(75,	2),
-(76,	2),
-(79,	2),
-(80,	2),
-(81,	2),
-(82,	2),
-(87,	2),
-(88,	2),
+(97,	1),
+(98,	1),
+(99,	1),
+(100,	1),
+(101,	1),
+(102,	1),
+(103,	1),
+(104,	1),
 (7,	3),
 (8,	3),
-(9,	3),
 (10,	3),
 (19,	3),
 (20,	3),
@@ -7356,10 +7343,8 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (33,	3),
 (34,	3),
 (39,	3),
-(40,	3),
 (43,	3),
 (44,	3),
-(45,	3),
 (46,	3),
 (51,	3),
 (55,	3),
@@ -7383,38 +7368,37 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (31,	4),
 (32,	4),
 (34,	4),
-(39,	4),
 (43,	4),
 (44,	4),
 (46,	4),
-(51,	4),
 (55,	4),
 (56,	4),
 (57,	4),
 (58,	4),
 (63,	4),
-(64,	4),
 (79,	4),
 (80,	4),
 (81,	4),
 (82,	4),
 (87,	4),
 (88,	4),
+(7,	5),
+(8,	5),
 (31,	5),
 (32,	5),
 (34,	5),
 (45,	5),
 (46,	5),
 (51,	5),
-(52,	5),
 (82,	5),
+(7,	6),
+(8,	6),
 (31,	6),
 (32,	6),
 (34,	6),
 (45,	6),
 (46,	6),
 (51,	6),
-(52,	6),
 (82,	6);
 
 DROP TABLE IF EXISTS `roles`;
@@ -7429,12 +7413,12 @@ CREATE TABLE `roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `roles` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
-(1,	'super_admin',	'web',	'2025-02-19 00:41:17',	'2025-02-19 00:41:17'),
-(2,	'team_leader',	'web',	'2025-02-19 00:42:08',	'2025-03-01 14:34:40'),
-(3,	'operation_center',	'web',	'2025-03-01 14:34:43',	'2025-03-01 14:44:17'),
-(4,	'service_operation',	'web',	'2025-03-01 14:35:39',	'2025-03-01 14:35:39'),
-(5,	'field_technician',	'web',	'2025-03-01 14:42:34',	'2025-03-01 14:42:34'),
-(6,	'panel_user',	'web',	'2025-03-01 14:44:22',	'2025-03-01 14:44:22');
+(1,	'super_admin',	'web',	'2025-03-01 15:22:47',	'2025-03-01 15:22:47'),
+(2,	'team_leader',	'web',	'2025-03-01 15:25:06',	'2025-03-01 15:25:06'),
+(3,	'operation_center',	'web',	'2025-03-01 15:26:26',	'2025-03-01 15:26:26'),
+(4,	'service_operation',	'web',	'2025-03-01 15:26:26',	'2025-03-01 15:26:26'),
+(5,	'field_technician',	'web',	'2025-03-01 15:26:26',	'2025-03-01 15:26:26'),
+(6,	'panel_user',	'web',	'2025-03-01 15:26:26',	'2025-03-01 15:26:26');
 
 DROP TABLE IF EXISTS `site_details`;
 CREATE TABLE `site_details` (
@@ -14406,22 +14390,10 @@ CREATE TABLE `tmo_data` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `tmo_data` (`tmo_id`, `site_id`, `site_name`, `site_province`, `site_address`, `site_latitude`, `site_longitude`, `engineer_name`, `engineer_number`, `pic_name`, `pic_number`, `sqf`, `esno`, `power_source`, `power_source_backup`, `fan_rack1`, `fan_rack2`, `grounding`, `ifl_length`, `signal`, `weather`, `tmo_type`, `action_json`, `problem_json`, `engineer_note`, `tmo_start_date`, `tmo_end_date`, `cboss_tmo_code`, `created_at`, `updated_at`, `approval`, `approval_details`, `is_device_change`, `spmk_number`, `created_by`, `approval_by`) VALUES
-('TMO-MHG-250127-001',	'AM16202042586308N',	'PONPES UMMUL QURA AMUNTAI',	'Kalimantan Selatan',	'Desa Bayur Rt 04, Kecamatan Haur Gading, Kabupaten Hulu Sungai Utara\n',	'-2.407291',	'115.246125',	'Kamisato Ayato',	'123124',	'Kamisato Ayaka',	'123124123',	'123',	'112',	'PLN',	'Genset',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Corrective Maintenance',	NULL,	NULL,	NULL,	'2025-01-26 14:48:46',	'2025-01-27 14:48:51',	NULL,	'2025-01-27 07:51:30',	'2025-01-30 06:17:58',	'Rejected',	'Galengkap cuy',	0,	NULL,	NULL,	NULL),
-('TMO-MHG-250127-002',	'AM16577166651218N',	'YAYASAN PENDIDIKAN RAUDHATUL ATHFAL NURUL IKHLAS',	'Sumatera Utara',	'Desa Penggalian Dusun Vi Naga Raya Kecamatan Tebing Syahbandar Kabupaten Serdang Bedagai',	'3.275603',	'99.172343',	'Kamisato Ayato',	'123124',	'Kamisato Ayaka',	'412313123',	'123',	'112',	'PLN',	'PLTA',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Cerah',	'Preventive Maintenance',	NULL,	NULL,	NULL,	'2025-01-27 06:05:01',	'2025-01-27 18:05:10',	NULL,	'2025-01-27 11:08:26',	'2025-02-26 10:28:58',	'Pending',	'Menurutmu berapaa lagi kaukan mencintaiku?',	0,	NULL,	NULL,	NULL),
-('TMO-MHG-250127-003',	'AM16224574777210N',	'SD BK PEANA',	'Sulawesi Tengah',	'Desa Peana Kecamatan Pipikoko Sulawesi Tengah',	'-1.76955',	'119.922357',	'Kamisato Ayato',	'+62123124',	'Kamisato Ayaka',	'+621231513213',	'123',	'112',	'PLN',	'None',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Preventive Maintenance',	'[\"PERGANTIAN PERANGKAT FAIL\", \"REPOINTING \", \"PREVENTIVE MAINTENANCE\"]',	'[\"MODEM HUGHES HT2010\", \"PREVENTIVE MAINTENANCE\", \"MISS POINTING\"]',	'Test notee',	'2025-01-27 17:24:08',	'2025-01-27 20:24:14',	NULL,	'2025-01-27 13:25:29',	'2025-02-26 10:35:54',	'Pending',	'Napsu dulu baru logikah, tinta biru tinggal cerita',	0,	NULL,	NULL,	NULL),
-('TMO-MHG-250127-004',	'AO16224664495307N',	'KANTOR KEPALA DESA KOLIDETUNG',	'Nusa Tenggara Timur',	'Nanga, Kecamatan Lela, Kabupaten Sikka',	'-8.722942',	'122.127645',	'Jose Mariano',	'8123',	'Faustina Yopita Da Onang',	'82',	'112',	'133',	'PLN',	'None',	'Normal',	'Normal',	'Normal',	'25',	'4G',	'Mendung',	'Preventive Maintenance',	NULL,	NULL,	NULL,	'2025-01-27 14:20:34',	'2025-01-27 21:20:42',	'3OM1PFWB',	'2025-01-27 14:30:27',	'2025-01-29 14:37:58',	'Approved',	NULL,	0,	NULL,	NULL,	NULL),
-('TMO-MHG-250203-001',	'AM16568573441201N',	'SMP N 2 SATU ATAP KOLANG',	'Sumatera Utara',	'Desa Sipakpahi, Kec Kolang, Tapanuli Tengah',	'1.90394',	'98.740858',	'Kamisato Ayato',	'+62123124',	'Kamisato Ayaka',	'+6212312412',	'123',	'112',	'PLN',	'Genset',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Corrective Maintenance',	'[\"Pergantian Perangkat Fail\", \"Menyalakan Perangkat\", \"Repointing \"]',	'[\"ADAPTOR MODEM\", \"MISS POINTING\", \"MASALAH BAHAN BAKAR MINYAK\"]',	NULL,	'2025-02-03 11:17:36',	'2025-02-03 23:17:55',	'BMI8N5B2',	'2025-02-03 16:23:03',	'2025-02-18 16:05:03',	'Approved',	NULL,	1,	NULL,	NULL,	1),
-('TMO-MHG-250204-001',	'AM16926928316107N',	'POS KOUT JAGOI BABANG (LAMA)',	'Kalimantan Barat',	'Jl. Paralel Trans Kalimantan, Kec. Jagoi Babang, Kab. Bengkayang, Kalimantan Barat',	'1.510737',	'109.692213',	'Xilonen',	'+6281354678999',	'Kujou Sara',	'+628765433231',	'104',	'122',	'Solar Panel',	'None',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Preventive Maintenance',	NULL,	NULL,	'',	'2025-02-04 11:51:07',	'2025-02-04 15:51:12',	'XFG918',	'2025-02-04 10:56:11',	'2025-02-26 16:06:18',	'Approved',	NULL,	1,	NULL,	NULL,	1),
-('TMO-MHG-250206-001',	'AM16224736717310N',	'KANTOR DESA TAMANGAPA',	'Sulawesi Selatan',	'Balombang Jl. Poros Mks - Pare Desa Tamangapa',	'-4.668308',	'119.573445',	'Muhammad Luthfi Fauzan',	'+6285776155093',	'Yuliana',	'+6281228559693',	'102',	'142',	'PLN',	'None',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Preventive Maintenance',	'[\"PERGANTIAN PERANGKAT FAIL\", \"REINSTALL MODEM\"]',	'[\"MODEM TIDAK TRANSMIT\", \"MODEM HUGHES HT2010\"]',	NULL,	'2025-02-05 05:28:58',	'2025-02-06 07:29:09',	NULL,	'2025-02-06 00:29:55',	'2025-02-11 15:51:32',	'Pending',	NULL,	1,	NULL,	NULL,	NULL),
-('TMO-MHG-250218-001',	'AM16566717727606N',	'SDN KECIL KALUBIBING',	'Sulawesi Barat',	'Budong-Budong Kecamatan Tapoyo Kabupaten Mamuju Tengah Sulawesi Barat\n',	'-2.086803',	'119.236073',	'Xilonen',	'+6281344210300',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Corrective Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-02-18 14:50:43',	'2025-02-18 14:50:43',	'Pending',	NULL,	0,	'NA1-MHG/NOM/2502/CKR-00900',	1,	NULL),
-('TMO-MHG-250218-002',	'AM16224576037210N',	'SMP SATU ATAP NEGERI 19 SIGI',	'Sulawesi Tengah',	'Jl. M. Supubaja Sidondo Ii',	'-1.089198',	'119.890057',	'Kaedahara Kazuha',	'+6289682381239',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Preventive Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-02-18 14:54:29',	'2025-02-18 14:54:29',	'Pending',	NULL,	0,	'SPMK-NA1-MHG/NOM/2502/CKR-00943',	1,	NULL),
-('TMO-MHG-250218-003',	'AM16926927815321N',	'POS PAMTAS AILALA',	'Nusa Tenggara Timur',	'Desa Alas Utara, Kecamatan Koba Lima Timur, Kabupaten Malaka',	'-9.335747',	'125.030134',	'Xilonen',	'+6281344210300',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Corrective Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-02-18 15:20:32',	'2025-02-18 15:20:32',	'Pending',	NULL,	0,	'SPMK-NA1-MHG/NOM/2502/CKR-00955',	1,	NULL),
-('TMO-MHG-250226-001',	'AM16566688027207N',	'SD NEGERI MATA',	'Sulawesi Tengah',	'Sulawesi Tengah. Kabupaten Banggai Kepulauan. Totikum Selatan. Mata',	'-1.351068',	'123.426599',	'Xilonen',	'+6281344210300',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Corrective Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-02-26 15:23:39',	'2025-02-26 15:23:39',	'Pending',	NULL,	0,	'SPMK-NA1-MHG/NOM/2501/CKR-01131',	1,	NULL),
-('TMO-MHG-250226-002',	'AM16199393831225N',	'KANTOR KEPALA DESA BAWOSALO\'O',	'Sumatera Utara',	'Desa Bawosalo\'O, Kecamatan Sirombu, Kabupaten Nias Barat',	'0.964259',	'97.443124',	'Xilonen',	'+6281344210300',	'YUNITA	 ',	'+6285830246394',	'122',	'133',	'PLN',	'None',	'Normal',	'Normal',	'Normal',	'20',	'4G Telkomsel',	'Mendung',	'Corrective Maintenance',	'[\"Preventive Maintenance\"]',	'[\"Preventive Maintenance\"]',	'Problem : VSAT NORMAL\nAction  : \n- MEMBERSIHKAN RACK, MODEM DAN ROUTER\n- PENGENCANGAN BAUT\n- test internet',	'2025-02-28 11:59:24',	'2025-02-28 17:59:35',	NULL,	'2025-02-26 15:27:03',	'2025-03-01 14:18:42',	'Pending',	NULL,	0,	'SPMK-NA1-MHG/NOM/2502/CKR-00996',	1,	NULL),
-('TMO-MHG-250226-003',	'AO16224642065311N',	'SDM TAWAKIHU',	'Nusa Tenggara Timur',	'Laiponda, Kecamatan Katala Hamu Lingu, Kabupaten Sumba Timur, Nusa Tenggara Timur.\n\n',	'-9.862543',	'119.896555',	'Nico Robin',	'+6281344210300',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Corrective Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-02-26 15:43:53',	'2025-02-26 16:12:39',	'Pending',	'dashboardcuy',	0,	'SPMK-NA1-MHG/NOM/2502/CKR-00875',	1,	NULL),
-('TMO-MHG-250226-004',	'AM16493097481410N',	'KANTOR DESA NIPAH SENDANU',	'Riau',	'Jalan Pelita Desa Nipah Sendanu Kecamatan Tebingtinggi Timur',	'0.857975',	'102.98386',	'Nico Robin',	'+6281344210300',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Preventive Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-02-26 15:45:55',	'2025-02-26 16:33:13',	'Pending',	'Pak Coba di Perbaiki Kembali Yooo\n* Tambahkan SN Modem\n* XCek SN Router',	0,	'SPMK-NA1-MHG/NOM/2502/CKR-01096',	1,	NULL),
-('TMO-MHG-250226-005',	'AM17236103961109N',	'KANTOR KEPALA DESA LEUBANG HULU',	'Aceh',	'Leubang Hulu, Kec. Teupah Barat, Kabupaten Simeulue',	'2.450574',	'96.291781',	'Nico Robin',	'+6281344210300',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Preventive Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-02-26 15:52:58',	'2025-02-26 16:22:09',	'Pending',	'murung wajah pribumi \nterdengar wajah hewan bernyanyi',	0,	'SPMK-NA1-MHG/NOM/2502/CKR-01146',	1,	NULL),
-('TMO-MHG-250301-001',	'AM16224619331104N',	'KANTOR DESA ARUL KUMER BARAT',	'Aceh',	'Desa Arul Kumer Barat',	'4.640595',	'96.731377',	'Xilonen',	'+6281344210300',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Corrective Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-03-01 12:02:17',	'2025-03-01 12:03:43',	'Pending',	NULL,	NULL,	'SPMK-NA1-MHG/NOM/2502/CKR-03240',	1,	NULL);
+('TMO-MHG-250301-001',	'AM16224619331104N',	'KANTOR DESA ARUL KUMER BARAT',	'Aceh',	'Desa Arul Kumer Barat',	'4.640595',	'96.731377',	'Xilonen',	'+6289682381239',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Corrective Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-03-01 16:04:22',	'2025-03-01 16:04:22',	'Pending',	NULL,	NULL,	'SPMK-NA1-MHG/NOM/2502/CKR-01248',	10,	NULL),
+('TMO-MHG-250301-002',	'AM16577166891218N',	'RAUDHATUL ATHFAL (RA) AMAL SARIAH',	'Sumatera Utara',	'Dusun I Bogak Besar Kec. Teluk Mengkudu - Serdang Bedagai Provinsi Sumatera Utara',	'3.550172',	'99.157584',	'Kujou Sara',	'+6281344210344',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Corrective Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-03-01 16:24:24',	'2025-03-01 16:24:24',	'Pending',	NULL,	NULL,	'SPMK-NA1-MHG/NOM/2502/CKR-00937',	10,	NULL),
+('TMO-MHG-250301-003',	'AM16902768046401N',	'MADRASAH TSANAWIYAH ANWARUS SALAF',	'Kalimantan Timur',	'Jl. Kupang Desa Sempulang Kec. Tanah Grogot',	'-1.87056',	'116.155309',	'Shenhe',	'+6281382828388',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'Corrective Maintenance',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-03-01 16:25:39',	'2025-03-01 16:25:39',	'Pending',	NULL,	NULL,	'SPMK-NA1-MHG/NOM/2502/CKR-01299',	13,	NULL),
+('TMO-MHG-250302-001',	'AO16491369985316N',	'KANTOR DESA RENDUWAWO',	'Nusa Tenggara Timur',	'Jln Raja - Jawakisa Segho 86472',	'-8.700977',	'121.245',	'Kujou Sara',	'+6281344210344',	'BIBIANA PANGO',	'+6281238100922',	'113',	'136',	'PLN',	'None',	'Normal',	'Normal',	'Normal',	'20',	'4G ',	'Cerah',	'Preventive Maintenance',	'[\"Preventive Maintenance\"]',	'[\"Preventive Maintenance\"]',	'Action   : \n- pemeliharaan perangkat',	'2025-02-28 16:45:49',	'2025-01-28 19:45:57',	'83JFON36',	'2025-03-02 08:39:27',	'2025-03-02 09:56:54',	'Approved',	NULL,	1,	'SPMK-NA1-MHG/NOM/2502/CKR-00513',	13,	11);
 
 DROP TABLE IF EXISTS `tmo_details`;
 CREATE TABLE `tmo_details` (
@@ -14447,13 +14419,7 @@ CREATE TABLE `tmo_details` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `tmo_details` (`tmo_id`, `transceiver_sn`, `feedhorn_sn`, `antenna_sn`, `stabillizer_sn`, `rack_sn`, `modem_sn`, `router_sn`, `ap1_sn`, `ap2_sn`, `transceiver_type`, `modem_type`, `router_type`, `ap1_type`, `ap2_type`, `created_at`, `updated_at`) VALUES
-('TMO-MHG-250127-002',	'C240810883',	'-',	'MT10201012403456',	'MT12301012403456',	'MOF1701012403456',	'CC0015340632AF',	'34605J49F2',	'34601G974D',	'34601G7E44',	'Hughes HB220',	'HT2010',	'Mikrotik RB450x4',	'Grandstream',	'Grandstream',	NULL,	NULL),
-('TMO-MHG-250127-003',	'702230502107',	'K22BA2313714',	'0201012402793',	'-',	'-',	'C60015114289AG',	'HGD09JEJ6E3',	'34601G36C9',	'TIDAK TERJANGKAU',	'Hughes HB220',	'Hughes HT2010',	'Mikrotik RB450',	'Grandstream GWN7630LR',	'Grandstream GWN7630LR',	'2025-01-27 13:25:29',	'2025-01-27 13:28:34'),
-('TMO-MHG-250127-004',	'702311704879',	'L22BA1803072',	'MT10201012402412',	'2403501347',	'2403501347',	'C60015278477',	'HGD09P5F8ZE',	'34601H9613',	'34601H0F0F',	'Hughes HB220',	'Hughes HT2010',	'Mikrotik RB450',	'Grandstream GWN',	'Grandstream GWN',	'2025-01-27 14:30:27',	'2025-01-27 14:30:27'),
-('TMO-MHG-250203-001',	'C240815092',	'180042833',	'MT10201012403431',	'mt12301012403431',	'mof1701012403410',	'CC0015285644AQ',	'34605JA6C5',	'34601G0861',	'34601GB1CC',	'RevGo',	'Hughes HT2300',	'Grandstream GWN',	'Grandstream GWN',	'Grandstream GWN',	'2025-02-03 16:23:03',	'2025-02-03 16:23:03'),
-('TMO-MHG-250204-001',	'702228416880',	'E22BA1006199',	'MT10201012400217',	'MT12301012400217',	'R.0624.01215',	'C60015290568AL',	'HGK09JIPX03',	'34601G0861',	'34504G1F94',	'Hughes HB220',	'Hughes HT2010',	'Mikrotik RB450',	'Grandstream GWN',	'Grandstream GWN',	'2025-02-04 10:56:11',	'2025-02-04 10:56:11'),
-('TMO-MHG-250206-001',	'702231410169',	'L22BA2601948',	'MT10201012402201',	'2403500158',	'MOF1701012402201',	'C6 0015137695 AM',	'HGD09VK8X6Y',	'34601HFF81',	'34601HFF81',	'Hughes HB220',	'Hughes HT2010',	'Mikrotik RB450',	'Grandstream GWN7630LR',	'Grandstream GWN7630LR',	'2025-02-06 00:29:55',	'2025-02-06 00:29:55'),
-('TMO-MHG-250226-002',	'C240814607',	'180042835',	'MT10201012403463',	'MT12301012403463',	'MOF1701012403463',	'CC0015340980AL',	'34605JE14B',	'34601G240F',	'34601G2189',	'RevGo',	'Hughes HT2010',	'Grandstream GWN',	'Grandstream GWN7630LR',	'Grandstream GWN7630LR',	'2025-03-01 11:06:12',	'2025-03-01 11:06:12');
+('TMO-MHG-250302-001',	'702311701560',	'L22BA0600931',	'MT10201012402515',	'MT12301012402515',	'MOF1701012402515',	'C60015039621AC',	'HGD09T5GKAB',	'34601HB48F',	'34601H5770',	'Hughes HB220',	'Hughes HT2010',	'Mikrotik RB450',	'Grandstream GWN7630LR',	'Grandstream GWN7630LR',	'2025-03-02 08:52:15',	'2025-03-02 08:52:15');
 
 DROP TABLE IF EXISTS `tmo_device_change`;
 CREATE TABLE `tmo_device_change` (
@@ -14473,11 +14439,8 @@ CREATE TABLE `tmo_device_change` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `tmo_device_change` (`tmo_device_change_id`, `device_name`, `device_sn`, `device_img`, `tmo_id`, `created_at`, `updated_at`, `homebase_id`) VALUES
-('DVC-MHG-250204-001',	'Transceiver Hughes HB220',	'E22BA1006199',	'device-images/01JK89MXWJ1X2174YZP4Z5DC1P.jpg',	'TMO-MHG-250204-001',	'2025-02-04 10:56:11',	'2025-02-04 10:56:11',	NULL),
-('DVC-MHG-250204-002',	'Mikrotik RB450',	'HGKO9SCC9GV',	'device-images/01JK89MXWM4ZFTANYHK6ZCB79X.jpg',	'TMO-MHG-250204-001',	'2025-02-04 10:56:11',	'2025-02-04 10:56:11',	NULL),
-('DVC-MHG-250207-001',	'Adaptor Modem',	'-',	'device-images/01JKE5MBYPZHN9H1R0FCZ15J96.jpg',	'TMO-MHG-250206-001',	'2025-02-06 17:41:25',	'2025-02-11 13:52:52',	'MHG-HB-002'),
-('DVC-MHG-250207-002',	'POE',	'-',	'device-images/01JKE5MC0X7AFD1WCZX18PDDTJ.jpg',	'TMO-MHG-250206-001',	'2025-02-06 17:41:25',	'2025-02-11 13:52:52',	'MHG-HB-002'),
-('DVC-MHG-250211-001',	'Adaptor Modem',	'-',	NULL,	'TMO-MHG-250203-001',	'2025-02-11 07:10:24',	'2025-02-11 15:46:14',	'MHG-HB-001');
+('DVC-MHG-250302-001',	'POE',	'HGK09VEZV4E',	'device-change/TMO-MHG-250302-001/01JNB3GCR5A2AKKFW1PMRSG0CC.jpg',	'TMO-MHG-250302-001',	'2025-03-02 09:37:58',	'2025-03-02 09:37:58',	'MHG-HB-004'),
+('DVC-MHG-250302-002',	'Modem Hughes HT2010',	'C60015291368AK  ',	'device-change/TMO-MHG-250302-001/01JNB3KJ4J0Z9YQRGATZ02EW7D.jpg',	'TMO-MHG-250302-001',	'2025-03-02 09:39:42',	'2025-03-02 09:39:42',	'MHG-HB-176');
 
 DROP TABLE IF EXISTS `tmo_homebase`;
 CREATE TABLE `tmo_homebase` (
@@ -15028,13 +14991,10 @@ CREATE TABLE `tmo_images` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `tmo_images` (`tmo_id`, `transceiver_img`, `feedhorn_img`, `antenna_img`, `stabillizer_img`, `rack_img`, `modem_img`, `router_img`, `ap1_img`, `ap2_img`, `modem_summary_img`, `pingtest_img`, `speedtest_img`, `cm_ba_img`, `pm_ba_img`, `signplace_img`, `stabillizer_voltage_img`, `power_source_voltage_img`, `created_at`, `updated_at`) VALUES
-('TMO-MHG-250127-003',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-02-11 07:14:47',	'2025-02-11 07:14:47'),
-('TMO-MHG-250127-004',	'tmo-images/transceiver/01JJM7F3MTACWVYQ0JQ78WA8SF.jpg',	'tmo-images/feedhorn/01JJM7F3ZSN3ZWW80WH7WRP5S3.jpg',	'tmo-images/antenna/01JJM2QGS33YGJ6J1AYWBJTAM3.png',	'tmo-images/stabillizer/01JJM2QGS5DBAWPPPGNR2TQYDS.png',	'tmo-images/rack/01JJM2QGS7ZF3HMEK3CG050DHQ.jpeg',	'tmo-images/modem/01JJM2QGS9H2590HRTRG53S48Y.png',	'tmo-images/router/01JJM2QGSBNJ439PBNC29S3EP3.png',	'tmo-images/ap1/01JJM2QGSE57PWN6WP8A5DYVR6.png',	'tmo-images/ap2/01JJM2QGSN4HW0HVNCRY6NG0NC.png',	'tmo-images/modem_summary/01JJM2QGSWWCQT7WBSB23YQ4RH.png',	'tmo-images/pingtest/01JJM2QGT07TRJND7RRC5N78W7.png',	'tmo-images/speedtest/01JJM2QGT4BQ9PHWGQ5NSCVE9M.png',	'tmo-images/cm_ba/01JJM2QGT7EN8GM38A86AHFXMA.JPG',	'tmo-images/pm_ba/01JJM2QGTEEZGV2Z7BFXD0EXBZ.png',	'tmo-images/signplace/01JJM2QGTHAA2EX7HGHRE6FVDG.png',	'tmo-images/stabillizer_voltage/01JJM2QGTKXV1R58KV0DV5B2FW.jpg',	'tmo-images/power_source_voltage/01JJM2QGTNJMZZ7ETD7EAD3N1G.png',	'2025-01-27 14:30:27',	'2025-01-27 15:53:15'),
-('TMO-MHG-250203-001',	'tmo-images/transceiver/01JK69YJTV4XBCAKB59R0D82JK.jpg',	'tmo-images/feedhorn/01JK69YKCA85MJ9VG3CP50SB5Q.jpg',	'tmo-images/antenna/01JK69YKFQ4F6PBQJC6JBZ0Y2A.jpg',	'tmo-images/stabillizer/01JK69YKHQ4PCRRYBYT5Z3XT3B.jpg',	'tmo-images/rack/01JK69YKMKQQPSNG0CGTBMKDGZ.jpg',	'tmo-images/modem/01JK69YNJ44AHCAY18T66VM3X1.jpg',	'tmo-images/router/01JK69YNKZ5X6RTH3FZBQGB723.jpg',	'tmo-images/ap1/01JK69YNQYGMAG3TSTC6G5ME32.jpg',	'tmo-images/ap2/01JK69YNSP9VKWWR4MNMTJ89FA.jpg',	'tmo-images/modem_summary/01JK69YNXQ2SX38Z0ZX3YA9C5H.jpg',	'tmo-images/pingtest/01JK69YP1BCE70DNF5HJEF4JRV.jpg',	'tmo-images/speedtest/01JK69YP7RQM2DE5GBY34963M9.jpg',	'tmo-images/cm_ba/01JK69YP96R2ZW04RSJRCH9KQH.jpg',	'tmo-images/pm_ba/01JK69YPEMN5RZ7XS2JY5WTDB9.jpg',	'tmo-images/signplace/01JK69YPHMV0HZE6HB6CKEV0WZ.jpg',	'tmo-images/stabillizer_voltage/01JK69YPMGEA2GAET3119V16HC.jpg',	'tmo-images/power_source_voltage/01JK69YQ3WDW6DWZG0GYD7MP2J.jpg',	'2025-02-03 16:23:03',	'2025-02-03 16:23:03'),
-('TMO-MHG-250204-001',	'tmo-images/transceiver/01JK89MVCJ2R0RXAT8MC5C3XJ1.jpg',	'tmo-images/feedhorn/01JK89MW4NYRX5M501J9X36VE6.jpg',	'tmo-images/antenna/01JK89MW8AJCD1ANTNS4G3NVMF.jpg',	'tmo-images/stabillizer/01JK89MWC6CKGR2TJ3J3J6VBSA.jpg',	'tmo-images/rack/01JK89MWFNQXXK1BR6Z6R03VWQ.jpg',	'tmo-images/modem/01JK89MWFRKPSRNNMS3MYSZD4W.jpg',	'tmo-images/router/01JK89MWKC75XPTMF1KQ08AVKZ.jpg',	'tmo-images/ap1/01JK89MWQ4W9QN6JRXNQ49REH0.jpg',	'tmo-images/ap2/01JK89MWTES98E4HF0ZWRF8P26.jpg',	'tmo-images/modem_summary/01JK89MWY67C4MKHHKVART8YNN.jpg',	'tmo-images/pingtest/01JK89MX25VZ80WWNYE9D99SH9.jpg',	'tmo-images/speedtest/01JK89MX61F8DS03ZV0EET9ETY.jpg',	NULL,	'tmo-images/pm_ba/01JK89MXA08EXPQ4XCV01180JQ.jpg',	'tmo-images/signplace/01JK89MXD2V7VV8M2051FTKFDY.jpg',	'tmo-images/stabillizer_voltage/01JK89MXGGP4X77D6RVX9SMYQA.jpg',	'tmo-images/power_source_voltage/01JK89MXRAXKAHKHPFQBAZCTGG.jpg',	'2025-02-04 10:56:11',	'2025-02-04 10:56:11'),
-('TMO-MHG-250206-001',	'tmo-images/transceiver/01JKCAKMBAJMKJX3ZC6MS01Z7V.jpg',	'tmo-images/feedhorn/01JKV14C023K9142AVH5QX4EBT.jpg',	NULL,	NULL,	'tmo-images/rack/01JKE5MBM3M6EKYQJME8WK3Z23.jpg',	'tmo-images/modem/01JKV14CH0GS46YEFM8510RDE0.jpg',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'tmo-images/cm_ba/01JKCAKMDAMVZ0PSXW59K9K8QT.jpg',	'tmo-images/pm_ba/01JKCAKMDDGKAKDFVRM1G06JYX.jpg',	NULL,	NULL,	NULL,	'2025-02-06 00:29:55',	'2025-02-11 17:32:55'),
-('TMO-MHG-250226-002',	'tmo-images/TMO-MHG-250226-002/transceiver/01JN8P571WD76VVYWS6FG6SWCE.jpg',	'tmo-images/TMO-MHG-250226-002/feedhorn/01JN8P574E3FC19BCEFHVTQZP9.jpg',	'tmo-images/TMO-MHG-250226-002/antenna/01JN8P576718NFAB2JCDDCTEAZ.jpg',	NULL,	NULL,	'tmo-images/TMO-MHG-250226-002/modem/01JN8P5782NFXENRR3152JRC7N.jpg',	'tmo-images/TMO-MHG-250226-002/router/01JN8P579TB741GXFR1FX2QNX8.jpg',	'tmo-images/TMO-MHG-250226-002/ap1/01JN8P57BJ3HXPYQQXJZY2XD97.jpg',	'tmo-images/TMO-MHG-250226-002/ap2/01JN8P57DBW03S8F3D1R96QSM5.jpg',	'tmo-images/TMO-MHG-250226-002/modem_summary/01JN8P57F5Z13GCB63P90N78PV.jpg',	NULL,	NULL,	'tmo-images/TMO-MHG-250226-002/cm_ba/01JN8P57H5H92HMJBCZJ2RJ64E.jpg',	'tmo-images/TMO-MHG-250226-002/pm_ba/01JN8PA5PKYGGBC9ARK7JPK0SP.jpg',	'tmo-images/TMO-MHG-250226-002/signplace/01JN8QC830V9QVTQJKN3XHY4A5.jpg',	'tmo-images/TMO-MHG-250226-002/stabillizer_voltage/01JN8P57H7P61VT7YWFBKKNMAM.jpg',	NULL,	NULL,	'2025-03-01 11:27:30'),
-('TMO-MHG-250301-001',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-03-01 12:02:17',	'2025-03-01 12:02:17');
+('TMO-MHG-250301-001',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-03-01 16:04:22',	'2025-03-01 16:04:22'),
+('TMO-MHG-250301-002',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-03-01 16:24:24',	'2025-03-01 16:24:24'),
+('TMO-MHG-250301-003',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2025-03-01 16:25:39',	'2025-03-01 16:25:39'),
+('TMO-MHG-250302-001',	'tmo-images/TMO-MHG-250302-001/transceiver/01JNB0WM6MB89VKA4G6Y2ZRZ7K.jpg',	'tmo-images/TMO-MHG-250302-001/feedhorn/01JNB0WMPVV6MY1KRCC0BZV7G4.jpg',	NULL,	NULL,	NULL,	'tmo-images/TMO-MHG-250302-001/modem/01JNB0WMRQP3T29T92G7DNXM0R.jpg',	'tmo-images/TMO-MHG-250302-001/router/01JNB0WN9HGHXZPJ17SCRFQQSG.jpg',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'tmo-images/TMO-MHG-250302-001/signplace/01JNB0WPAG8JMJKPZJ7GTM7ZP5.jpg',	NULL,	NULL,	'2025-03-02 08:39:27',	'2025-03-02 09:00:08');
 
 DROP TABLE IF EXISTS `tmo_problems`;
 CREATE TABLE `tmo_problems` (
@@ -15114,14 +15074,10 @@ CREATE TABLE `tmo_task` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `tmo_task` (`task_id`, `spmk_number`, `site_id`, `site_name`, `province`, `address`, `engineer`, `engineer_number`, `tmo_id`, `created_at`, `updated_at`, `tmo_type`, `latitude`, `longitude`, `created_by`) VALUES
-(3,	'SPMK-NA1-MHG/NOM/2502/CKR-00943',	'AM16224576037210N',	'SMP SATU ATAP NEGERI 19 SIGI',	'Sulawesi Tengah',	'Jl. M. Supubaja Sidondo Ii',	'Kaedahara Kazuha',	'+6289682381239',	'TMO-MHG-250218-002',	'2025-02-18 14:54:29',	'2025-02-18 14:54:29',	'Preventive Maintenance',	'-1.089198',	'119.890057',	NULL),
-(4,	'SPMK-NA1-MHG/NOM/2502/CKR-00955',	'AM16926927815321N',	'POS PAMTAS AILALA',	'Nusa Tenggara Timur',	'Desa Alas Utara, Kecamatan Koba Lima Timur, Kabupaten Malaka',	'Xilonen',	'+6281344210300',	'TMO-MHG-250218-003',	'2025-02-18 15:20:32',	'2025-02-18 15:20:32',	'Corrective Maintenance',	'-9.335747',	'125.030134',	1),
-(5,	'SPMK-NA1-MHG/NOM/2501/CKR-01131',	'AM16566688027207N',	'SD NEGERI MATA',	'Sulawesi Tengah',	'Sulawesi Tengah. Kabupaten Banggai Kepulauan. Totikum Selatan. Mata',	'Xilonen',	'+6281344210300',	'TMO-MHG-250226-001',	'2025-02-26 15:23:39',	'2025-02-26 15:23:39',	'Corrective Maintenance',	'-1.351068',	'123.426599',	1),
-(6,	'SPMK-NA1-MHG/NOM/2502/CKR-00996',	'AM16199393831225N',	'KANTOR KEPALA DESA BAWOSALO\'O',	'Sumatera Utara',	'Desa Bawosalo\'O, Kecamatan Sirombu, Kabupaten Nias Barat',	'Xilonen',	'+6281344210300',	'TMO-MHG-250226-002',	'2025-02-26 15:27:03',	'2025-03-01 14:18:42',	'Corrective Maintenance',	'0.964259',	'97.443124',	1),
-(7,	'SPMK-NA1-MHG/NOM/2502/CKR-00875',	'AO16224642065311N',	'SDM TAWAKIHU',	'Nusa Tenggara Timur',	'Laiponda, Kecamatan Katala Hamu Lingu, Kabupaten Sumba Timur, Nusa Tenggara Timur.\n\n',	'Nico Robin',	'+6281344210300',	'TMO-MHG-250226-003',	'2025-02-26 15:43:53',	'2025-02-26 15:43:53',	'Corrective Maintenance',	'-9.862543',	'119.896555',	1),
-(8,	'SPMK-NA1-MHG/NOM/2502/CKR-01096',	'AM16493097481410N',	'KANTOR DESA NIPAH SENDANU',	'Riau',	'Jalan Pelita Desa Nipah Sendanu Kecamatan Tebingtinggi Timur',	'Nico Robin',	'+6281344210300',	'TMO-MHG-250226-004',	'2025-02-26 15:45:55',	'2025-02-26 15:45:55',	'Preventive Maintenance',	'0.857975',	'102.98386',	1),
-(9,	'SPMK-NA1-MHG/NOM/2502/CKR-01146',	'AM17236103961109N',	'KANTOR KEPALA DESA LEUBANG HULU',	'Aceh',	'Leubang Hulu, Kec. Teupah Barat, Kabupaten Simeulue',	'Nico Robin',	'+6281344210300',	'TMO-MHG-250226-005',	'2025-02-26 15:52:58',	'2025-02-26 15:52:58',	'Preventive Maintenance',	'2.450574',	'96.291781',	1),
-(10,	'SPMK-NA1-MHG/NOM/2502/CKR-03240',	'AM16224619331104N',	'KANTOR DESA ARUL KUMER BARAT',	'Aceh',	'Desa Arul Kumer Barat',	'Xilonen',	'+6281344210300',	'TMO-MHG-250301-001',	'2025-03-01 12:02:17',	'2025-03-01 12:03:43',	'Corrective Maintenance',	'4.640595',	'96.731377',	1);
+(11,	'SPMK-NA1-MHG/NOM/2502/CKR-01248',	'AM16224619331104N',	'KANTOR DESA ARUL KUMER BARAT',	'Aceh',	'Desa Arul Kumer Barat',	'Xilonen',	'+6289682381239',	'TMO-MHG-250301-001',	'2025-03-01 16:04:22',	'2025-03-01 16:04:22',	'Corrective Maintenance',	'4.640595',	'96.731377',	10),
+(12,	'SPMK-NA1-MHG/NOM/2502/CKR-00937',	'AM16577166891218N',	'RAUDHATUL ATHFAL (RA) AMAL SARIAH',	'Sumatera Utara',	'Dusun I Bogak Besar Kec. Teluk Mengkudu - Serdang Bedagai Provinsi Sumatera Utara',	'Kujou Sara',	'+6281344210344',	'TMO-MHG-250301-002',	'2025-03-01 16:24:24',	'2025-03-01 16:24:24',	'Corrective Maintenance',	'3.550172',	'99.157584',	10),
+(13,	'SPMK-NA1-MHG/NOM/2502/CKR-01299',	'AM16902768046401N',	'MADRASAH TSANAWIYAH ANWARUS SALAF',	'Kalimantan Timur',	'Jl. Kupang Desa Sempulang Kec. Tanah Grogot',	'Shenhe',	'+6281382828388',	'TMO-MHG-250301-003',	'2025-03-01 16:25:39',	'2025-03-01 16:25:39',	'Corrective Maintenance',	'-1.87056',	'116.155309',	13),
+(14,	'SPMK-NA1-MHG/NOM/2502/CKR-00341',	'AO16491369985316N',	'KANTOR DESA RENDUWAWO',	'Nusa Tenggara Timur',	'Jln Raja - Jawakisa Segho 86472',	'Kujou Sara',	'+6281344210344',	'TMO-MHG-250302-001',	'2025-03-02 08:39:27',	'2025-03-02 09:56:54',	'Preventive Maintenance',	'-8.700977',	'121.245',	13);
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
@@ -15141,12 +15097,11 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `username`, `name`, `number`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
 (1,	NULL,	'NOC Mahaga',	NULL,	'noc@mahaga-pratama.co.id',	NULL,	'$2y$12$uI2pqYRrtS2MExJEPwdLGO1pWWHCoiAdXbuwsRXlLApRWuG8b1N1K',	NULL,	'2025-01-11 04:15:23',	'2025-01-11 04:15:23'),
-(2,	NULL,	'Kamisato Ayato',	NULL,	'ayato@mahaga-pratama.co.id',	NULL,	'$2y$12$8dHVnuEC2SCoLv5Jf/9yLevT0I7G7azrhc1POLO/.BTNYTG8wEmxK',	NULL,	'2025-01-25 10:50:38',	'2025-01-25 10:50:38'),
-(3,	'xilonen',	'Xilonen',	'+6281344210300',	'xilonen@mahaga-pratama.co.id',	NULL,	'$2y$12$Y2du3byFSl4YKw7.2FuwiurS8AYbMc57r5TReyc0pzVSZYVvNxbCm',	NULL,	'2025-02-17 12:58:59',	'2025-02-18 14:18:58'),
-(5,	NULL,	'Yelan',	'+6281313920301',	'yelan@mahaga-pratama.co.id',	NULL,	'$2y$12$7Y9kpIPcVxScURxtqNLq4OWwvTf5HMXOt8vnjZpsyrWBMgH9w2cJm',	NULL,	'2025-02-17 14:20:47',	'2025-02-17 14:20:47'),
-(6,	'kaedahara.kazuha',	'Kaedahara Kazuha',	'+6289682381239',	'kaedahara.kazuha@mahaga-pratama.co.id',	NULL,	'$2y$12$Xgb0qjBxWqpkJxsqlq5WIOSeGzIB30M92RCGoIAtSY6/EyZY0WPda',	NULL,	'2025-02-17 14:42:20',	'2025-02-17 14:42:20'),
-(7,	'nico.robin',	'Nico Robin',	'+6281344210300',	'nico.robin@mahaga-pratama.co.id',	NULL,	'$2y$12$9SRhCAU7rsuMMjlYNInX9.NXDPnKTWeaETS/btFrttUHVjTwKNMlm',	NULL,	'2025-02-26 09:31:27',	'2025-02-26 09:31:27'),
-(8,	'vinsmoke.reiju',	'Vinsmoke Reiju',	'+6287192837182',	'vinsmoke.reiju@mahaga-pratama.co.id',	NULL,	'$2y$12$/vOFj10IF36XwTdOgR2zb.iKascxqWzr5mIVYlagD4rrEYc1hZNCi',	NULL,	'2025-02-26 09:37:57',	'2025-02-26 09:37:57'),
-(9,	'shenhe',	'Shenhe',	'+6281382828388',	'shenhe@mahaga-pratama.co.id',	NULL,	'$2y$12$q2nnQlA/MZpGhoqidbY7mOiV3O9OF7YlvbvixQIqv0kqK/RAwanYu',	NULL,	'2025-03-01 15:01:27',	'2025-03-01 15:01:27');
+(9,	'shenhe',	'Shenhe',	'+6281382828388',	'shenhe@mahaga-pratama.co.id',	NULL,	'$2y$12$q2nnQlA/MZpGhoqidbY7mOiV3O9OF7YlvbvixQIqv0kqK/RAwanYu',	NULL,	'2025-03-01 15:01:27',	'2025-03-01 15:01:27'),
+(10,	'nso.team',	'NSO Team',	'+6281290909080',	'nso.team@mahaga-pratama.co.id',	NULL,	'$2y$12$yP9jbN6cy2TvHt8YO19bN.wiaSyG3dPY3J3WQK6VyhylPDJVv824K',	NULL,	'2025-03-01 15:05:20',	'2025-03-01 15:09:22'),
+(11,	'noc.team',	'NOC Team',	'+6289682381239',	'noc.team@mahaga-pratama.co.id',	NULL,	'$2y$12$PZpkmOeDpFIpqf1GAD7NaepTVMpAt1NcfGUqLA/hobjMCgAC0R.fy',	NULL,	'2025-03-01 15:06:02',	'2025-03-01 15:09:40'),
+(12,	'xilonen',	'Xilonen',	'+6289682381239',	'xilonen@mahaga-pratama.co.id',	NULL,	'$2y$12$3XTw89w2a8zrf.v2oDZsfuovcn6mViSK.rnn15QtdnP7rDBu79y3e',	NULL,	'2025-03-01 15:06:57',	'2025-03-01 15:06:57'),
+(13,	'nico.robin',	'Nico Robin',	'+6289682381239',	'nico.robin@mahaga-pratama.co.id',	NULL,	'$2y$12$B2nGS7Pdr/EdZjFjfM3AreLOehrpPK1gjEWaYD4YLixPmYxMLcHGy',	NULL,	'2025-03-01 15:07:36',	'2025-03-01 15:07:36'),
+(14,	'kujou.sara',	'Kujou Sara',	'+6281344210344',	'kujou.sara@mahaga-pratama.co.id',	NULL,	'$2y$12$I7eaN88XCbOfFgV.ZR2JUOSDCgOXyXDvTN4DCAPOlFSQl.ZPkvunS',	NULL,	'2025-03-01 15:08:36',	'2025-03-01 15:08:36');
 
--- 2025-03-01 15:03:49
+-- 2025-03-02 16:54:43
