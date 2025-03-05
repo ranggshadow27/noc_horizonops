@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Ysfkaya\FilamentPhoneInput\Forms\PhoneInput;
 
 class TMODataResource extends Resource
@@ -408,172 +409,239 @@ class TMODataResource extends Resource
                     ->schema([
                         Forms\Components\FileUpload::make('transceiver_img')
                             ->label('Transceiver')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/transceiver")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_transceiver.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->openable()->downloadable()
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('feedhorn_img')
                             ->label('Feedhorn')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/feedhorn")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_feedhorn.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('antenna_img')
                             ->label('Dish Antenna')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/antenna")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_antenna.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
-                        // ->panelAspectRatio('1:1')
                         // ->panelLayout('integrated')
 
                         Forms\Components\FileUpload::make('stabillizer_img')
                             ->label('Stabillizer')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/stabillizer")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_stabillizer.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('rack_img')
                             ->label('Rack Indoor')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/rack")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_rack.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('modem_img')
                             ->label('Modem')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/modem")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_modem.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('router_img')
                             ->label('Router')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/router")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_router.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('ap1_img')
                             ->label('Access Point 1')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/ap1")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_ap1.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('ap2_img')
                             ->label('Access Point 2')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/ap2")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_ap2.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('modem_summary_img')
                             ->label('Modem Summary')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/modem_summary")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_modem_summary.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('pingtest_img')
                             ->label('Ping Test')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/pingtest")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_pingtest.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('speedtest_img')
                             ->label('Speedtest')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/speedtest")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_speedtest.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('cm_ba_img')
                             ->label('BA Corrective Maintenance')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/cm_ba")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_cm_ba.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('pm_ba_img')
                             ->label('BA Preventive Maintenance')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/pm_ba")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_pm_ba.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('signplace_img')
                             ->label('Sign')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/signplace")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_signplace.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('stabillizer_voltage_img')
                             ->label('Stabillizer Voltage')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/stabillizer_voltage")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_stabillizer_voltage.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
 
                         Forms\Components\FileUpload::make('power_source_voltage_img')
                             ->label('Power Source Voltage')
-                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}/power_source_voltage")
+                            ->directory(fn($record) => "tmo-images/{$record->tmo_id}")
                             ->imagePreviewHeight('250')
                             ->removeUploadedFileButtonPosition('right')->loadingIndicatorPosition('right')
                             ->uploadButtonPosition('right')->uploadProgressIndicatorPosition('right')
                             ->image()->optimize('jpg')
                             ->openable()->downloadable()
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file) : string {
+                                return (string) str("_power_source_voltage.{$file->extension()}")->prepend(now()->timestamp);
+                            })
                             ->nullable(),
                     ])
                     ->columns(4),
@@ -769,7 +837,7 @@ class TMODataResource extends Resource
                     ->placeholder(
                         fn(TmoData $record) =>
                         $record->tmo_end_date || $record->pic_name ||
-                        $record->action_json || $record->problem_json ?
+                            $record->action_json || $record->problem_json ?
                             "Waiting Approval" :
                             "Data Unfinished"
                     ),

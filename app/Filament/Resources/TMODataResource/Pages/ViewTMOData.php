@@ -14,8 +14,7 @@ use Filament\Forms;
 use Filament\Infolists\Components\Actions\Action;
 use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Notifications\Notification;
-use Filament\Support\Enums\Alignment;
-use Filament\Support\Enums\FontWeight;
+
 use Ysfkaya\FilamentPhoneInput\Infolists\PhoneEntry;
 use Webbingbrasil\FilamentCopyActions\Pages\Actions\CopyAction;
 use Ysfkaya\FilamentPhoneInput\PhoneInputNumberType;
@@ -129,11 +128,21 @@ Note			: {$this->record->engineer_note}
                     return $data;
                 }),
 
+            Actions\Action::make('export_img')
+                ->label("Export Images")
+                ->icon('phosphor-file-zip-duotone')
+                ->color('gray')
+                ->url(fn() => route('export.zip', ['id' => $this->record->tmo_id])) // Gunakan helper route
+                ->openUrlInNewTab(),
+
             Actions\EditAction::make()
                 ->label("Edit TMO")
                 ->icon('phosphor-plus-circle-duotone')
                 // ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('id')->contains(1)),
                 ->visible(fn(TmoData $record) => $record->approval === 'Pending'),
+
+            // ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('id')->contains(1)),
+            // ->visible(fn(TmoData $record) => $record->approval === 'Pending'),
         ];
     }
 
@@ -352,70 +361,87 @@ Note			: {$this->record->engineer_note}
                     ->schema([
                         Infolists\Components\ImageEntry::make('transceiver_img')
                             ->label('Transceiver')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('feedhorn_img')
                             ->label('Feedhorn')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('antenna_img')
                             ->label('Dish Antenna')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('stabillizer_img')
                             ->label('Stabillizer')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('rack_img')
                             ->label('Rack Indoor')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('modem_img')
                             ->label('Modem')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('router_img')
                             ->label('Router')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('ap1_img')
                             ->label('Access Point 1')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('ap2_img')
                             ->label('Access Point 2')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('modem_summary_img')
                             ->label('Modem Summary')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('pingtest_img')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound')
                             ->label('Ping Test'),
 
                         Infolists\Components\ImageEntry::make('speedtest_img')
                             ->label('Speedtest')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('cm_ba_img')
                             ->label('BA Corrective Maintenance')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('pm_ba_img')
                             ->label('BA Preventive Maintenance')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('signplace_img')
                             ->label('Sign')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('stabillizer_voltage_img')
                             ->label('Stabillizer Voltage')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
 
                         Infolists\Components\ImageEntry::make('power_source_voltage_img')
                             ->label('Power Source Voltage')
+                            ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
                     ])
                     ->columns(4)->collapsible()->persistCollapsed(),
@@ -636,7 +662,7 @@ Note			: {$this->record->engineer_note}
                             ->color('primary')
                             ->visible(fn(TmoData $record) => $record->approval === 'Pending' && auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4)),
 
-                            Infolists\Components\Actions\Action::make('add_note')
+                        Infolists\Components\Actions\Action::make('add_note')
                             ->label('Add Note')
                             ->form([
                                 Forms\Components\Textarea::make('approval_details')

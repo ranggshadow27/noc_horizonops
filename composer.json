@@ -19,6 +19,7 @@
         "leandrocfe/filament-apex-charts": "^3.1",
         "psr/simple-cache": "2.0",
         "pxlrbt/filament-excel": "^2.4",
+        "stechstudio/laravel-zipstream": "^5.4",
         "webbingbrasil/filament-copyactions": "^3.0",
         "ysfkaya/filament-phone-input": "^3.1"
     },
