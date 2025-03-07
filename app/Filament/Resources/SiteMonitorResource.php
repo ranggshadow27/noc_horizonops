@@ -156,7 +156,7 @@ class SiteMonitorResource extends Resource
                     ])
                     ->label("Modem Status")
                     ->searchable(),
-                SelectFilter::make('router')
+                SelectFilter::make('mikrotik')
                     ->options([
                         'up' => 'Up',
                         'down' => 'Down',
