@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Resources\MahagaResource\Pages\Auth\Login;
 use App\Filament\Resources\MahagaResource\Pages\Auth\Register;
 use App\Filament\Resources\MahagaResource\Pages\Auth\EditProfile;
+use App\Filament\Resources\TMODataResource\Widgets\TMODataOverview;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -46,7 +47,6 @@ class MahagaPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->favicon(asset('images/favicon.png'))
             ->brandLogo(asset('images/logo.png'))
-            ->defaultThemeMode(ThemeMode::Dark)
             ->topNavigation()
             ->collapsedSidebarWidth('15em')
             ->maxContentWidth(MaxWidth::Full)
@@ -57,12 +57,14 @@ class MahagaPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                TMODataOverview::class
+                // Widgets\AccountWidget::class,
+                // Widgets\FilamentInfoWidget::class,
                 // TmoDataChart::class,
             ])
             ->plugins([
-                FilamentApexChartsPlugin::make()
+                FilamentApexChartsPlugin::make(),
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -77,8 +79,6 @@ class MahagaPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ])->plugins([
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
             ])
             ->databaseNotifications();
     }

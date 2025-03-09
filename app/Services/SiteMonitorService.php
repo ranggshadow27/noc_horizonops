@@ -79,10 +79,39 @@ class SiteMonitorService
                         'mikrotik' => $item['mikrotik'] ?? 'Failed',
                         'ap1' => $item['AP1'] ?? 'Failed',
                         'ap2' => $item['AP2'] ?? 'Failed',
-                        'modem_last_up' => $item['modem'] === 'Down' ? Carbon::now() : null,
-                        'mikrotik_last_up' => $item['mikrotik'] === 'Down' ? Carbon::now() : null,
-                        'ap1_last_up' => $item['AP1'] === 'Down' ? Carbon::now() : null,
-                        'ap2_last_up' => $item['AP2'] === 'Down' ? Carbon::now() : null,
+
+                        // 'modem_last_up' => $item['modem'] === 'Down' ? Carbon::now() : null,
+                        // 'mikrotik_last_up' => $item['mikrotik'] === 'Down' ? Carbon::now() : null,
+                        // 'ap1_last_up' => $item['AP1'] === 'Down' ? Carbon::now() : null,
+                        // 'ap2_last_up' => $item['AP2'] === 'Down' ? Carbon::now() : null,
+
+                        'modem_last_up' =>
+                        $item['modem'] === 'Down' && !$apiData->modem_last_up ?
+                            Carbon::now() : (
+                                $item['modem'] !== 'Up' ?
+                                $apiData->modem_last_up : null
+                            ),
+
+                        'mikrotik_last_up' =>
+                        $item['mikrotik'] === 'Down' && !$apiData->mikrotik_last_up ?
+                            Carbon::now() : (
+                                $item['mikrotik'] !== 'Up' ?
+                                $apiData->mikrotik_last_up : null
+                            ),
+
+                        'ap1_last_up' =>
+                        $item['AP1'] === 'Down' && !$apiData->ap1_last_up ?
+                            Carbon::now() : (
+                                $item['AP1'] !== 'Up' ?
+                                $apiData->ap1_last_up : null
+                            ),
+
+                        'ap2_last_up' =>
+                        $item['AP2'] === 'Down' && !$apiData->ap2_last_up ?
+                            Carbon::now() : (
+                                $item['AP2'] !== 'Up' ?
+                                $apiData->ap2_last_up : null
+                            ),
                     ]);
                 }
 

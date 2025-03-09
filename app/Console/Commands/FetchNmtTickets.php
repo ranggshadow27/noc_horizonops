@@ -1,0 +1,126 @@
+<?php
+
+namespace App\Console\Commands;
+
+use Carbon\Carbon;
+use Illuminate\Console\Command;
+use App\Models\CheckUpdate;
+use App\Models\NmtTickets;
+use App\Models\SiteDetail;
+use Illuminate\Support\Facades\Http;
+use App\Models\TmoData;
+
+class FetchNmtTickets extends Command
+{
+
+    protected $signature = 'fetch:nmt-tickets';
+    protected $description = 'Ambil data dari API Apps Script dan simpan ke database nmt_tickets';
+
+    public function handle()
+    {
+        $lastUpdateApiUrl = 'https://script.google.com/macros/s/AKfycbyh7RPiVKhwkPEnjzz2Fkf3e6T3g81I4yQgGd-yCqZSCbSjwTsymytKMzcpy-YUCq5Q2w/exec'; // Ganti dengan API last_update
+        // $tmoDataApiUrl = 'https://example.com/api/tmo_data'; // Ganti dengan API data TMO
+
+        // Fetch last_update dari API
+        $response = Http::get($lastUpdateApiUrl);
+        if ($response->failed()) {
+            $this->error('Gagal mengambil data last_update');
+            return;
+        }
+
+        $apiLastUpdate = Carbon::parse($response->json()['last_update'])
+            ->setTimezone('Asia/Jakarta')
+            ->format('Y-m-d H:i:s'); // Sesuaikan key JSON
+
+        // Cek last_update di DB
+        $dbLastUpdate = CheckUpdate::where('update_name', 'NMT Ticket')->first();
+
+        if ($dbLastUpdate && $dbLastUpdate->update_time == $apiLastUpdate) {
+            $this->info('Tidak ada perubahan, fetch dibatalkan.');
+            return;
+        }
+
+        // Jika berbeda, update last_update di database
+        $this->info('Ada perubahan, otw fetch...');
+
+        CheckUpdate::updateOrCreate(
+            ['update_name' => 'NMT Ticket'], // Key
+            ['update_time' => $apiLastUpdate] // Field yang diperbarui
+        );
+
+        // Panggil function untuk fetch dan insert data
+        $this->fetchAndInsertNmtTickets();
+    }
+
+    private function fetchAndInsertNmtTickets()
+    {
+        $apiUrl = 'https://script.google.com/macros/s/AKfycbyRlM3BUudeZXH6CvtBdwcT4Gz9pUxTx6SzTWmhYfL5Hyov05t259PAZ0IjOlmodBFiGg/exec'; // Ganti dengan URL API kamu
+        $response = Http::get($apiUrl);
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            foreach ($data as $item) {
+                $site = SiteDetail::where('site_id', $item['SITE ID'])->first();
+
+                if (!$site) {
+                    // Skip data jika site_id tidak ditemukan
+                    $this->info("Data dengan site_id {$item['SITE ID']} di-skip karena tidak ditemukan di site_details.");
+                    continue;
+                }
+
+                // Convert "problems" string ke array JSON
+                $ticketId = str_replace('/', '-', $item['TICKET ID']);
+                $status = $item['STATUS'];
+                $ticketDate = Carbon::parse($item['DATE START TT'])->format('Y-m-d H:i:s');
+
+                // Cek jika ticket_id sudah ada di database
+                $existingTicket = NmtTickets::where('ticket_id', $ticketId)->first();
+
+                if ($existingTicket) {
+                    // Update hanya field yang diinginkan jika ticket_id sudah ada
+                    $existingTicket->update([
+                        'status' => $item['STATUS'],
+                        'aging' => $item['DOWN TIME'],
+                        'problem_classification' => $item['PROBLEM CLASSIFICATION'],
+                        'problem_detail' => $item['DETAIL PROBLEM'],
+                        'problem_type' => $item['TEKNIS/NON TEKNIS'],
+                        'update_progress' => $item['UPDATE PROGRESS'],
+                    ]);
+
+                    if ($status == "CLOSED") {
+                        $existingTicket->update([
+                            'closed_date' => Carbon::parse(now())->format('Y-m-d H:i:s')
+                        ]);
+                    } else {
+                        $existingTicket->update([
+                            'status' => $status,
+                            'closed_date' => null
+                        ]);
+                    }
+
+                    $this->info("Ticket dengan ticket_id {$ticketId} telah diperbarui.");
+                } else {
+                    // Jika ticket_id belum ada, insert semua field
+                    NmtTickets::create([
+                        'ticket_id' => $ticketId,
+                        'site_id' => $item['SITE ID'],
+                        'status' => $item['STATUS'],
+                        'date_start' => $ticketDate,
+                        'aging' => $item['DOWN TIME'],
+                        'problem_classification' => $item['PROBLEM CLASSIFICATION'],
+                        'problem_detail' => $item['DETAIL PROBLEM'],
+                        'problem_type' => $item['TEKNIS/NON TEKNIS'],
+                        'update_progress' => $item['UPDATE PROGRESS'],
+                    ]);
+
+                    $this->info("Ticket dengan ticket_id {$ticketId} telah ditambahkan.");
+                }
+            }
+
+            $this->info('Data berhasil diperbarui dari API.');
+        } else {
+            $this->error('Gagal mengambil data dari API.');
+        }
+    }
+}

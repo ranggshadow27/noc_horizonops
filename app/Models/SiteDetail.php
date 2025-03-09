@@ -57,5 +57,10 @@ class SiteDetail extends Model
     {
         return $this->hasMany(SiteMonitor::class, 'site_id', 'site_id');
     }
+
+    public function nmtTickets()
+    {
+        return $this->hasMany(NmtTickets::class, 'site_id', 'site_id');
+    }
 }
 

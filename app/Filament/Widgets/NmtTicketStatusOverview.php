@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\TmoData;
+use App\Models\NmtTickets;
 use Flowframe\Trend\Trend;
 use Illuminate\Support\Carbon;
 use Flowframe\Trend\TrendValue;
@@ -11,7 +11,7 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Support\RawJs;
 
-class TmoDataFilterChart extends ApexChartWidget
+class NmtTicketStatusOverview extends ApexChartWidget
 {
     use HasWidgetShield;
     /**
@@ -19,17 +19,18 @@ class TmoDataFilterChart extends ApexChartWidget
      *
      * @var string
      */
-    protected static ?string $chartId = 'tmoDataFilterChart';
+    protected static ?string $chartId = 'nmtTicketStatusOverview';
 
     /**
      * Widget Title
      *
      * @var string|null
      */
-    protected static ?string $heading = 'TMO Data Chart';
-    protected static ?string $subheading = 'Summary of TMO Data';
+    protected static ?string $heading = 'NMT Ticket Status';
+    protected static ?string $subheading = 'Summary of NMT Ticket Status';
 
     protected static ?string $pollingInterval = null;
+
     /**
      * Chart options (series, labels, types, size, animations...)
      * https://apexcharts.com/docs/options
@@ -41,7 +42,7 @@ class TmoDataFilterChart extends ApexChartWidget
     {
         return [
             DatePicker::make('date_start')
-                ->default(now()->subDays(20)),
+                ->default(now()->subDays(14)),
             DatePicker::make('date_end')
                 ->default(now()->addDays(1)),
         ];
@@ -49,25 +50,30 @@ class TmoDataFilterChart extends ApexChartWidget
 
     protected function getOptions(): array
     {
-        $pmTMO = Trend::query(TmoData::where('tmo_type', 'Preventive Maintenance'))
+        $openTT = Trend::query(NmtTickets::where('status', 'OPEN'))
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start']),
                 end: Carbon::parse($this->filterFormData['date_end']),
             )
-            ->dateColumn('tmo_start_date')
+            ->dateColumn('date_start')
             ->perDay()
             ->count();
 
-        $cmTMO = Trend::query(TmoData::where('tmo_type', 'Corrective Maintenance'))
+        $closeTT = Trend::query(NmtTickets::where('status', 'CLOSED'))
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start']),
                 end: Carbon::parse($this->filterFormData['date_end']),
             )
-            ->dateColumn('tmo_start_date')
+            ->dateColumn('closed_date')
             ->perDay()
             ->count();
 
         return [
+            'theme' => [
+                'mode' => 'light', //dark
+                'palette' => 'palette4'
+            ],
+
             'chart' => [
                 'type' => "area",
                 'height' => 350,
@@ -89,15 +95,15 @@ class TmoDataFilterChart extends ApexChartWidget
 
             'series' => [
                 [
-                    'name' => 'Preventive',
+                    'name' => 'Ticket Open',
                     // 'data' => [17, 5, 10, 10, 14, 4, 21, 19, 11, 13, 16, 8],
-                    'data' => $pmTMO->map(fn(TrendValue $value) => $value->aggregate),
+                    'data' => $openTT->map(fn(TrendValue $value) => $value->aggregate),
                 ],
 
                 [
-                    'name' => 'Corrective',
+                    'name' => 'Closed Ticket',
                     // 'data' => [7, 4, 6, 10, 14, 7, 5, 9, 10, 15, 13, 18],
-                    'data' => $cmTMO->map(fn(TrendValue $value) => $value->aggregate),
+                    'data' => $closeTT->map(fn(TrendValue $value) => $value->aggregate),
                 ],
             ],
 
@@ -115,7 +121,7 @@ class TmoDataFilterChart extends ApexChartWidget
 
             'xaxis' => [
                 // 'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                'categories' => $cmTMO->map(fn(TrendValue $value) => $value->date),
+                'categories' => $openTT->map(fn(TrendValue $value) => $value->date),
                 'type' => 'datetime',
                 'labels' => [
                     'style' => [
@@ -137,7 +143,6 @@ class TmoDataFilterChart extends ApexChartWidget
             ],
 
             'colors' => ['#80b918', '#f7b801'],
-
             'stroke' => [
                 'curve' => 'smooth',
                 'width' => 3,

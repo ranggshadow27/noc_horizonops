@@ -43,36 +43,38 @@ class TMODataOverview extends BaseWidget
 
         // Hitung jumlah berdasarkan status
         // $todayPending = (clone $query)->where('approval', 'Pending')->count();
-        $totalPending = (clone $queryTotal)->where('approval', 'Pending')->count();
+        // $totalPending = (clone $queryTotal)->where('tmo_type', 'Pending')->count();
 
-        $todayApproved = (clone $query)->where('approval', 'Approved')->count();
-        $totalApproved = (clone $queryTotal)->where('approval', 'Approved')->count();
+        $todayApproved = (clone $query)->where('tmo_type', 'Preventive Maintenance')->count();
+        $totalApproved = (clone $queryTotal)->where('tmo_type', 'Preventive Maintenance')->count();
 
-        $todayReject = (clone $query)->where('approval', 'Reject')->count();
-        $totalReject = (clone $queryTotal)->where('approval', 'Reject')->count();
+        $todayReject = (clone $query)->where('tmo_type', 'Corrective Maintenance')->count();
+        $totalReject = (clone $queryTotal)->where('tmo_type', 'Corrective Maintenance')->count();
 
         // Hitung total hari ini dengan filter sesuai role user
         $totalToday = $totalTodayQuery->count();
+        $totalTMO = $queryTotal->count();
 
         return [
-            Stat::make('Total Pending TMO', $totalPending)
-                ->descriptionIcon('phosphor-hourglass-high-duotone')
-                ->description("TMO waiting for approval")
+            Stat::make('Today TMO', $totalTMO)
+                ->descriptionIcon('phosphor-check-circle')
+                ->description("Total TMO assigned today")
                 ->color('warning'),
 
-            Stat::make('Total Approved TMO', $totalApproved)
-                ->descriptionIcon('phosphor-check-circle', 'before')
-                ->description("{$todayApproved} TMO has been approved today")
-                ->color('success'),
-
-            Stat::make('Total Rejected TMO', $totalReject)
-                ->descriptionIcon('phosphor-x', 'before')
-                ->description("{$todayReject} TMO is rejected today")
-                ->color('danger'),
-
-            Stat::make('Today TMO', $totalToday)
-                ->description('Overall TMO assigned today')
+            Stat::make('Today PM TMO', $totalApproved)
+                ->descriptionIcon('phosphor-check-circle')
+                ->description("Preventive Maintenance TMO assigned today")
                 ->color('primary'),
+
+            Stat::make('Today CM TMO', $totalReject)
+                ->descriptionIcon('phosphor-check-circle')
+                ->description("Corrective Maintenance TMO is done today")
+                ->color('primary'),
+
+            Stat::make('Overall TMO', $totalToday)
+                ->descriptionIcon('phosphor-check-circle')
+                ->description('TMO has been assigned')
+                ->color('success'),
         ];
     }
 }

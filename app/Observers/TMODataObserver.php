@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\SiteDetail;
 use App\Models\TmoData;
 use App\Models\TmoTask;
 use Illuminate\Support\Facades\Storage;
@@ -11,9 +12,23 @@ class TMODataObserver
     /**
      * Handle the TMOData "created" event.
      */
-    public function created(TmoData $tMOData): void
+    public function created(TmoData $tmoData): void
     {
-        //
+        if ($tmoData->site_id) {
+            // Ambil data dari site_details
+            $site = SiteDetail::find($tmoData->site_id);
+
+            if ($site) {
+                // Update field di tmo_data
+                $tmoData->update([
+                    'site_name' => $site->site_name,
+                    'site_province' => $site->province,
+                    'site_address' => $site->address,
+                    'site_latitude' => $site->latitude,
+                    'site_longitude' => $site->longitude,
+                ]);
+            }
+        }
     }
 
     /**
@@ -66,10 +81,7 @@ class TMODataObserver
         //
     }
 
-    public function saved(TmoData $tMOData): void
-    {
-
-    }
+    public function saved(TmoData $tMOData): void {}
 
     /**
      * Handle the TMOData "force deleted" event.

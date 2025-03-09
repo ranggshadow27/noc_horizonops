@@ -271,10 +271,10 @@ Note			: {$this->record->engineer_note}
                         ]),
 
                         Infolists\Components\TextEntry::make('problem_json')
-                            ->label('Problem')->default("-"),
+                            ->label('Problem/Action')->default("-"),
 
-                        Infolists\Components\TextEntry::make('action_json')
-                            ->label('Action Taken')->default("-"),
+                        // Infolists\Components\TextEntry::make('action_json')
+                        //     ->label('Action Taken')->default("-"),
 
                         Infolists\Components\TextEntry::make('engineer_note')
                             ->label('Note')->markdown()->default("-"),
@@ -354,7 +354,7 @@ Note			: {$this->record->engineer_note}
                             ->default("-")
                             ->label('Rack Serial Number'),
                     ])
-                    ->columns(4)->collapsible()->persistCollapsed(),
+                    ->columns(4)->collapsible()->collapsed(true),
 
                 Infolists\Components\Section::make('Images')
                     ->relationship('tmoImages')
@@ -444,7 +444,7 @@ Note			: {$this->record->engineer_note}
                             ->size(250)
                             ->defaultImageUrl('https://placehold.co/100/transparent/gray?font=roboto&text=No Image\nFound'),
                     ])
-                    ->columns(4)->collapsible()->persistCollapsed(),
+                    ->columns(4)->collapsible()->collapsed(true),
 
                 Infolists\Components\Section::make('Old Device')
                     ->schema([
@@ -472,7 +472,7 @@ Note			: {$this->record->engineer_note}
                             ->label('')
                             ->grid(3) // Tampilkan dalam 2 kolom
 
-                    ])->columns(1)->collapsible()->persistCollapsed(),
+                    ])->columns(1)->collapsible()->collapsed(true),
 
                 Infolists\Components\Section::make('TMO Approval')
                     ->schema([

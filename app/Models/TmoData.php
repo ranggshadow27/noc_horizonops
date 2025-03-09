@@ -61,7 +61,7 @@ class TmoData extends Model
 
         // Event sebelum record dibuat
         static::creating(function ($model) {
-            $model->tmo_id = self::generateTmoId();
+            // $model->tmo_id = self::generateTmoId();
         });
     }
 

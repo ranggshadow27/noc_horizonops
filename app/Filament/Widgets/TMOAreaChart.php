@@ -59,6 +59,7 @@ class TMOAreaChart extends ApexChartWidget
                 start: Carbon::parse($this->filterFormData['date_start']),
                 end: Carbon::parse($this->filterFormData['date_end']),
             )
+            ->dateColumn('tmo_start_date')
             ->perMonth()
             ->count();
 
@@ -73,6 +74,7 @@ class TMOAreaChart extends ApexChartWidget
                 start: Carbon::parse($this->filterFormData['date_start']),
                 end: Carbon::parse($this->filterFormData['date_end']),
             )
+            ->dateColumn('tmo_start_date')
             ->perMonth()
             ->count();
 
@@ -87,6 +89,7 @@ class TMOAreaChart extends ApexChartWidget
                 start: Carbon::parse($this->filterFormData['date_start']),
                 end: Carbon::parse($this->filterFormData['date_end']),
             )
+            ->dateColumn('tmo_start_date')
             ->perMonth()
             ->count();
 
@@ -101,6 +104,7 @@ class TMOAreaChart extends ApexChartWidget
                 start: Carbon::parse($this->filterFormData['date_start']),
                 end: Carbon::parse($this->filterFormData['date_end']),
             )
+            ->dateColumn('tmo_start_date')
             ->perMonth()
             ->count();
 
@@ -115,6 +119,7 @@ class TMOAreaChart extends ApexChartWidget
                 start: Carbon::parse($this->filterFormData['date_start']),
                 end: Carbon::parse($this->filterFormData['date_end']),
             )
+            ->dateColumn('tmo_start_date')
             ->perMonth()
             ->count();
 
@@ -129,6 +134,7 @@ class TMOAreaChart extends ApexChartWidget
                 start: Carbon::parse($this->filterFormData['date_start']),
                 end: Carbon::parse($this->filterFormData['date_end']),
             )
+            ->dateColumn('tmo_start_date')
             ->perMonth()
             ->count();
 
@@ -247,7 +253,7 @@ class TMOAreaChart extends ApexChartWidget
 
 
             'legend' => [
-                'position' => 'left',
+                'position' => 'bottom',
                 // 'offsetY' => 40
             ]
 

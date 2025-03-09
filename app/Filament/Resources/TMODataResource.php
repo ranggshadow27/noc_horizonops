@@ -745,7 +745,7 @@ class TMODataResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->query(static::getEloquentQuery()->orderByDesc('created_at'))
+            ->query(static::getEloquentQuery()->orderByDesc('tmo_id'))
             ->columns([
                 Tables\Columns\TextColumn::make('tmo_id')->label('TMO ID')
                     ->sortable()
@@ -832,8 +832,9 @@ class TMODataResource extends Resource
                     ),
 
                 Tables\Columns\TextColumn::make('cboss_tmo_code')
-                    ->label('TMO Note')
+                    ->label('TMO Code')
                     ->searchable()
+                    ->copyable()
                     ->placeholder(
                         fn(TmoData $record) =>
                         $record->tmo_end_date || $record->pic_name ||
@@ -849,8 +850,8 @@ class TMODataResource extends Resource
                     ->toggledHiddenByDefault(true)
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('creator.name')
-                    ->label('Assign By')
+                Tables\Columns\TextColumn::make('approval_by')
+                    ->label('Approver')
                     ->limit(15)
                     ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
                         $state = $column->getState();
@@ -865,9 +866,9 @@ class TMODataResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('approval')
-                    ->label("TMO Approval")
-                    ->options(fn() => TmoData::query()->pluck('approval', 'approval')),
+                // Tables\Filters\SelectFilter::make('approval')
+                //     ->label("TMO Approval")
+                //     ->options(fn() => TmoData::query()->pluck('approval', 'approval')),
 
                 Tables\Filters\SelectFilter::make('site_province')
                     ->label("Province")
@@ -875,7 +876,7 @@ class TMODataResource extends Resource
                         function () {
                             if (auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4)) {
                                 return TmoData::query()
-                                    ->where('created_by', auth()->id())
+                                    // ->where('created_by', auth()->id())
                                     ->pluck('site_province', 'site_province');
                             }
 
