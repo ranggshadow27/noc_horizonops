@@ -23,9 +23,9 @@ class TMODataOverview extends BaseWidget
         $roleIds = $user->roles->pluck('id');
 
         // Query dasar
-        $query = TMOData::whereDate('updated_at', $today);
-        $queryTotal = TMOData::whereDate('created_at', '<=', $today);
-        $totalTodayQuery = TMOData::whereDate('created_at', $today);
+        $query = TMOData::whereDate('tmo_start_date', $today);
+        $queryTotal = TMOData::whereDate('tmo_start_date', '<=', $today);
+        $totalTodayQuery = TMOData::whereDate('tmo_start_date', $today);
 
         // Jika user memiliki role id > 4, filter berdasarkan engineer_name
         if ($roleIds->some(fn($id) => $id > 4)) {
@@ -45,10 +45,10 @@ class TMODataOverview extends BaseWidget
         // $todayPending = (clone $query)->where('approval', 'Pending')->count();
         // $totalPending = (clone $queryTotal)->where('tmo_type', 'Pending')->count();
 
-        $todayApproved = (clone $query)->where('tmo_type', 'Preventive Maintenance')->count();
+        $todayTmoPM = (clone $query)->where('tmo_type', 'Preventive Maintenance')->count();
         $totalApproved = (clone $queryTotal)->where('tmo_type', 'Preventive Maintenance')->count();
 
-        $todayReject = (clone $query)->where('tmo_type', 'Corrective Maintenance')->count();
+        $todayTmoCM = (clone $query)->where('tmo_type', 'Corrective Maintenance')->count();
         $totalReject = (clone $queryTotal)->where('tmo_type', 'Corrective Maintenance')->count();
 
         // Hitung total hari ini dengan filter sesuai role user
@@ -56,22 +56,22 @@ class TMODataOverview extends BaseWidget
         $totalTMO = $queryTotal->count();
 
         return [
-            Stat::make('Today TMO', $totalTMO)
+            Stat::make('Today TMO', $totalToday)
                 ->descriptionIcon('phosphor-check-circle')
                 ->description("Total TMO assigned today")
                 ->color('warning'),
 
-            Stat::make('Today PM TMO', $totalApproved)
+            Stat::make('Today PM TMO', $todayTmoPM)
                 ->descriptionIcon('phosphor-check-circle')
                 ->description("Preventive Maintenance TMO assigned today")
                 ->color('primary'),
 
-            Stat::make('Today CM TMO', $totalReject)
+            Stat::make('Today CM TMO', $todayTmoCM)
                 ->descriptionIcon('phosphor-check-circle')
                 ->description("Corrective Maintenance TMO is done today")
                 ->color('primary'),
 
-            Stat::make('Overall TMO', $totalToday)
+            Stat::make('Overall TMO', $totalTMO)
                 ->descriptionIcon('phosphor-check-circle')
                 ->description('TMO has been assigned')
                 ->color('success'),

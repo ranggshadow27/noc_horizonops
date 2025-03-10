@@ -223,9 +223,10 @@ class TMOAreaChart extends ApexChartWidget
             ],
 
             'grid' => [
-                'borderColor' => "#2A2A2DFF",
-                'opacity' => 0.5,
-                'clipMarkers' => false,
+                'strokeDashArray' => 10,
+                // 'borderColor' => "#B6B6B6FF",
+                'position' => 'back',
+                // 'clipMarkers' => false,
                 'yaxis' => [
                     'lines' => [
                         'show' => true
@@ -239,11 +240,11 @@ class TMOAreaChart extends ApexChartWidget
                 ]
             ],
 
-            'dataLabels'=> [
-                'style'=> [
-                    'fontSize'=> '12px',
-                  ]
-                ],
+            'dataLabels' => [
+                'style' => [
+                    'fontSize' => '12px',
+                ]
+            ],
 
             'fill' => [
                 'opacity' => 1

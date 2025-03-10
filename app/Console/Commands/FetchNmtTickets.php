@@ -30,7 +30,7 @@ class FetchNmtTickets extends Command
 
         $apiLastUpdate = Carbon::parse($response->json()['last_update'])
             ->setTimezone('Asia/Jakarta')
-            ->format('Y-m-d H:i:s'); // Sesuaikan key JSON
+            ->format('Y-m-d'); // Sesuaikan key JSON
 
         // Cek last_update di DB
         $dbLastUpdate = CheckUpdate::where('update_name', 'NMT Ticket')->first();
@@ -54,7 +54,7 @@ class FetchNmtTickets extends Command
 
     private function fetchAndInsertNmtTickets()
     {
-        $apiUrl = 'https://script.google.com/macros/s/AKfycbyRlM3BUudeZXH6CvtBdwcT4Gz9pUxTx6SzTWmhYfL5Hyov05t259PAZ0IjOlmodBFiGg/exec'; // Ganti dengan URL API kamu
+        $apiUrl = 'https://script.google.com/macros/s/AKfycbzLIrSJLKpi4zXiTflJNlQaNB0hhj-hXNWN58JZpNwTDZUloZjto8RItot9eAiuEw3tqQ/exec'; // Ganti dengan URL API kamu
         $response = Http::get($apiUrl);
 
         if ($response->successful()) {
@@ -81,6 +81,7 @@ class FetchNmtTickets extends Command
                     // Update hanya field yang diinginkan jika ticket_id sudah ada
                     $existingTicket->update([
                         'status' => $item['STATUS'],
+                        'date_start' => $ticketDate,
                         'aging' => $item['DOWN TIME'],
                         'problem_classification' => $item['PROBLEM CLASSIFICATION'],
                         'problem_detail' => $item['DETAIL PROBLEM'],
