@@ -50,7 +50,7 @@ class TmoDeviceProblemChart extends ApexChartWidget
 
     protected function getOptions(): array
     {
-        $device = ["POE", "Mikrotik", "Grandstream", "Modem", "Transceiver", "Adaptor Modem", "Adaptor Router"];
+        $device = ["POE", "Router", "Modem", "Transceiver", "Access Point", "Adaptor Modem", "Adaptor Router"];
 
         $poeTrend = TmoData::where('problem_json', 'like', '%POE%')
             ->whereBetween('tmo_start_date', [
@@ -81,6 +81,24 @@ class TmoDeviceProblemChart extends ApexChartWidget
         $routergwnCount = $routerTrend->map(function ($item) {
             $problemArray = $item->problem_json; // Pastikan problem_json adalah JSON
             return count(array_filter($problemArray, fn($value) =>  Str::lower($value) === 'router grandstream'));
+            // return $problemArray;
+        })->sum();
+
+        $apTrend = TmoData::where('problem_json', 'like', '%AP%')
+            ->whereBetween('tmo_start_date', [
+                Carbon::parse($this->filterFormData['date_start']),
+                Carbon::parse($this->filterFormData['date_end']),
+            ])->get();
+
+        $ap1Count = $apTrend->map(function ($item) {
+            $problemArray = $item->problem_json; // Pastikan problem_json adalah JSON
+            return count(array_filter($problemArray, fn($value) =>  $value === 'AP1'));
+            // return $problemArray;
+        })->sum();
+
+        $ap2Count = $apTrend->map(function ($item) {
+            $problemArray = $item->problem_json; // Pastikan problem_json adalah JSON
+            return count(array_filter($problemArray, fn($value) =>  $value === 'AP2'));
             // return $problemArray;
         })->sum();
 
@@ -145,9 +163,9 @@ class TmoDeviceProblemChart extends ApexChartWidget
 
             'series' => [
                 [
-                    'name' => 'POE',
+                    'name' => 'Total',
                     'group' => 'pm',
-                    'data' => [$poeCount, $routerCount, $routergwnCount, $modemCount, $transceiverCount, $adaptormCount, $adaptorrCount]
+                    'data' => [$poeCount, $routerCount + $routergwnCount, $modemCount, $transceiverCount, $ap1Count + $ap2Count, $adaptormCount, $adaptorrCount]
                     // 'data' => $poe->map(fn(TrendValue $value) => $value->aggregate),
                 ],
                 // [

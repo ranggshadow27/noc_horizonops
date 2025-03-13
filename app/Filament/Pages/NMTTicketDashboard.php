@@ -11,6 +11,13 @@ class NMTTicketDashboard extends Page
     protected static string $view = 'filament.pages.n-m-t-ticket-dashboard';
 
     protected static ?string $navigationLabel = 'NMT Ticket Dashboard';
-    protected ?string $heading = 'NMT Ticket Dashboard';
     protected static ?string $navigationGroup = 'Trouble Tickets';
+
+    protected ?string $heading = 'NMT Ticket Dashboard';
+    protected ?string $subheading = 'Custom Page Subheading';
+
+    public function getColumns(): int | string | array
+    {
+        return 2;
+    }
 }

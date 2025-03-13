@@ -44,12 +44,35 @@ class NmtTicketStatusOverview extends ApexChartWidget
             DatePicker::make('date_start')
                 ->default(now()->subDays(14)),
             DatePicker::make('date_end')
-                ->default(now()->addDays(1)),
+                ->default(now()->endOfDay()),
         ];
     }
 
     protected function getOptions(): array
     {
+
+        $overallTicketStartDate = NmtTickets::where('status', 'OPEN')
+            ->whereNotIn('problem_detail', ['RENOVASI', 'RELOKASI', 'BENCANA ALAM'])
+            ->orderBy('date_start', 'asc')
+            ->value('date_start');
+
+        $totalOpen = NmtTickets::where('status', 'OPEN')
+            ->whereNotIn('problem_detail', ['RENOVASI', 'RELOKASI', 'BENCANA ALAM'])
+            ->whereBetween('date_start', [
+                Carbon::parse($overallTicketStartDate),
+                Carbon::parse($this->filterFormData['date_start']),
+            ])->count();
+
+        // $poeCount = $poeTrend->map(function ($item) {
+        //     // Decode string menjadi array, jika problem_json adalah string JSON
+        //     $problemArray = $item->ticket_id; // Pastikan problem_json adalah JSON
+        //     // Hitung berapa kali 'POE' muncul dalam array
+        //     return $problemArray;
+        //     // return $problemArray;
+        // });
+
+        // dd($poeCount);
+
         $openTT = Trend::query(NmtTickets::where('status', 'OPEN'))
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start']),
@@ -58,6 +81,7 @@ class NmtTicketStatusOverview extends ApexChartWidget
             ->dateColumn('date_start')
             ->perDay()
             ->count();
+
 
         $closeTT = Trend::query(NmtTickets::where('status', 'CLOSED'))
             ->between(
@@ -68,11 +92,29 @@ class NmtTicketStatusOverview extends ApexChartWidget
             ->perDay()
             ->count();
 
+        $totalTT = Trend::query(NmtTickets::where('status', 'OPEN')
+            ->whereNotIn('problem_detail', ['RENOVASI', 'RELOKASI', 'BENCANA ALAM']))
+            ->between(
+                start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
+                end: Carbon::parse($this->filterFormData['date_end'])->endOfDay(),
+            )
+            ->dateColumn('date_start')
+            ->perDay()
+            ->count()
+            ->reduce(function ($carry, TrendValue $value) use (&$totalOpen) {
+                // static $total = 14;
+                $totalOpen += $value->aggregate;
+                $carry[] = ['date' => $value->date, 'total' => $totalOpen];
+                return $carry;
+            }, []);
+
+        // dd($totalTT);
+
         return [
-            'theme' => [
-                'mode' => 'light', //dark
-                'palette' => 'palette4'
-            ],
+            // 'theme' => [
+            //     'mode' => 'light', //dark
+            //     'palette' => 'palette4'
+            // ],
 
             'chart' => [
                 'type' => "area",
@@ -96,7 +138,6 @@ class NmtTicketStatusOverview extends ApexChartWidget
             'series' => [
                 [
                     'name' => 'Ticket Open',
-                    // 'data' => [17, 5, 10, 10, 14, 4, 21, 19, 11, 13, 16, 8],
                     'data' => $openTT->map(fn(TrendValue $value) => $value->aggregate),
                 ],
 
@@ -104,6 +145,16 @@ class NmtTicketStatusOverview extends ApexChartWidget
                     'name' => 'Closed Ticket',
                     // 'data' => [7, 4, 6, 10, 14, 7, 5, 9, 10, 15, 13, 18],
                     'data' => $closeTT->map(fn(TrendValue $value) => $value->aggregate),
+
+                    // 'data' => array_column($closeTT, 'total'),
+                ],
+
+                [
+                    'name' => 'Total Ticket',
+                    // 'data' => [7, 4, 6, 10, 14, 7, 5, 9, 10, 15, 13, 18],
+                    // 'data' => $closeTT->map(fn(TrendValue $value) => $value->aggregate),
+
+                    'data' => array_column($totalTT, 'total'),
                 ],
             ],
 
@@ -121,6 +172,7 @@ class NmtTicketStatusOverview extends ApexChartWidget
 
             'xaxis' => [
                 // 'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                // 'categories' => array_column($closeTT, 'date'),
                 'categories' => $openTT->map(fn(TrendValue $value) => $value->date),
                 'type' => 'datetime',
                 'labels' => [
@@ -142,7 +194,7 @@ class NmtTicketStatusOverview extends ApexChartWidget
                 ],
             ],
 
-            'colors' => ['#80b918', '#f7b801'],
+            // 'colors' => ['#80b918', '#f7b801'],
             'stroke' => [
                 'curve' => 'smooth',
                 'width' => 3,
@@ -177,7 +229,7 @@ class NmtTicketStatusOverview extends ApexChartWidget
 
             'markers' => [
                 'size' => 4, // Ukuran titik
-                'colors' => ['#80b918', '#f7b801'], // Sesuaikan warna dengan series
+                // 'colors' => ['#80b918', '#f7b801'], // Sesuaikan warna dengan series
                 'strokeWidth' => 2,
                 'strokeColors' => '#ffffff', // Warna garis luar
                 'hover' => [

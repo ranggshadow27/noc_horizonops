@@ -5,12 +5,14 @@ namespace App\Filament\Resources\NmtTicketsResource\Pages;
 use App\Filament\Resources\NmtTicketsResource;
 use Carbon\Carbon;
 use Filament\Actions;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
 use pxlrbt\FilamentExcel\Actions\Pages\ExportAction;
 use pxlrbt\FilamentExcel\Columns\Column;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use Filament\Actions\ActionGroup;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Artisan;
 
 class ListNmtTickets extends ListRecords
 {
@@ -265,6 +267,12 @@ class ListNmtTickets extends ListRecords
                 ->icon('heroicon-m-arrow-down-tray')
                 ->label("Export Data")
                 ->tooltip("Export Data"),
+
+            Action::make('Import Data')
+                ->label("Get Data")
+                ->action(fn() => Artisan::call('fetch:nmt-tickets'))
+                ->requiresConfirmation()
+                ->successNotificationTitle('Data berhasil diimport')
         ];
     }
 }
