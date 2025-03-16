@@ -15,6 +15,7 @@ class NmtTicketsByProvinceTableWidget extends BaseWidget
     {
         return $table
             ->heading("Ticket Open per Province")
+            ->description("Live Highest Trouble Tickets by Province")
             ->paginated([5])
             ->query(
                 NmtTickets::query()
@@ -25,12 +26,19 @@ class NmtTicketsByProvinceTableWidget extends BaseWidget
             )
             ->columns([
                 TextColumn::make('site_province')
-                    ->label('Provinsi'),
+                    ->label('Province Name'),
 
                 TextColumn::make('total_tickets')
-                    ->label('Total Tiket Open')
+                    ->label('Total Open')
                     ->badge()
-                    ->numeric(),
+                    ->color(function($state) {
+                        if ($state >= 20) {
+                            return 'danger';
+                        } elseif ($state >= 8 && $state < 20) {
+                            return 'warning';
+                        }
+                    })
+                    ->formatStateUsing(fn($state) => $state . " Tickets"),
 
                 TextColumn::make('area.area')
                     ->label('Area'),

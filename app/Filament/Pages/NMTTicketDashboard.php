@@ -13,8 +13,8 @@ class NMTTicketDashboard extends Page
     protected static ?string $navigationLabel = 'NMT Ticket Dashboard';
     protected static ?string $navigationGroup = 'Trouble Tickets';
 
-    protected ?string $heading = 'NMT Ticket Dashboard';
-    protected ?string $subheading = 'Custom Page Subheading';
+    protected ?string $heading = "";
+    // protected ?string $subheading = 'Custom Page Subheading';
 
     public function getColumns(): int | string | array
     {

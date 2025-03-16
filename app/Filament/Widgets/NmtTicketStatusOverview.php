@@ -42,7 +42,7 @@ class NmtTicketStatusOverview extends ApexChartWidget
     {
         return [
             DatePicker::make('date_start')
-                ->default(now()->subDays(14)),
+                ->default(now()->startOfMonth()),
             DatePicker::make('date_end')
                 ->default(now()->endOfDay()),
         ];
@@ -73,7 +73,8 @@ class NmtTicketStatusOverview extends ApexChartWidget
 
         // dd($poeCount);
 
-        $openTT = Trend::query(NmtTickets::where('status', 'OPEN'))
+        // $openTT = Trend::query(NmtTickets::where('status', 'OPEN'))
+        $openTT = Trend::model(NmtTickets::class)
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start']),
                 end: Carbon::parse($this->filterFormData['date_end']),
@@ -149,13 +150,13 @@ class NmtTicketStatusOverview extends ApexChartWidget
                     // 'data' => array_column($closeTT, 'total'),
                 ],
 
-                [
-                    'name' => 'Total Ticket',
-                    // 'data' => [7, 4, 6, 10, 14, 7, 5, 9, 10, 15, 13, 18],
-                    // 'data' => $closeTT->map(fn(TrendValue $value) => $value->aggregate),
+                // [
+                //     'name' => 'Total Ticket',
+                //     // 'data' => [7, 4, 6, 10, 14, 7, 5, 9, 10, 15, 13, 18],
+                //     // 'data' => $closeTT->map(fn(TrendValue $value) => $value->aggregate),
 
-                    'data' => array_column($totalTT, 'total'),
-                ],
+                //     'data' => array_column($totalTT, 'total'),
+                // ],
             ],
 
             'legend' => [

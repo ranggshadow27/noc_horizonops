@@ -41,32 +41,25 @@ class NmtTicketByAreaChart extends ApexChartWidget
 
     protected function getOptions(): array
     {
-        $openTT = NmtTickets::query()->where('status', 'OPEN')->selectRaw('area_list.area, COUNT(nmt_tickets.ticket_id) as total_tickets')->join('area_list', 'area_list.province', '=', 'nmt_tickets.site_province')->groupBy('area_list.area')->orderBy('area_list.area', 'asc')->pluck('total_tickets', 'area_list.area');
+        $openTT = NmtTickets::query()->where('status', 'OPEN')
+            ->selectRaw('area_list.area, COUNT(nmt_tickets.ticket_id) as total_tickets')
+            ->join('area_list', 'area_list.province', '=', 'nmt_tickets.site_province')
+            ->groupBy('area_list.area')->orderBy('area_list.area', 'asc')
+            ->pluck('total_tickets', 'area_list.area');
 
         return [
             'chart' => [
                 'type' => 'polarArea',
-                'height' => 350,
+                'height' => 370,
             ],
 
             'series' => $openTT->values()->toArray(),
 
             'labels' => $openTT->keys()->toArray(),
 
-            'legend' => [
-                'position' => 'bottom',
-                'fontFamily' => 'inherit',
-                // 'fontWeight' => 600,
-
-                'labels' => [
-                    // 'colors' => '#9ca3af',
-                    'fontWeight' => 600,
-                ],
-            ],
-
             'stroke' => [
                 'colors' => '#fff',
-                'width' => 5,
+                'width' => 4,
             ],
 
             'dataLabels' => [
@@ -84,43 +77,30 @@ class NmtTicketByAreaChart extends ApexChartWidget
                     ],
                 ],
             ],
-
-            // 'theme' => [
-            //     'monochrome' => [
-            //         'enabled' => true,
-            //         'shadeTo' => 'light',
-            //         'shadeIntensity' => 0.6,
-            //     ],
-            // ],
-
-            // 'plotOptions' => [
-            //     'polarArea' => [
-            //         'rings' => [
-            //             'strokeWidth' => 1,
-            //             'strokeColor' => '#e8e8e8',
-            //         ],
-
-            //         'spokes' => [
-            //             'strokeWidth' => 1,
-            //             'connectorColors' => '#e8e8e8',
-            //         ],
-            //     ],
-            // ],
         ];
     }
 
     protected function extraJsOptions(): ?RawJs
     {
+
         return RawJs::make(
             <<<'JS'
             {
-                // theme: {
-                //         monochrome: {
-                //             enabled: true,
-                //             shadeTo: 'light',
-                //             shadeIntensity: 0.6
-                //         }
-                // },
+                fill: {
+                    opacity: 0.8,
+                },
+
+                legend: {
+                    fontFamily: 'inherit',
+                    position: 'bottom',
+                    formatter: function(val, opts) {
+                        return val + " (" + opts.w.globals.series[opts.seriesIndex] + " Tickets)"
+                    }
+                },
+
+                dataLabels: {
+                    // formatter: function (value) { return value; },
+                },
 
                 plotOptions: {
                         polarArea: {
@@ -128,17 +108,10 @@ class NmtTicketByAreaChart extends ApexChartWidget
                                 strokeWidth: 1
                             },
                             spokes: {
-                                strokeWidth: 1
+                                strokeWidth: 5
                             },
                         }
                 },
-
-                // dataLabels: {
-                //     enabled: true,
-                //     formatter: function (value) {
-                //         return value >= 5 ? value : "";
-                //     }
-                // },
             }
             JS,
         );

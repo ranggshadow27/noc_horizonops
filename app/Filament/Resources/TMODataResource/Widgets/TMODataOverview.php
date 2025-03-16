@@ -71,10 +71,10 @@ class TMODataOverview extends BaseWidget
                 ->description("Corrective Maintenance TMO is done today")
                 ->color('primary'),
 
-            Stat::make('Overall TMO', $totalTMO)
-                ->descriptionIcon('phosphor-check-circle')
-                ->description('TMO has been assigned')
-                ->color('success'),
+            // Stat::make('Overall TMO', $totalTMO)
+            //     ->descriptionIcon('phosphor-check-circle')
+            //     ->description('TMO has been assigned')
+            //     ->color('success'),
         ];
     }
 }

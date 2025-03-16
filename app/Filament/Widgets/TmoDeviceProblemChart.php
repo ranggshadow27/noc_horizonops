@@ -157,8 +157,8 @@ class TmoDeviceProblemChart extends ApexChartWidget
             'chart' => [
                 'type' => 'bar',
                 'height' => 350,
-                // 'stacked' => true,
                 'fontFamily' => 'inherit',
+                // 'stacked' => true,
             ],
 
             'series' => [
