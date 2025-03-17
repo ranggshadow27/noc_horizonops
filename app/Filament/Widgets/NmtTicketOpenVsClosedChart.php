@@ -49,7 +49,7 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
                 start: Carbon::parse(now()->subMonth(2)),
                 end: Carbon::parse(now()->addMonths(3))
             )
-            ->dateColumn('closed_date')
+            ->dateColumn('date_start')
             ->perMonth()
             ->count();
 

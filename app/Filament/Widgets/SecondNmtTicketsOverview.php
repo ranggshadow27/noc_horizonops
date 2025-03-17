@@ -39,7 +39,7 @@ class SecondNmtTicketsOverview extends BaseWidget
 
                 Stat::make('Closed Ticket', $teknis . ' - ' . $nonTeknis)
                 ->descriptionIcon('phosphor-handshake-duotone')
-                ->description("by NSO - by NOC")
+                ->description("Closed by NSO - NOC")
                 ->color('success'),
 
 
