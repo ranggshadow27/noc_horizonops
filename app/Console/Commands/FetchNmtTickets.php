@@ -100,7 +100,7 @@ class FetchNmtTickets extends Command
                         ]);
                     }
 
-                    $this->info("Ticket dengan ticket_id {$ticketId} telah diperbarui.");
+                    $this->info("Ticket dengan ticket_id {$ticketId} {$ticketDate} telah diperbarui.");
                 } else {
                     // Jika ticket_id belum ada, insert semua field
                     NmtTickets::create([
@@ -115,7 +115,7 @@ class FetchNmtTickets extends Command
                         'update_progress' => $item['UPDATE PROGRESS'],
                     ]);
 
-                    $this->info("Ticket dengan ticket_id {$ticketId} telah ditambahkan.");
+                    $this->info("Ticket dengan ticket_id {$ticketId} {$ticketDate} telah ditambahkan.");
                 }
             }
 

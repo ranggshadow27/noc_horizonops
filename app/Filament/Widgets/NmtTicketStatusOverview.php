@@ -76,8 +76,8 @@ class NmtTicketStatusOverview extends ApexChartWidget
         // $openTT = Trend::query(NmtTickets::where('status', 'OPEN'))
         $openTT = Trend::model(NmtTickets::class)
             ->between(
-                start: Carbon::parse($this->filterFormData['date_start']),
-                end: Carbon::parse($this->filterFormData['date_end']),
+                start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
+                end: Carbon::parse($this->filterFormData['date_end'])->endOfDay(),
             )
             ->dateColumn('date_start')
             ->perDay()
@@ -86,8 +86,8 @@ class NmtTicketStatusOverview extends ApexChartWidget
 
         $closeTT = Trend::query(NmtTickets::where('status', 'CLOSED'))
             ->between(
-                start: Carbon::parse($this->filterFormData['date_start']),
-                end: Carbon::parse($this->filterFormData['date_end']),
+                start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
+                end: Carbon::parse($this->filterFormData['date_end'])->endOfDay(),
             )
             ->dateColumn('closed_date')
             ->perDay()
