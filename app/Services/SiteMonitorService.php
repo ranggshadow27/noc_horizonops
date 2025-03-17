@@ -75,6 +75,7 @@ class SiteMonitorService
                     // Jika data tidak ada, buat data baru
                     $apiData = SiteMonitor::updateOrCreate([
                         'site_id' => $item['terminal_id'] ?? 'Failed',
+                        'sitecode' => $item['sitecode'] ?? 'Failed',
                         'modem' => $item['modem'] ?? 'Failed',
                         'mikrotik' => $item['mikrotik'] ?? 'Failed',
                         'ap1' => $item['AP1'] ?? 'Failed',
