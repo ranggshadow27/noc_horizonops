@@ -25,33 +25,25 @@ class NmtTicketsOverview extends BaseWidget
             ->where('status', 'CLOSED')
             ->count();
 
-        $nonTeknis = NmtTickets::where('problem_type', 'NON TEKNIS')
-            ->where('status', 'OPEN')
-            ->count();
-
-        $teknis = NmtTickets::where('problem_type', 'TEKNIS')
-            ->where('status', 'OPEN')
-            ->count();
-
         return [
-            Stat::make('Trouble Ticket Open', $todayTotal)
+            Stat::make('Ticket Open', $todayTotal)
                 ->descriptionIcon('phosphor-exclamation-mark-duotone')
                 ->description("Opened today")
                 ->color('danger'),
 
-            Stat::make('Trouble Ticket Closed', $todayClosed)
+            Stat::make('Ticket Closed', $todayClosed)
                 ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Done Close today")
+                ->description("Closed today")
                 ->color('success'),
 
-            Stat::make('Overall Ticket Open', $todayOpen)
+            Stat::make('Total Ticket Open', $todayOpen)
                 ->descriptionIcon('phosphor-hourglass-high-duotone')
                 ->description("Tickets in Progress")
                 ->color('warning'),
 
-            Stat::make('Today Tickets', $todayOpen + $todayClosed)
+            Stat::make('Overall Tickets', $todayOpen + $todayClosed)
                 ->descriptionIcon('phosphor-cards-three-duotone')
-                ->description("Currently Assigned")
+                ->description("Ticket assigned")
                 ->color('gray'),
 
             // Stat::make('Problem Type', $teknis . ' / ' . $nonTeknis)
