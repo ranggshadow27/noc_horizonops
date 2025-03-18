@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             $apiDataService = new \App\Services\SiteMonitorService();
             $apiDataService->fetchAndSaveData();
-        })->everyMinute();  // Bisa disesuaikan dengan interval yang diinginkan
+        })->everyTenMinutes();  // Bisa disesuaikan dengan interval yang diinginkan
 
         $schedule->call(function () {
             \Illuminate\Notifications\DatabaseNotification::where('created_at', '<', now()->subDays(3))->delete();
@@ -29,7 +29,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
