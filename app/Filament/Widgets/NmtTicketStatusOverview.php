@@ -54,7 +54,7 @@ class NmtTicketStatusOverview extends ApexChartWidget
         $overallTicketStartDate = NmtTickets::where('status', 'OPEN')
             // ->whereNotIn('problem_detail', ['RENOVASI', 'RELOKASI', 'BENCANA ALAM'])
             ->orderBy('date_start', 'asc')
-            ->value('ticket_id');
+            ->value('date_start');
 
         // dd($overallTicketStartDate);
 
