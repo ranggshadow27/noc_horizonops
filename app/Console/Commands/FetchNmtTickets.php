@@ -94,7 +94,7 @@ class FetchNmtTickets extends Command
 
                     if ($status == "CLOSED") {
                         $existingTicket->update([
-                            'closed_date' => Carbon::parse(now()->startOfDay())->format('Y-m-d H:i:s')
+                            'closed_date' => $item['ACTUAL ONLINE'] !== "-" || !$item['ACTUAL ONLINE'] ? $item['ACTUAL ONLINE'] : Carbon::parse(now()->startOfDay())->format('Y-m-d H:i:s')
                         ]);
                     } else {
                         $existingTicket->update([
@@ -103,7 +103,7 @@ class FetchNmtTickets extends Command
                         ]);
                     }
 
-                    $this->info("Ticket dengan ticket_id {$ticketId} {$ticketDate} telah diperbarui.");
+                    $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah diperbarui.");
                 } else {
                     // Jika ticket_id belum ada, insert semua field
                     NmtTickets::create([
@@ -118,7 +118,7 @@ class FetchNmtTickets extends Command
                         'update_progress' => $item['UPDATE PROGRESS'],
                     ]);
 
-                    $this->info("Ticket dengan ticket_id {$ticketId} {$ticketDate} telah ditambahkan.");
+                    $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah ditambahkan.");
                 }
             }
 
