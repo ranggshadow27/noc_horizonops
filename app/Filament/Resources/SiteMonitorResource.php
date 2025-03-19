@@ -95,6 +95,10 @@ class SiteMonitorResource extends Resource
                     ->description(fn(SiteMonitor $record): string => $record->site?->administrative_area ?? '-')
                     ->label('Province'),
 
+                Tables\Columns\TextColumn::make('site.administrative_area')
+                    ->hidden()
+                    ->label('Administrative Area'),
+
                 Tables\Columns\TextColumn::make('site.gateway')
                     ->sortable()
                     ->searchable()
