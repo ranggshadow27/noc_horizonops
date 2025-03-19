@@ -30,12 +30,12 @@ class FetchNmtTickets extends Command
 
         $apiLastUpdate = Carbon::parse($response->json()['last_update'])
             ->setTimezone('Asia/Jakarta')
-            ->format('Y-m-d'); // Sesuaikan key JSON
+            ->format('Y-m-d H:i:s'); // Sesuaikan key JSON
 
         // Cek last_update di DB
         $dbLastUpdate = CheckUpdate::where('update_name', 'NMT Ticket')->first();
 
-        if ($dbLastUpdate && $dbLastUpdate->update_time == $apiLastUpdate) {
+        if ($dbLastUpdate && $dbLastUpdate->update_time === $apiLastUpdate) {
             $this->info('Tidak ada perubahan, fetch dibatalkan.');
             return;
         }
