@@ -108,7 +108,6 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
             ->whereDate('date_start', '<', Carbon::parse($this->filterFormData['date_start']))
             ->count();
 
-
         // Ambil data per hari dengan Laravel Trend
         $trendOpen = Trend::query(NmtTickets::where('status', 'OPEN'))
             ->between(

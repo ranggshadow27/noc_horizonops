@@ -107,7 +107,8 @@ class SiteMonitorResource extends Resource
                     ->label('Gateway'),
 
                 Tables\Columns\TextColumn::make('status')->badge()->searchable()
-                    ->sortable()->color(fn(string $state): string => match ($state) {
+                    ->sortable()
+                    ->color(fn(string $state): string => match ($state) {
                         'Critical' => 'danger',
                         'Normal' => 'success',
                         'Minor' => 'primary',

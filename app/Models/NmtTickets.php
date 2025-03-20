@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class NmtTickets extends Model
 {
@@ -35,5 +36,10 @@ class NmtTickets extends Model
     public function area()
     {
         return $this->belongsTo(AreaList::class, 'site_province', 'province');
+    }
+
+    public function siteMonitor()
+    {
+        return $this->hasOne(SiteMonitor::class, 'site_id', 'site_id');
     }
 }

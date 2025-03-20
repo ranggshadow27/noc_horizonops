@@ -30,6 +30,15 @@ class NmtTicketsResource extends Resource
     protected static ?string $navigationIcon = 'phosphor-tag-chevron-duotone';
     protected static ?int $navigationSort = 1;
 
+    public static function getNavigationBadge(): ?string
+    {
+        return NmtTickets::where('status', "OPEN")
+            ->whereHas('siteMonitor', function ($query) {
+                $query->where('modem_last_up', '=', null)->orWhere('modem_last_up', '>=', now()->subDays(5));
+            })
+            ->count(); // Hitung total data
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -86,7 +95,7 @@ class NmtTicketsResource extends Resource
                     })
                     ->searchable(),
 
-                    Tables\Columns\TextColumn::make('site_province')
+                Tables\Columns\TextColumn::make('site_province')
                     ->label("Province")
                     ->limit(15)
                     ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
@@ -117,8 +126,37 @@ class NmtTicketsResource extends Resource
                     )
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('siteMonitor.modem_last_up')
+                    ->label('Modem Last Up')
+                    ->default("Up")
+                    ->badge()
+                    ->color(function ($state) {
+                        if ($state === "Up") {
+                            return 'success'; // Jika "Up", warna hijau (success)
+                        }
+
+                        $modemTime = Carbon::parse($state);
+                        $now = Carbon::now();
+
+                        // Jika selisih kurang dari atau sama dengan 3 hari → success (hijau)
+                        // Jika lebih dari 3 hari → danger (merah)
+                        return $modemTime->diffInDays($now) <= 3 ? 'success' : 'gray';
+                    })
+                    ->formatStateUsing(function ($state) {
+                        if ($state === "Up") {
+                            return "Up";
+                        }
+
+                        return Carbon::parse($state)
+                            ->diffForHumans();
+                    })
+
+                    ->sortable()
+                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('problem_classification')
                     ->label("Classification")
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable()
                     ->searchable(),
 
@@ -166,7 +204,7 @@ class NmtTicketsResource extends Resource
 
                 Tables\Filters\SelectFilter::make('area')
                     ->label("Area")
-                    ->options(fn() => AreaList::all()->pluck('area', 'area')) //you probably want to limit this in some way?
+                    ->options(fn() => AreaList::all()->pluck('area', 'area'))
                     ->modifyQueryUsing(function (Builder $query, $state) {
                         if (! $state['value']) {
                             return $query;
@@ -174,7 +212,28 @@ class NmtTicketsResource extends Resource
                         return $query->whereHas('area', fn($query) => $query->where('area', $state['value']));
                     }),
 
+                Tables\Filters\SelectFilter::make('modem_last_up')
+                    ->label('Filter by Modem Last Up')
+                    ->options([
+                        'now' => 'Up (Online)',
+                        'recent' => '≤ 3 days ago',
+                        'old' => '> 3 days ago',
+                    ])
+                    ->modifyQueryUsing(function (Builder $query, array $state) {
+                        if (!isset($state['value']) || empty($state['value'])) {
+                            return $query; // Jika tidak ada filter yang dipilih, kembalikan query tanpa filter
+                        }
 
+                        return $query->whereHas('siteMonitor', function ($query) use ($state) {
+                            if ($state['value'] === 'now') {
+                                $query->whereNull('modem_last_up');
+                            } elseif ($state['value'] === 'recent') {
+                                $query->where('modem_last_up', '>=', now()->subDays(5))->orWhere('modem_last_up', '=', null);
+                            } elseif ($state['value'] === 'old') {
+                                $query->where('modem_last_up', '<', now()->subDays(3));
+                            }
+                        });
+                    })
             ])
             ->actions([
                 // Tables\Actions\EditAction::make(),
