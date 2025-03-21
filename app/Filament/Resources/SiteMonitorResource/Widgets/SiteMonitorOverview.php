@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SiteMonitorResource\Widgets;
 
+use App\Filament\Resources\SiteMonitorResource;
 use App\Models\SiteMonitor;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -9,6 +10,11 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 class SiteMonitorOverview extends BaseWidget
 {
     protected static ?string $pollingInterval = '10m';
+
+    function goToProject()
+    {
+        redirect('mahaga/site-monitors?tableFilters[modem_last_up][created_from]=2025-03-16');
+    }
 
     protected function getStats(): array
     {
@@ -26,13 +32,21 @@ class SiteMonitorOverview extends BaseWidget
         return [
             Stat::make('Total Modem UP', $totalModemUp . " Site")
                 ->description("$modemPercentage% of modems are currently online")->color('primary')
-                ->descriptionIcon('phosphor-check-circle-duotone'),
+                ->descriptionIcon('phosphor-check-circle-duotone')
+                // ->url('site-monitors')
+                ->extraAttributes([
+                    'class' => 'cursor-pointer',
+                    'wire:click' => 'goToProject()',
+                ]),
+
             Stat::make('Total Router UP', $totalRouterUp . " Site")
                 ->description("$routerPercentage% of router sensors are online")->color('primary')
                 ->descriptionIcon('phosphor-check-circle-duotone'),
+
             Stat::make('Total Access Point 1 UP', $totalAp1Up . " Site")
                 ->description("$ap1Percentage% of access point 1 sensors are online")->color('primary')
                 ->descriptionIcon('phosphor-check-circle-duotone'),
+
             Stat::make('Total Access Point 2 UP', $totalAp2Up . " Site")
                 ->description("$ap2Percentage% of access point 2 sensors are online")->color('primary')
                 ->descriptionIcon('phosphor-check-circle-duotone'),

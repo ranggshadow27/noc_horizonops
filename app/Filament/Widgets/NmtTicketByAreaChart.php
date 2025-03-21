@@ -86,6 +86,19 @@ class NmtTicketByAreaChart extends ApexChartWidget
         return RawJs::make(
             <<<'JS'
             {
+                chart: {
+                    events: {
+                        dataPointSelection: (event, chartContext,config) => {
+
+                            let category = config.w.config;
+                            console.log(category); // Debugging
+
+                            // window.location.href = '/site-monitors';
+                            console.log("Tess");
+                        }
+                    }
+                },
+
                 fill: {
                     opacity: 0.8,
                 },

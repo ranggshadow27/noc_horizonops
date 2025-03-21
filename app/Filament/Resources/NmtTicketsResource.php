@@ -128,10 +128,10 @@ class NmtTicketsResource extends Resource
 
                 Tables\Columns\TextColumn::make('siteMonitor.modem_last_up')
                     ->label('Modem Last Up')
-                    ->default("Up")
+                    ->default("Online")
                     ->badge()
                     ->color(function ($state) {
-                        if ($state === "Up") {
+                        if ($state === "Online") {
                             return 'success'; // Jika "Up", warna hijau (success)
                         }
 
@@ -143,8 +143,8 @@ class NmtTicketsResource extends Resource
                         return $modemTime->diffInDays($now) <= 3 ? 'success' : 'gray';
                     })
                     ->formatStateUsing(function ($state) {
-                        if ($state === "Up") {
-                            return "Up";
+                        if ($state === "Online") {
+                            return "Online";
                         }
 
                         return Carbon::parse($state)
@@ -213,7 +213,7 @@ class NmtTicketsResource extends Resource
                     }),
 
                 Tables\Filters\SelectFilter::make('modem_last_up')
-                    ->label('Filter by Modem Last Up')
+                    ->label('Modem Last Up')
                     ->options([
                         'now' => 'Up (Online)',
                         'recent' => '≤ 3 days ago',
