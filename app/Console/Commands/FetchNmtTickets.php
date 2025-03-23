@@ -69,7 +69,6 @@ class FetchNmtTickets extends Command
                     continue;
                 }
 
-                // Convert "problems" string ke array JSON
                 $ticketId = str_replace('/', '-', $item['TICKET ID']);
                 $status = $item['STATUS'];
                 $ticketDate = Carbon::parse($item['DATE START TT'], 'Asia/Jakarta')
@@ -79,6 +78,7 @@ class FetchNmtTickets extends Command
 
                 // Cek jika ticket_id sudah ada di database
                 $existingTicket = NmtTickets::where('ticket_id', $ticketId)->first();
+
 
                 if ($existingTicket) {
                     // Update hanya field yang diinginkan jika ticket_id sudah ada

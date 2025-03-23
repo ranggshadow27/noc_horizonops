@@ -58,30 +58,34 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
         while ($currentDate->lte(Carbon::parse($this->filterFormData['date_end'])->endOfDay())) {
             // Hitung jumlah tiket yang masih Open pada tanggal ini
             $openTickets = NmtTickets::where('date_start', '<=', $currentDate)
+                ->where('problem_detail', 'LIKE', "%RENOVASI%")
                 ->where(function ($query) use ($currentDate) {
                     $query->where('status', '=', 'OPEN')
-                        ->where('problem_detail', 'LIKE', "%RENOVASI%");
+                        ->orWhere('closed_date', '>=', $currentDate);
                 })
                 ->count();
 
             $relokTickets = NmtTickets::where('date_start', '<=', $currentDate)
+                ->where('problem_classification', 'LIKE', "%RELOKASI%")
                 ->where(function ($query) use ($currentDate) {
                     $query->where('status', '=', 'OPEN')
-                        ->where('problem_classification', 'LIKE', "%RELOKASI%");
+                        ->orWhere('closed_date', '>=', $currentDate);
                 })
                 ->count();
 
-                $liburTickets = NmtTickets::where('date_start', '<=', $currentDate)
+            $liburTickets = NmtTickets::where('date_start', '<=', $currentDate)
+                ->where('problem_detail', 'LIKE', "%LIBUR%")
                 ->where(function ($query) use ($currentDate) {
                     $query->where('status', '=', 'OPEN')
-                        ->where('problem_detail', 'LIKE', "%LIBUR%");
+                        ->orWhere('closed_date', '>=', $currentDate);
                 })
                 ->count();
 
-                $bencanaTickets = NmtTickets::where('date_start', '<=', $currentDate)
+            $bencanaTickets = NmtTickets::where('date_start', '<=', $currentDate)
+                ->where('problem_detail', 'LIKE', "%BENCANA%")
                 ->where(function ($query) use ($currentDate) {
                     $query->where('status', '=', 'OPEN')
-                        ->where('problem_detail', 'LIKE', "%BENCANA%");
+                        ->orWhere('closed_date', '>=', $currentDate);
                 })
                 ->count();
 
