@@ -24,7 +24,8 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
      *
      * @var string|null
      */
-    protected static ?string $heading = 'NmtTicketProblemDetailLineChart';
+    protected static ?string $heading = 'NMT Ticket Category';
+    protected static ?string $subheading = 'Summary NMT Open (Relokasi, Renovasi, Bencana, Libur)';
 
     /**
      * Chart options (series, labels, types, size, animations...)
@@ -45,88 +46,54 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
 
     protected function getOptions(): array
     {
-        // Hitung total tiket Open Renovasi sebelum start date
-        $initialrelokasi = NmtTickets::where('status', 'OPEN')
-            ->where('problem_classification', 'PENGAJUAN RELOKASI')
-            ->whereDate('date_start', '<', Carbon::parse($this->filterFormData['date_start']))
-            ->count();
+        $dates = [];
 
-
-        // Ambil data per hari dengan Laravel Trend
-        $trendrelokasi = Trend::query(NmtTickets::where('status', 'OPEN')
-            ->where('problem_classification', 'PENGAJUAN RELOKASI'))
-            ->between(
-                start: Carbon::parse($this->filterFormData['date_start']),
-                end: Carbon::parse($this->filterFormData['date_end']),
-            )
-            ->dateColumn('date_start')
-            ->perDay()
-            ->count();
-
-        // Hitung akumulasi mulai dari initialCount
-        $relokasiDates = [];
-        $relokasiCounts = [];
-        $relokasiSum = $initialrelokasi; // Mulai dari jumlah tiket sebelum start date
-
-        foreach ($trendrelokasi as $data) {
-            $relokasiSum += $data->aggregate; // Akumulasi dari hari sebelumnya
-            $relokasiDates[] = Carbon::parse($data->date)->format('d M');
-            $relokasiCounts[] = $relokasiSum;
-        }
-
-        // Hitung total tiket Open Renovasi sebelum start date
-        $initialRenovasi = NmtTickets::where('status', 'OPEN')
-            ->where('problem_detail', 'RENOVASI GEDUNG')
-            ->whereDate('date_start', '<', Carbon::parse($this->filterFormData['date_start']))
-            ->count();
-
-
-        // Ambil data per hari dengan Laravel Trend
-        $trendRenovasi = Trend::query(NmtTickets::where('status', 'OPEN')
-            ->where('problem_detail', 'RENOVASI GEDUNG'))
-            ->between(
-                start: Carbon::parse($this->filterFormData['date_start']),
-                end: Carbon::parse($this->filterFormData['date_end']),
-            )
-            ->dateColumn('date_start')
-            ->perDay()
-            ->count();
-
-        // Hitung akumulasi mulai dari initialCount
-        $renovasiDates = [];
         $renovasiCounts = [];
-        $renovasiSum = $initialRenovasi; // Mulai dari jumlah tiket sebelum start date
+        $relokCounts = [];
+        $bencanaCounts = [];
+        $liburCounts = [];
 
-        foreach ($trendRenovasi as $data) {
-            $renovasiSum += $data->aggregate; // Akumulasi dari hari sebelumnya
-            $renovasiDates[] = Carbon::parse($data->date)->format('d M');
-            $renovasiCounts[] = $renovasiSum;
-        }
+        $currentDate = Carbon::parse($this->filterFormData['date_start'])->startOfDay();
 
-        // Hitung total tiket Open Renovasi sebelum start date
-        $initialOpen = NmtTickets::where('status', 'OPEN')
-            ->whereDate('date_start', '<', Carbon::parse($this->filterFormData['date_start']))
-            ->count();
+        while ($currentDate->lte(Carbon::parse($this->filterFormData['date_end'])->endOfDay())) {
+            // Hitung jumlah tiket yang masih Open pada tanggal ini
+            $openTickets = NmtTickets::where('date_start', '<=', $currentDate)
+                ->where(function ($query) use ($currentDate) {
+                    $query->where('status', '=', 'OPEN')
+                        ->where('problem_detail', 'LIKE', "%RENOVASI%");
+                })
+                ->count();
 
-        // Ambil data per hari dengan Laravel Trend
-        $trendOpen = Trend::query(NmtTickets::where('status', 'OPEN'))
-            ->between(
-                start: Carbon::parse($this->filterFormData['date_start']),
-                end: Carbon::parse($this->filterFormData['date_end']),
-            )
-            ->dateColumn('date_start')
-            ->perDay()
-            ->count();
+            $relokTickets = NmtTickets::where('date_start', '<=', $currentDate)
+                ->where(function ($query) use ($currentDate) {
+                    $query->where('status', '=', 'OPEN')
+                        ->where('problem_classification', 'LIKE', "%RELOKASI%");
+                })
+                ->count();
 
-        // Hitung akumulasi mulai dari initialCount
-        $openDates = [];
-        $openCounts = [];
-        $openSum = $initialOpen; // Mulai dari jumlah tiket sebelum start date
+                $liburTickets = NmtTickets::where('date_start', '<=', $currentDate)
+                ->where(function ($query) use ($currentDate) {
+                    $query->where('status', '=', 'OPEN')
+                        ->where('problem_detail', 'LIKE', "%LIBUR%");
+                })
+                ->count();
 
-        foreach ($trendOpen as $data) {
-            $openSum += $data->aggregate; // Akumulasi dari hari sebelumnya
-            $openDates[] = Carbon::parse($data->date)->format('d M');
-            $openCounts[] = $openSum;
+                $bencanaTickets = NmtTickets::where('date_start', '<=', $currentDate)
+                ->where(function ($query) use ($currentDate) {
+                    $query->where('status', '=', 'OPEN')
+                        ->where('problem_detail', 'LIKE', "%BENCANA%");
+                })
+                ->count();
+
+            $renovasiCounts[] = $openTickets;
+            $relokCounts[] = $relokTickets;
+            $bencanaCounts[] = $bencanaTickets;
+            $liburCounts[] = $liburTickets;
+
+            $dates[] = $currentDate->format('d M');
+
+            // Lanjut ke hari berikutnya
+            $currentDate->addDay();
         }
 
         return [
@@ -136,7 +103,7 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
             // ],
 
             'chart' => [
-                'type' => "area",
+                'type' => "line",
                 'height' => 350,
                 'foreColor' => "#ccc",
                 'fontFamily' => 'inherit',
@@ -156,18 +123,23 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
 
             'series' => [
                 [
-                    'name' => 'Ticket Renovasi',
+                    'name' => 'Renovasi',
                     'data' => $renovasiCounts,
                 ],
 
                 [
-                    'name' => 'Ticket Relokasi',
-                    'data' => $relokasiCounts,
+                    'name' => 'Relokasi',
+                    'data' => $relokCounts,
                 ],
 
                 [
-                    'name' => 'Ticket Open',
-                    'data' => $openCounts,
+                    'name' => 'Libur',
+                    'data' => $liburCounts,
+                ],
+
+                [
+                    'name' => 'Bencana Alam',
+                    'data' => $bencanaCounts,
                 ],
 
                 // [
@@ -188,6 +160,7 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
             ],
 
             'legend' => [
+                'position' => 'top',
                 'markers' => [
                     'size' => 4,
                     'offsetX' => -5,
@@ -202,7 +175,7 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
             'xaxis' => [
                 // 'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                 // 'categories' => array_column($closeTT, 'date'),
-                'categories' => $renovasiDates,
+                'categories' => $dates,
                 'type' => 'datetime',
                 'labels' => [
                     'style' => [
@@ -223,9 +196,9 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
                 ],
             ],
 
-            // 'colors' => ['#80b918', '#f7b801'],
+            'colors' => ['#858599', '#FE4A49', '#FEC620', '#8D0101'],
             'stroke' => [
-                'curve' => 'smooth',
+                // 'curve' => 'smooth',
                 'width' => 3,
             ],
 
@@ -271,19 +244,19 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
             //     'theme' => 'dark',
             // ],
 
-            'fill' => [
-                // 'type' => 'gradient',
-                'gradient' => [
-                    // 'shade' => 'dark',
-                    // 'type' => 'horizontal',
-                    'enabled' => true,
-                    // 'gradientToColors' => ['#ea580c'],
-                    // 'inverseColors' => true,
-                    'opacityFrom' => 0.55,
-                    'opacityTo' => 0.0,
-                    // 'stops' => [0, 90, 100],
-                ],
-            ],
+            // 'fill' => [
+            //     // 'type' => 'gradient',
+            //     'gradient' => [
+            //         // 'shade' => 'dark',
+            //         // 'type' => 'horizontal',
+            //         'enabled' => true,
+            //         // 'gradientToColors' => ['#ea580c'],
+            //         // 'inverseColors' => true,
+            //         'opacityFrom' => 0.55,
+            //         'opacityTo' => 0.0,
+            //         // 'stops' => [0, 90, 100],
+            //     ],
+            // ],
         ];
     }
 
@@ -298,9 +271,9 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
 
             dataLabels: {
                 enabled: true,
-                formatter: function (value) {
-                    return value >= 5 ? value : "";
-                }
+                // formatter: function (value) {
+                //     return value >= 10 ? value : "";
+                // }
             },        }
         JS);
     }

@@ -23,7 +23,7 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
      *
      * @var string|null
      */
-    protected static ?string $heading = 'Trouble Ticket Status';
+    protected static ?string $heading = 'Progress Summary';
     protected static ?string $subheading = 'Overall NMT Tickets Open vs Closed';
 
     /**
@@ -81,6 +81,16 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
                     'name' => 'TT Closed',
                     'data' => $closedTT->map(fn(TrendValue $value) => $value->aggregate),
                 ],
+                [
+                    'name' => 'TT Remaining',
+                    'data' => $openTT->zip($closedTT)->map(function($values) {
+                        if ($values[0]->aggregate - $values[1]->aggregate < 0) {
+                            return 0;
+                        }
+
+                        return $values[0]->aggregate - $values[1]->aggregate;
+                    }),
+                ],
             ],
 
             'xaxis' => [
@@ -103,7 +113,12 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
                 ],
             ],
 
-            'colors' => ['#F86624', '#4ecdc4']
+            'colors' => ['#CB0101', '#45C8D9', '#FEC620'],
+
+            'stroke' => [
+                'width' => 1,
+                'colors' => ['#fff']
+            ]
 
 
         ];
@@ -127,7 +142,7 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
             },
 
             dataLabels: {
-                offsetX: 10,
+                offsetX: 0,
             },
 
             plotOptions: {

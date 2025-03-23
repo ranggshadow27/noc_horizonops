@@ -16,7 +16,7 @@ class NmtTicketsByProvinceTableWidget extends BaseWidget
         return $table
             ->heading("Ticket Open per Province")
             ->description("Live Highest Trouble Tickets by Province")
-            ->paginated([5])
+            ->paginated([14])
             ->query(
                 NmtTickets::query()
                     ->selectRaw('MIN(ticket_id) as ticket_id, site_province, COUNT(*) as total_tickets') // Tambahkan ID untuk Filament

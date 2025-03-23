@@ -23,7 +23,7 @@ class NmtTicketByAreaChart extends ApexChartWidget
      *
      * @var string|null
      */
-    protected static ?string $heading = 'Open by Area';
+    protected static ?string $heading = 'Tickets Open by Area';
     protected static ?string $subheading = 'Summary of NMT Ticket Open by Area';
 
 
@@ -50,7 +50,8 @@ class NmtTicketByAreaChart extends ApexChartWidget
         return [
             'chart' => [
                 'type' => 'polarArea',
-                'height' => 370,
+                'height' => 390,
+                'fontFamily' => 'inherit',
             ],
 
             'series' => $openTT->values()->toArray(),
@@ -59,7 +60,7 @@ class NmtTicketByAreaChart extends ApexChartWidget
 
             'stroke' => [
                 'colors' => '#fff',
-                'width' => 4,
+                'width' => 2,
             ],
 
             'dataLabels' => [
@@ -111,6 +112,17 @@ class NmtTicketByAreaChart extends ApexChartWidget
                     }
                 },
 
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        legend: {
+                            position: 'bottom',
+                            offsetX: -10,
+                            offsetY: 0
+                        }
+                    }
+                }],
+
                 dataLabels: {
                     // formatter: function (value) { return value; },
                 },
@@ -118,10 +130,10 @@ class NmtTicketByAreaChart extends ApexChartWidget
                 plotOptions: {
                         polarArea: {
                             rings: {
-                                strokeWidth: 1
+                                strokeWidth: 1,
                             },
                             spokes: {
-                                strokeWidth: 5
+                                strokeWidth: 5,
                             },
                         }
                 },

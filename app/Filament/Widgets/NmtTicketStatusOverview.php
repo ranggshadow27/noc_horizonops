@@ -50,32 +50,6 @@ class NmtTicketStatusOverview extends ApexChartWidget
 
     protected function getOptions(): array
     {
-
-        $overallTicketStartDate = NmtTickets::where('status', 'OPEN')
-            // ->whereNotIn('problem_detail', ['RENOVASI', 'RELOKASI', 'BENCANA ALAM'])
-            ->orderBy('date_start', 'asc')
-            ->value('date_start');
-
-        // dd($overallTicketStartDate);
-
-        $totalOpen = NmtTickets::where('status', 'OPEN')
-            ->whereNotIn('problem_detail', ['RENOVASI', 'RELOKASI', 'BENCANA ALAM'])
-            ->whereBetween('date_start', [
-                Carbon::parse($overallTicketStartDate),
-                Carbon::parse($this->filterFormData['date_start']),
-            ])->count();
-
-        // $poeCount = $poeTrend->map(function ($item) {
-        //     // Decode string menjadi array, jika problem_json adalah string JSON
-        //     $problemArray = $item->ticket_id; // Pastikan problem_json adalah JSON
-        //     // Hitung berapa kali 'POE' muncul dalam array
-        //     return $problemArray;
-        //     // return $problemArray;
-        // });
-
-        // dd($poeCount);
-
-        // $openTT = Trend::query(NmtTickets::where('status', 'OPEN'))
         $openTT = Trend::model(NmtTickets::class)
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
@@ -95,23 +69,24 @@ class NmtTicketStatusOverview extends ApexChartWidget
             ->perDay()
             ->count();
 
-        $totalTT = Trend::query(NmtTickets::where('status', 'OPEN')
-            ->whereNotIn('problem_detail', ['RENOVASI', 'RELOKASI', 'BENCANA ALAM']))
-            ->between(
-                start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
-                end: Carbon::parse($this->filterFormData['date_end'])->endOfDay(),
-            )
-            ->dateColumn('date_start')
-            ->perDay()
-            ->count()
-            ->reduce(function ($carry, TrendValue $value) use (&$totalOpen) {
-                // static $total = 14;
-                $totalOpen += $value->aggregate;
-                $carry[] = ['date' => $value->date, 'total' => $totalOpen];
-                return $carry;
-            }, []);
+        $openCounts = [];
 
-        // dd($totalTT);
+        $currentDate = Carbon::parse($this->filterFormData['date_start'])->startOfDay();
+
+        while ($currentDate->lte(Carbon::parse($this->filterFormData['date_end'])->endOfDay())) {
+            // Hitung jumlah tiket yang masih Open pada tanggal ini
+            $openTickets = NmtTickets::where('date_start', '<=', $currentDate)
+                ->where(function ($query) use ($currentDate) {
+                    $query->where('status', '=', 'OPEN')
+                        ->orWhere('closed_date', '>=', $currentDate);
+                })
+                ->count();
+
+            $openCounts[] = $openTickets;
+
+            // Lanjut ke hari berikutnya
+            $currentDate->addDay();
+        }
 
         return [
             // 'theme' => [
@@ -152,6 +127,11 @@ class NmtTicketStatusOverview extends ApexChartWidget
                     // 'data' => array_column($closeTT, 'total'),
                 ],
 
+                [
+                    'name' => 'Ticket Overall',
+                    'data' => $openCounts,
+                ],
+
                 // [
                 //     'name' => 'Total Ticket',
                 //     // 'data' => [7, 4, 6, 10, 14, 7, 5, 9, 10, 15, 13, 18],
@@ -162,6 +142,7 @@ class NmtTicketStatusOverview extends ApexChartWidget
             ],
 
             'legend' => [
+                'position' => 'top',
                 'markers' => [
                     'size' => 4,
                     'offsetX' => -5,

@@ -39,7 +39,6 @@ class NmtTicketByProblemClassChart extends ApexChartWidget
             ->orderBy('problem_classification', 'desc')
             ->pluck('count', 'problem_classification');
 
-        // Mapping untuk mengganti label yang panjang
         $labelMapping = [
             'MASALAH SUMBER DAYA LISTRIK' => 'Power',
             'LAYANAN AI SEMENTARA DIMATIKAN' => 'Sengaja Dimatikan',
@@ -48,10 +47,8 @@ class NmtTicketByProblemClassChart extends ApexChartWidget
             'PENGAJUAN RELOKASI' => 'Relokasi',
             'OFFLINE' => 'Offline',
             '-' => 'Belum Teridentifikasi',
-            // Tambahkan mapping lainnya sesuai kebutuhan
         ];
 
-        // Ubah label sesuai mapping (jika tidak ada di mapping, pakai aslinya)
         $formattedLabels = $problems->keys()->map(function ($label) use ($labelMapping) {
             return $labelMapping[$label] ?? $label;
         });

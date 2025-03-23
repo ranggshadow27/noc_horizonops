@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
+use Illuminate\Contracts\View\View;
 
 class NMTTicketDashboard extends Page
 {
@@ -14,10 +15,16 @@ class NMTTicketDashboard extends Page
     protected static ?string $navigationGroup = 'Trouble Tickets';
 
     protected ?string $heading = "";
+
     // protected ?string $subheading = 'Custom Page Subheading';
 
     public function getColumns(): int | string | array
     {
         return 2;
+    }
+
+    public function getFooter(): ?View
+    {
+        return view('filament.pages.footer');
     }
 }
