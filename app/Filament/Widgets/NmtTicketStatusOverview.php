@@ -70,14 +70,16 @@ class NmtTicketStatusOverview extends ApexChartWidget
             ->count();
 
         $openCounts = [];
+        $liburCounts = [];
+        $dates = [];
 
         $currentDate = Carbon::parse($this->filterFormData['date_start'])->startOfDay();
 
-        while ($currentDate->lte(Carbon::parse($this->filterFormData['date_end'])->startOfDay())) {
+        while ($currentDate->lte(Carbon::parse($this->filterFormData['date_end'])->endOfDay())) {
             // Hitung jumlah tiket yang masih Open pada tanggal ini
             $openTickets = NmtTickets::where('date_start', '<=', $currentDate)
                 ->whereNot('problem_detail', 'LIKE', "%RENOVASI%")
-                ->whereNot('problem_detail', 'LIKE', "%LIBUR%")
+                // ->whereNot('problem_detail', 'LIKE', "%LIBUR%")
                 ->whereNot('problem_detail', 'LIKE', "%BENCANA%")
                 ->whereNot('problem_classification', 'LIKE', "%RELOKASI%")
                 ->where(function ($query) use ($currentDate) {
@@ -86,7 +88,21 @@ class NmtTicketStatusOverview extends ApexChartWidget
                 })
                 ->count();
 
-            $openCounts[] = $openTickets;
+            $liburTickets = NmtTickets::where('date_start', '<=', $currentDate)
+                ->where('problem_detail', 'LIKE', "%LIBUR%")
+                ->where(function ($query) use ($currentDate) {
+                    $query->where('status', '=', 'OPEN')
+                        ->orWhere('closed_date', '>=', $currentDate);
+                })
+                ->count();
+
+            $todayLiburClose = NmtTickets::where('problem_detail', 'LIKE', "%LIBUR%")
+                ->where('closed_date', '>=', $currentDate)
+                ->where('closed_date', '<=', $currentDate->endOfDay())
+                ->count();
+
+            $openCounts[] = $openTickets - ($liburTickets - $todayLiburClose);
+            $dates[] = $currentDate->format('d M');
 
             // Lanjut ke hari berikutnya
             $currentDate->addDay();
