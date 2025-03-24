@@ -111,9 +111,15 @@ class NmtTicketsResource extends Resource
 
                 Tables\Columns\TextColumn::make('status')
                     ->label("Status")
-                    ->badge()->color(fn(string $state): string => match ($state) {
-                        'OPEN' => 'warning',
-                        'CLOSED' => 'success',
+                    ->badge()
+                    ->color(function ($state) {
+                        if ($state === "OPEN") {
+                            return "warning";
+                        } elseif ($state === "CLOSED") {
+                            return 'success';
+                        } else {
+                            return 'gray';
+                        }
                     })
                     ->formatStateUsing(fn($state) => Str::title($state))
                     ->searchable(),
