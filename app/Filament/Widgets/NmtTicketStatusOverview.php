@@ -73,7 +73,7 @@ class NmtTicketStatusOverview extends ApexChartWidget
 
         $currentDate = Carbon::parse($this->filterFormData['date_start'])->startOfDay();
 
-        while ($currentDate->lte(Carbon::parse($this->filterFormData['date_end'])->endOfDay())) {
+        while ($currentDate->lte(Carbon::parse($this->filterFormData['date_end'])->startOfDay())) {
             // Hitung jumlah tiket yang masih Open pada tanggal ini
             $openTickets = NmtTickets::where('date_start', '<=', $currentDate)
                 ->whereNot('problem_detail', 'LIKE', "%RENOVASI%")
