@@ -254,6 +254,8 @@ class NmtTicketsResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
+            ->paginated([10, 25, 50, 100, 'all'])
+            ->defaultPaginationPageOption(10)
             ->emptyStateHeading('No NMT Ticket yet')
             ->emptyStateDescription('Once you have been import NMT Ticket, it will appear here.')
             ->emptyStateIcon('phosphor-ticket-duotone');

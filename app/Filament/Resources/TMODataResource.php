@@ -1127,6 +1127,8 @@ class TMODataResource extends Resource
                     return $query->where('engineer_name', auth()->user()->name);
                 }
             })
+            ->paginated([10, 25, 50, 100, 'all'])
+            ->defaultPaginationPageOption(10)
             ->emptyStateHeading('No Assigned TMO yet')
             ->emptyStateDescription('Once you have been assign your first TMO, it will appear here.')
             ->emptyStateIcon('phosphor-hand-withdraw-duotone')

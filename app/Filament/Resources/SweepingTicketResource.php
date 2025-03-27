@@ -21,7 +21,7 @@ class SweepingTicketResource extends Resource
 
     protected static ?string $navigationIcon = 'phosphor-broom-duotone';
 
-    protected static ?string $navigationLabel = 'Sweeping Tickets';
+    protected static ?string $navigationLabel = 'Sweeping Ticket';
     protected static ?string $navigationGroup = 'Trouble Tickets';
 
     protected static bool $hasTitleCaseModelLabel = false;
@@ -142,6 +142,8 @@ class SweepingTicketResource extends Resource
                 // Tables\Actions\DeleteAction::make(),
             ])
             ->headerActions([])
+            ->paginated([10, 25, 50, 100, 'all'])
+            ->defaultPaginationPageOption(10)
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
