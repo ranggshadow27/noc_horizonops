@@ -46,6 +46,15 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
 
     protected function getOptions(): array
     {
+        $openTT = Trend::model(NmtTickets::class)
+            ->between(
+                start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
+                end: Carbon::parse($this->filterFormData['date_end'])->endOfDay(),
+            )
+            ->dateColumn('date_start')
+            ->perDay()
+            ->count();
+
         $dates = [];
 
         $renovasiCounts = [];
@@ -73,6 +82,11 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
                 })
                 ->count();
 
+            $todayLiburClose = NmtTickets::where('problem_detail', 'LIKE', "%LIBUR%")
+                ->where('closed_date', '>=', $currentDate)
+                ->where('closed_date', '<=', $currentDate->endOfDay())
+                ->count();
+
             $liburTickets = NmtTickets::where('date_start', '<=', $currentDate)
                 ->where('problem_detail', 'LIKE', "%LIBUR%")
                 ->where(function ($query) use ($currentDate) {
@@ -92,7 +106,7 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
             $renovasiCounts[] = $openTickets;
             $relokCounts[] = $relokTickets;
             $bencanaCounts[] = $bencanaTickets;
-            $liburCounts[] = $liburTickets;
+            $liburCounts[] = $liburTickets - $todayLiburClose;
 
             $dates[] = $currentDate->format('d M');
 
@@ -179,7 +193,7 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
             'xaxis' => [
                 // 'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                 // 'categories' => array_column($closeTT, 'date'),
-                'categories' => $dates,
+                'categories' => $openTT->map(fn(TrendValue $value) => $value->date),
                 'type' => 'datetime',
                 'labels' => [
                     'style' => [
