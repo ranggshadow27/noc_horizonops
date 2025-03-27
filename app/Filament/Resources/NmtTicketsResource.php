@@ -236,7 +236,7 @@ class NmtTicketsResource extends Resource
                             if ($state['value'] === 'now') {
                                 $query->whereNull('modem_last_up');
                             } elseif ($state['value'] === 'recent') {
-                                $query->where('modem_last_up', '>=', now()->subDays(5))->orWhere('modem_last_up', '=', null);
+                                $query->where('modem_last_up', '>=', now()->subDays(2))->orWhere('modem_last_up', '=', null);
                             } elseif ($state['value'] === 'old') {
                                 $query->where('modem_last_up', '<', now()->subDays(3));
                             }

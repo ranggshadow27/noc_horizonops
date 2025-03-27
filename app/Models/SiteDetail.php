@@ -62,5 +62,14 @@ class SiteDetail extends Model
     {
         return $this->hasMany(NmtTickets::class, 'site_id', 'site_id');
     }
-}
 
+    public function area()
+    {
+        return $this->belongsTo(AreaList::class, 'province', 'province');
+    }
+
+    public function sweepingTickets()
+    {
+        return $this->hasMany(SweepingTicket::class, 'site_id', 'site_id');
+    }
+}

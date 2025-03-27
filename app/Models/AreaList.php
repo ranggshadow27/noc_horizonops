@@ -23,4 +23,9 @@ class AreaList extends Model
     {
         return $this->hasMany(TmoData::class, 'site_province', 'province');
     }
+
+    public function siteDetails()
+    {
+        return $this->hasMany(SiteDetail::class, 'province', 'province');
+    }
 }
