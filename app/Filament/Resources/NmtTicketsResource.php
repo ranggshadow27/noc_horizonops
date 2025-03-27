@@ -75,9 +75,11 @@ class NmtTicketsResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('ticket_id')
                     ->label("Ticket ID")
+                    ->copyable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('site_id')
+                    ->copyable()
                     ->label("Site ID")
                     ->searchable(),
 

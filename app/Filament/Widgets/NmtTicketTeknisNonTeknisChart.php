@@ -31,16 +31,17 @@ class NmtTicketTeknisNonTeknisChart extends ApexChartWidget
      */
     protected function getOptions(): array
     {
-        $openTT = NmtTickets::where('status', 'OPEN')
+        $openTT = NmtTickets::where('status', 'OPEN')->count();
+
+        $nonTeknisCount = NmtTickets::where('problem_type', 'NON TEKNIS')
+            ->where('status', 'OPEN')
+            ->count();
+        $teknisCount = NmtTickets::where('problem_type', 'TEKNIS')
+            ->where('status', 'OPEN')
             ->count();
 
-        $nonTeknis = $openTT > 0 ? (NmtTickets::where('problem_type', 'NON TEKNIS')
-            ->where('status', 'OPEN')
-            ->count() / $openTT) * 100 : 0;
-
-        $teknis = $openTT > 0 ? (NmtTickets::where('problem_type', 'TEKNIS')
-            ->where('status', 'OPEN')
-            ->count() / $openTT) * 100 : 0;
+        $nonTeknis = $openTT > 0 ? ($nonTeknisCount / $openTT) * 100 : 0;
+        $teknis = $openTT > 0 ? ($teknisCount / $openTT) * 100 : 0;
 
         return [
             'chart' => [
@@ -51,34 +52,12 @@ class NmtTicketTeknisNonTeknisChart extends ApexChartWidget
 
             'series' => [round($nonTeknis), round($teknis)],
 
-            // 'plotOptions' => [
-            //     'radialBar' => [
-            //         'hollow' => [
-            //             'margin' => 5,
-            //             'size' => '40%',
-            //         ],
-            //         'dataLabels' => [
-            //             'show' => true,
-            //             'name' => [
-            //                 'show' => true,
-            //                 'fontFamily' => 'inherit'
-            //             ],
-            //             'value' => [
-            //                 'show' => true,
-            //                 'fontFamily' => 'inherit',
-            //                 'fontWeight' => 600,
-            //                 'fontSize' => '20px'
-            //             ],
-            //         ],
-
-            //     ],
-            // ],
-            // 'stroke' => [
-            //     'lineCap' => 'round',
-            // ],
-
             'labels' => ['Non-Teknis', 'Teknis'],
-            'colors' => ['#B2B09B' , '#B91372'],
+            'colors' => ['#B2B09B', '#B91372'],
+
+            'extra' => [  // Tambahkan data count
+                'counts' => [$nonTeknisCount, $teknisCount]
+            ]
         ];
     }
 
@@ -90,8 +69,9 @@ class NmtTicketTeknisNonTeknisChart extends ApexChartWidget
                     show: true,
                     position: 'bottom',
                     formatter: function (val, opts) {
-                        // console.log(opts.w);
-                        return val + " - " + opts.w.globals.series[opts.seriesIndex] + '%';
+                        // Ambil data count dari extra
+                        const counts = opts.w.config.extra.counts;
+                        return val + " - " + opts.w.globals.series[opts.seriesIndex] + '% (' + counts[opts.seriesIndex] + ' TT)';
                     }
                 },
 
@@ -150,7 +130,10 @@ class NmtTicketTeknisNonTeknisChart extends ApexChartWidget
                             offsetX: -8,
                             fontSize: '14px',
                             formatter: function(seriesName, opts) {
-                                return seriesName
+
+                                const counts = opts.w.config.extra.counts;
+
+                                return seriesName + ": " + counts[opts.seriesIndex]
                             },
                         },
                     },

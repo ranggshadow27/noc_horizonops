@@ -30,7 +30,8 @@ class FetchNmtTickets extends Command
 
         $apiLastUpdate = Carbon::parse($response->json()['last_update'])
             ->setTimezone('Asia/Jakarta')
-            ->format('Y-m-d H:i:s'); // Sesuaikan key JSON
+            ->format('Y-m-d'); // Sesuaikan key JSON
+        // ->format('Y-m-d H:i:s'); // Sesuaikan key JSON
 
         // Cek last_update di DB
         $dbLastUpdate = CheckUpdate::where('update_name', 'NMT Ticket')->first();
@@ -71,6 +72,7 @@ class FetchNmtTickets extends Command
 
                 $ticketId = str_replace('/', '-', $item['TICKET ID']);
                 $status = $item['STATUS'];
+
                 $ticketDate = Carbon::parse($item['DATE START TT'], 'Asia/Jakarta')
                     ->addDay()
                     ->startOfDay()
@@ -92,9 +94,10 @@ class FetchNmtTickets extends Command
                         'update_progress' => $item['UPDATE PROGRESS'],
                     ]);
 
-                    if ($status == "CLOSED") {
+                    if ($status === "CLOSED") {
                         $existingTicket->update([
-                            'closed_date' => $item['ACTUAL ONLINE'] !== "-" || !$item['ACTUAL ONLINE'] ? $item['ACTUAL ONLINE'] : Carbon::parse(now()->startOfDay())->format('Y-m-d H:i:s')
+                            // 'closed_date' => $item['ACTUAL ONLINE'] !== "-" || !$item['ACTUAL ONLINE'] ? $item['ACTUAL ONLINE'] : Carbon::parse(now()->startOfDay())->format('Y-m-d H:i:s')
+                            'closed_date' => $item['ACTUAL ONLINE'] ? $item['ACTUAL ONLINE'] : null,
                         ]);
                     } else {
                         $existingTicket->update([
