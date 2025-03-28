@@ -55,7 +55,7 @@ class FetchNmtTickets extends Command
 
     private function fetchAndInsertNmtTickets()
     {
-        $apiUrl = 'https://script.google.com/macros/s/AKfycbzLIrSJLKpi4zXiTflJNlQaNB0hhj-hXNWN58JZpNwTDZUloZjto8RItot9eAiuEw3tqQ/exec'; // Ganti dengan URL API kamu
+        $apiUrl = 'https://script.google.com/macros/s/AKfycbzLIrSJLKpi4zXiTflJNlQaNB0hhj-hXNWN58JZpNwTDZUloZjto8RItot9eAiuEw3tqQ/exec';
         $response = Http::get($apiUrl);
 
         if ($response->successful()) {
@@ -65,62 +65,61 @@ class FetchNmtTickets extends Command
                 $site = SiteDetail::where('site_id', $item['SITE ID'])->first();
 
                 if (!$site) {
-                    // Skip data jika site_id tidak ditemukan
                     $this->info("Data dengan site_id {$item['SITE ID']} di-skip karena tidak ditemukan di site_details.");
                     continue;
                 }
 
                 $ticketId = str_replace('/', '-', $item['TICKET ID']);
-                $status = $item['STATUS'];
+                $apiStatus = $item['STATUS'];
+                // Tentukan status akhir berdasarkan keberadaan ACTUAL ONLINE
+                $status = ($apiStatus === "CLOSED" && !isset($item['ACTUAL ONLINE'])) ? "OPEN" : $apiStatus;
 
                 $ticketDate = Carbon::parse($item['DATE START TT'], 'Asia/Jakarta')
                     ->addDay()
                     ->startOfDay()
                     ->translatedFormat('Y-m-d H:i:s');
 
-                // Cek jika ticket_id sudah ada di database
                 $existingTicket = NmtTickets::where('ticket_id', $ticketId)->first();
 
+                // Data dasar yang akan digunakan untuk update atau create
+                $ticketData = [
+                    'ticket_id' => $ticketId,
+                    'site_id' => $item['SITE ID'],
+                    'status' => $status,
+                    'date_start' => $ticketDate,
+                    'aging' => $item['DOWN TIME'],
+                    'problem_classification' => $item['PROBLEM CLASSIFICATION'],
+                    'problem_detail' => $item['DETAIL PROBLEM'],
+                    'problem_type' => $item['TEKNIS/NON TEKNIS'],
+                    'update_progress' => $item['UPDATE PROGRESS'],
+                ];
 
                 if ($existingTicket) {
-                    // Update hanya field yang diinginkan jika ticket_id sudah ada
-                    $existingTicket->update([
-                        'status' => $item['STATUS'],
-                        'date_start' => $ticketDate,
-                        'aging' => $item['DOWN TIME'],
-                        'problem_classification' => $item['PROBLEM CLASSIFICATION'],
-                        'problem_detail' => $item['DETAIL PROBLEM'],
-                        'problem_type' => $item['TEKNIS/NON TEKNIS'],
-                        'update_progress' => $item['UPDATE PROGRESS'],
+                    // Update ticket yang sudah ada
+                    $updateData = array_merge($ticketData, [
+                        'closed_date' => null // Default ke null
                     ]);
 
-                    if ($status === "CLOSED") {
-                        $existingTicket->update([
-                            // 'closed_date' => $item['ACTUAL ONLINE'] !== "-" || !$item['ACTUAL ONLINE'] ? $item['ACTUAL ONLINE'] : Carbon::parse(now()->startOfDay())->format('Y-m-d H:i:s')
-                            'closed_date' => $item['ACTUAL ONLINE'] ? $item['ACTUAL ONLINE'] : null,
-                        ]);
-                    } else {
-                        $existingTicket->update([
-                            'status' => $status,
-                            'closed_date' => null
-                        ]);
+                    // Hanya set closed_date jika status CLOSED dan ada ACTUAL ONLINE
+                    if ($status === "CLOSED" && isset($item['ACTUAL ONLINE'])) {
+                        if ($item['ACTUAL ONLINE'] !== null && $item['ACTUAL ONLINE'] !== "-") {
+                            $updateData['closed_date'] = Carbon::parse($item['ACTUAL ONLINE'], 'Asia/Jakarta')
+                                ->format('Y-m-d H:i:s');
+                        }
                     }
 
+                    $existingTicket->update($updateData);
                     $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah diperbarui.");
                 } else {
-                    // Jika ticket_id belum ada, insert semua field
-                    NmtTickets::create([
-                        'ticket_id' => $ticketId,
-                        'site_id' => $item['SITE ID'],
-                        'status' => $item['STATUS'],
-                        'date_start' => $ticketDate,
-                        'aging' => $item['DOWN TIME'],
-                        'problem_classification' => $item['PROBLEM CLASSIFICATION'],
-                        'problem_detail' => $item['DETAIL PROBLEM'],
-                        'problem_type' => $item['TEKNIS/NON TEKNIS'],
-                        'update_progress' => $item['UPDATE PROGRESS'],
-                    ]);
+                    // Insert ticket baru
+                    if ($status === "CLOSED" && isset($item['ACTUAL ONLINE'])) {
+                        if ($item['ACTUAL ONLINE'] !== null && $item['ACTUAL ONLINE'] !== "-") {
+                            $ticketData['closed_date'] = Carbon::parse($item['ACTUAL ONLINE'], 'Asia/Jakarta')
+                                ->format('Y-m-d H:i:s');
+                        }
+                    }
 
+                    NmtTickets::create($ticketData);
                     $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah ditambahkan.");
                 }
             }

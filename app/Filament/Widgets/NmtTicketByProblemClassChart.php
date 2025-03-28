@@ -91,14 +91,6 @@ class NmtTicketByProblemClassChart extends ApexChartWidget
             //     'colors' => ['#F50B0BFF']
             // ],
 
-            'plotOptions' => [
-                'bar' => [
-                    'horizontal' => true,
-                    'borderRadius' => 6,
-                    'borderRadiusApplication'=> 'end', // 'around', 'end'
-                ],
-            ],
-
             'grid' => [
                 'strokeDashArray' => 10,
                 'position' => 'back',
@@ -107,12 +99,6 @@ class NmtTicketByProblemClassChart extends ApexChartWidget
                         'show' => true
                     ]
                 ],
-            ],
-
-            'dataLabels' => [
-                'style' => [
-                    'fontSize' => '12px',
-                ]
             ],
 
             'fill' => [
@@ -144,6 +130,38 @@ class NmtTicketByProblemClassChart extends ApexChartWidget
                     type: "vertical",
                     shadeIntensity: .2,
                     stops: [0, 60, 100],
+                },
+            },
+
+            dataLabels: {
+                enabled: true,
+                offsetX: 16,
+                style: {
+                    colors: ['#212121']
+                },
+            },
+
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    borderRadius: 6,
+                    borderRadiusApplication: 'end', // 'around', 'end'
+                    dataLabels: {
+                        // offsetY: 30,
+                        hideOverflowingLabels: true,
+                        position: 'top',
+                        orientation: 'horizontal',
+                        total: {
+                            enabled: true,
+                            formatter: function(val, opts) {
+                                return val;
+                            },
+                        style: {
+                            fontSize: '12px',
+                            // fontWeight: 900
+                            }
+                        }
+                    }
                 },
             },
         }

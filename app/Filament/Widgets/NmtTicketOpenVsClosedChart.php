@@ -83,7 +83,7 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
                 ],
                 [
                     'name' => 'TT Remaining',
-                    'data' => $openTT->zip($closedTT)->map(function($values) {
+                    'data' => $openTT->zip($closedTT)->map(function ($values) {
                         if ($values[0]->aggregate - $values[1]->aggregate < 0) {
                             return 0;
                         }
