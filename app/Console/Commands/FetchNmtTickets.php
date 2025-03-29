@@ -71,7 +71,6 @@ class FetchNmtTickets extends Command
 
                 $ticketId = str_replace('/', '-', $item['TICKET ID']);
                 $apiStatus = $item['STATUS'];
-                // Tentukan status akhir berdasarkan keberadaan ACTUAL ONLINE
                 $status = ($apiStatus === "CLOSED" && !isset($item['ACTUAL ONLINE'])) ? "OPEN" : $apiStatus;
 
                 $ticketDate = Carbon::parse($item['DATE START TT'], 'Asia/Jakarta')
@@ -97,15 +96,23 @@ class FetchNmtTickets extends Command
                 if ($existingTicket) {
                     // Update ticket yang sudah ada
                     $updateData = array_merge($ticketData, [
-                        'closed_date' => null // Default ke null
+                        'closed_date' => $existingTicket->closed_date // Pertahankan nilai existing jika ada
                     ]);
 
-                    // Hanya set closed_date jika status CLOSED dan ada ACTUAL ONLINE
+                    // Logika untuk status CLOSED
                     if ($status === "CLOSED" && isset($item['ACTUAL ONLINE'])) {
                         if ($item['ACTUAL ONLINE'] !== null && $item['ACTUAL ONLINE'] !== "-") {
-                            $updateData['closed_date'] = Carbon::parse($item['ACTUAL ONLINE'], 'Asia/Jakarta')
-                                ->format('Y-m-d H:i:s');
+                            // Hanya update closed_date jika sebelumnya null
+                            if ($existingTicket->closed_date === null) {
+                                $updateData['closed_date'] = Carbon::parse($item['ACTUAL ONLINE'], 'Asia/Jakarta')
+                                    ->format('Y-m-d H:i:s');
+                            }
                         }
+                    }
+
+                    // Jika status menjadi OPEN, set closed_date ke null
+                    if ($status === "OPEN") {
+                        $updateData['closed_date'] = null;
                     }
 
                     $existingTicket->update($updateData);

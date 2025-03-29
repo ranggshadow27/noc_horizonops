@@ -34,7 +34,7 @@ class NmtTicketsResource extends Resource
     {
         return NmtTickets::where('status', "OPEN")
             ->whereHas('siteMonitor', function ($query) {
-                $query->where('modem_last_up', '=', null)->orWhere('modem_last_up', '>=', now()->subDays(5));
+                $query->where('modem_last_up', '=', null)->orWhere('modem_last_up', '>=', now()->subDays(2));
             })
             ->count(); // Hitung total data
     }

@@ -68,7 +68,7 @@ class FetchSweepingTickets extends Command
                     ]
                 );
 
-                $this->info("Berhasil menambahkan: $sweepingId");
+                // $this->info("Berhasil menambahkan: $sweepingId");
             }
 
             $this->info("Selesai memproses $count data dari API.");
