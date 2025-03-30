@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\NmtTickets;
+use App\Models\SweepingTicket;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -43,9 +44,14 @@ class SecondNmtTicketsOverview extends BaseWidget
             ->where('status', 'CLOSED')
             ->count();
 
+            $today = Carbon::today();
+
+            $majorOpen = SweepingTicket::whereDate('created_at', $today)
+                ->where('classification', 'MAJOR')
+                ->whereNot('status', 'CLOSED')
+                ->count();
+
         return [
-
-
             Stat::make('Today NOC Progress', $closedbyNOC)
                 ->descriptionIcon('phosphor-handshake-duotone')
                 ->description("Ticket Closed")
@@ -61,10 +67,10 @@ class SecondNmtTicketsOverview extends BaseWidget
                 ->description("Average days open")
                 ->color($ttAgingAvg > 14 ? 'danger' : ($ttAgingAvg > 7 ? 'warning' : 'success')),
 
-            Stat::make('Ticket Problem Type', $teknis . ' - ' . $nonTeknis)
-                ->descriptionIcon('phosphor-wrench-duotone')
-                ->description("Teknis/NonTeknis")
-                ->color('gray'),
+            Stat::make('Open Tomorrow', $majorOpen)
+                ->descriptionIcon('phosphor-push-pin-duotone')
+                ->description("Predicted Tickets")
+                ->color('warning'),
 
         ];
     }
