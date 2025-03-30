@@ -95,6 +95,16 @@ class SweepingTicketMajorTrendChart extends ApexChartWidget
             ->perDay()
             ->count();
 
+        $majorOpen = Trend::query(SweepingTicket::where('classification', 'MAJOR')
+            ->where('status', '=', 'OPEN'))
+            ->between(
+                start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
+                end: Carbon::parse($this->filterFormData['date_end'])->endOfDay(),
+            )
+            ->dateColumn('created_at')
+            ->perDay()
+            ->count();
+
         return [
             'chart' => [
                 'type' => 'line',
@@ -129,7 +139,11 @@ class SweepingTicketMajorTrendChart extends ApexChartWidget
 
                 [
                     'name' => 'Pending',
-                    'data' => $majorPending->map(fn(TrendValue $value) => $value->aggregate),
+                    'data' => $majorPending->map(
+                        function (TrendValue $value, $index) use ($majorOpen) {
+                            return $value->aggregate + $majorOpen[$index]->aggregate;
+                        }
+                    ),
                 ],
             ],
 

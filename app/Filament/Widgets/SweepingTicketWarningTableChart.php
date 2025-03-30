@@ -30,10 +30,10 @@ class SweepingTicketWarningTableChart extends BaseWidget
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
-                        'Open' => 'danger',
+                        'Open' => 'warning',
                         'PIC Tidak Respon' => 'warning',
-                        'Ter Follow Up' => 'gray',
-                        'Re Follow Up NSO' => 'gray',
+                        'Ter Follow Up' => 'info',
+                        'Re Follow Up NSO' => 'info',
                         'Closed' => 'success',
                     })
                     ->label('Category'),
