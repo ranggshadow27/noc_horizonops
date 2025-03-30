@@ -16,7 +16,6 @@ class SecondSweepingTTOverview extends BaseWidget
         $majorOpen = SweepingTicket::whereDate('created_at', $today)
             ->where('classification', 'MAJOR')
             ->whereNot('status', 'CLOSED')
-
             ->count();
 
         $majorClose = SweepingTicket::whereDate('created_at', $today)
@@ -45,12 +44,12 @@ class SecondSweepingTTOverview extends BaseWidget
                 ->color('warning'),
 
             Stat::make('Overall Up', $todayUp)
-                ->descriptionIcon('phosphor-hourglass-high-duotone')
+                ->descriptionIcon('phosphor-check-circle-duotone')
                 ->description("Site UP today")
                 ->color('success'),
 
             Stat::make('Overall Down', $todayDown)
-                ->descriptionIcon('phosphor-cards-three-duotone')
+                ->descriptionIcon('phosphor-exclamation-mark-duotone')
                 ->description("Site Down today")
                 ->color('danger'),
 
