@@ -12,4 +12,6 @@ class SweepingTicketDashboard extends Page
 
     protected static ?string $navigationLabel = 'Sweeping Ticket Dashboard';
     protected static ?string $navigationGroup = 'Trouble Tickets';
+
+    protected ?string $heading = "";
 }

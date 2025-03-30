@@ -117,7 +117,6 @@ class NmtTicketStatusOverview extends ApexChartWidget
             'chart' => [
                 'type' => "area",
                 'height' => 350,
-                'foreColor' => "#ccc",
                 'fontFamily' => 'inherit',
                 'toolbar' => [
                     'autoSelected' => "pan",
@@ -189,13 +188,6 @@ class NmtTicketStatusOverview extends ApexChartWidget
 
             'yaxis' => [
                 'min' => 0,
-                'tickAmount' => 4,
-                'labels' => [
-                    'style' => [
-                        'fontWeight' => 400,
-                        'fontFamily' => 'inherit',
-                    ],
-                ],
             ],
 
             // 'colors' => ['#80b918', '#f7b801'],
