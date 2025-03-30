@@ -70,6 +70,11 @@ class NmtTicketByAreaChart extends ApexChartWidget
                 ],
             ],
 
+            'legend' => [
+                'fontSize' => '14px',
+                'fontWeight' => 400,
+            ],
+
             'yaxis' => [
                 'show' => false,
                 'labels' => [

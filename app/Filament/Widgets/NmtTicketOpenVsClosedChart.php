@@ -115,12 +115,15 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
 
             'colors' => ['#CB0101', '#45C8D9', '#FEC620'],
 
+            'legend' => [
+                'fontSize' => '14px',
+                'fontWeight' => 400,
+            ],
+
             'stroke' => [
                 'width' => 1,
                 'colors' => ['#fff']
-            ]
-
-
+            ],
         ];
     }
 

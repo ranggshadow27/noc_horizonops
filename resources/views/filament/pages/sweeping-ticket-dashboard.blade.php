@@ -13,12 +13,7 @@
 
 <div class="flex flex-wrap justify-center items-center gap-4 w-full">
     <div class="flex-1 sm:w-1/2">
-        @livewire(\App\Filament\Widgets\SweepingTicketMajorTableChart::class)
-    </div>
-
-    <div class="flex-1 sm:w-1/2">
-        @livewire(\App\Filament\Widgets\SweepingTicketMinorTableChart::class)
-
+        @livewire(\App\Filament\Widgets\SweepingTicketUnWarningTableChart::class)
     </div>
 
     <div class="flex-1 sm:w-1/2">
@@ -26,7 +21,11 @@
     </div>
 
     <div class="flex-1 sm:w-1/2">
-        @livewire(\App\Filament\Widgets\SweepingTicketUnWarningTableChart::class)
+        @livewire(\App\Filament\Widgets\SweepingTicketMinorTableChart::class)
+    </div>
+
+    <div class="flex-1 sm:w-1/2">
+        @livewire(\App\Filament\Widgets\SweepingTicketMajorTableChart::class)
     </div>
 </div>
 
@@ -36,11 +35,15 @@
     </div> --}}
 
     <div class="flex-1 sm:w-1/2">
-        @livewire(\App\Filament\Widgets\SweepingTicketMajorTrendChart::class)
+        @livewire(\App\Filament\Widgets\SweepingTicketWarningTrendChart::class)
     </div>
 
     <div class="flex-1 sm:w-1/2">
         @livewire(\App\Filament\Widgets\SweepingTicketMinorTrendChart::class)
+    </div>
+
+    <div class="flex-1 sm:w-1/2">
+        @livewire(\App\Filament\Widgets\SweepingTicketMajorTrendChart::class)
     </div>
 </div>
 

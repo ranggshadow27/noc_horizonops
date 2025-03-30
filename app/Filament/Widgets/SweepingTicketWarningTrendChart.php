@@ -9,22 +9,22 @@ use Flowframe\Trend\TrendValue;
 use Illuminate\Support\Carbon;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class SweepingTicketMinorTrendChart extends ApexChartWidget
+class SweepingTicketWarningTrendChart extends ApexChartWidget
 {
     /**
      * Chart Id
      *
      * @var string
      */
-    protected static ?string $chartId = 'sweepingTicketMinorTrendChart';
+    protected static ?string $chartId = 'sweepingTicketWarningTrendChart';
 
     /**
      * Widget Title
      *
      * @var string|null
      */
-    protected static ?string $heading = 'Minor Sweeping Overview';
-    protected static ?string $subheading = 'Trends in Sweeping Minor Sites by Classification';
+    protected static ?string $heading = 'Warning Sweeping Overview';
+    protected static ?string $subheading = 'Trends in Sweeping Warning Sites by Classification';
 
     /**
      * Chart options (series, labels, types, size, animations...)
@@ -32,6 +32,7 @@ class SweepingTicketMinorTrendChart extends ApexChartWidget
      *
      * @return array
      */
+
     protected function getFormSchema(): array
     {
         return [
@@ -53,7 +54,7 @@ class SweepingTicketMinorTrendChart extends ApexChartWidget
             ->perDay()
             ->count();
 
-        $minorClose = Trend::query(SweepingTicket::where('classification', 'MINOR')
+        $warningClose = Trend::query(SweepingTicket::where('classification', 'WARNING')
             ->where('status', 'CLOSED'))
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
@@ -63,7 +64,7 @@ class SweepingTicketMinorTrendChart extends ApexChartWidget
             ->perDay()
             ->count();
 
-        $minorNso = Trend::query(SweepingTicket::where('classification', 'MINOR')
+        $warningNso = Trend::query(SweepingTicket::where('classification', 'WARNING')
             ->where('status', 'LIKE', '%FU KE NSO%'))
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
@@ -74,7 +75,7 @@ class SweepingTicketMinorTrendChart extends ApexChartWidget
             ->count();
 
 
-        $minorTerFU = Trend::query(SweepingTicket::where('classification', 'MINOR')
+        $warningTerFU = Trend::query(SweepingTicket::where('classification', 'WARNING')
             ->where('status', 'LIKE', '%FOLLOW UP%'))
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
@@ -84,7 +85,7 @@ class SweepingTicketMinorTrendChart extends ApexChartWidget
             ->perDay()
             ->count();
 
-        $minorPending = Trend::query(SweepingTicket::where('classification', 'MINOR')
+        $warningPending = Trend::query(SweepingTicket::where('classification', 'WARNING')
             ->where('status', 'LIKE', '%TIDAK RESPON%'))
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
@@ -94,7 +95,7 @@ class SweepingTicketMinorTrendChart extends ApexChartWidget
             ->perDay()
             ->count();
 
-            $minorOpen = Trend::query(SweepingTicket::where('classification', 'MINOR')
+        $warningOpen = Trend::query(SweepingTicket::where('classification', 'WARNING')
             ->where('status', 'OPEN'))
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
@@ -126,22 +127,22 @@ class SweepingTicketMinorTrendChart extends ApexChartWidget
             'series' => [
                 [
                     'name' => 'On Progress',
-                    'data' => $minorNso->map(function (TrendValue $value, $index) use ($minorTerFU) {
-                        return $value->aggregate + $minorTerFU[$index]->aggregate;
+                    'data' => $warningNso->map(function (TrendValue $value, $index) use ($warningTerFU) {
+                        return $value->aggregate + $warningTerFU[$index]->aggregate;
                     }),
                 ],
 
                 [
                     'name' => 'Closed',
-                    'data' => $minorClose->map(fn(TrendValue $value) => $value->aggregate),
+                    'data' => $warningClose->map(fn(TrendValue $value) => $value->aggregate),
 
                 ],
 
                 [
                     'name' => 'Pending',
-                    'data' => $minorPending->map(
-                        function (TrendValue $value, $index) use ($minorOpen) {
-                            return $value->aggregate + $minorOpen[$index]->aggregate;
+                    'data' => $warningPending->map(
+                        function (TrendValue $value, $index) use ($warningOpen) {
+                            return $value->aggregate + $warningOpen[$index]->aggregate;
                         }
                     ),
                 ],

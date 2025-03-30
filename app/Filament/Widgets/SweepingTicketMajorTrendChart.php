@@ -24,7 +24,7 @@ class SweepingTicketMajorTrendChart extends ApexChartWidget
      * @var string|null
      */
     protected static ?string $heading = 'Major Sweeping Overview';
-    protected static ?string $subheading = 'Trends in Sweeping Major Sites Displayed by Category';
+    protected static ?string $subheading = 'Trends in Sweeping Major Sites by Classification';
 
     /**
      * Chart options (series, labels, types, size, animations...)
@@ -181,6 +181,11 @@ class SweepingTicketMajorTrendChart extends ApexChartWidget
                         'show' => true
                     ]
                 ],
+            ],
+
+            'legend' => [
+                'fontSize' => '14px',
+                'fontWeight' => 600,
             ],
 
         ];

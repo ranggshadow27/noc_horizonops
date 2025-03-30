@@ -95,6 +95,11 @@ class NmtTicketOpenDurationChart extends ApexChartWidget
                     ],
                 ],
             ],
+
+            'legend' => [
+                'fontSize' => '14px',
+                'fontWeight' => 400,
+            ],
         ];
     }
 

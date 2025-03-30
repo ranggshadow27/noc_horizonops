@@ -55,6 +55,11 @@ class NmtTicketTeknisNonTeknisChart extends ApexChartWidget
             'labels' => ['Non-Teknis', 'Teknis'],
             'colors' => ['#B2B09B', '#B91372'],
 
+            'legend' => [
+                'fontSize' => '14px',
+                'fontWeight' => 400,
+            ],
+
             'extra' => [  // Tambahkan data count
                 'counts' => [$nonTeknisCount, $teknisCount]
             ]

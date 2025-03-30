@@ -13,26 +13,14 @@ class SecondSweepingTTOverview extends BaseWidget
     {
         $today = Carbon::today();
 
-
-        $unWarningOpen = SweepingTicket::whereDate('created_at', $today)
-            ->where('classification', 'UN WARNING')
+        $majorOpen = SweepingTicket::whereDate('created_at', $today)
+            ->where('classification', 'MAJOR')
             ->whereNot('status', 'CLOSED')
 
             ->count();
 
-        $warningOpen = SweepingTicket::whereDate('created_at', $today)
-            ->where('classification', 'WARNING')
-            ->whereNot('status', 'CLOSED')
-            ->count();
-
-
-        $unWarningClose = SweepingTicket::whereDate('created_at', $today)
-            ->where('classification', 'UN WARNING')
-            ->where('status', 'CLOSED')
-            ->count();
-
-        $warningClose = SweepingTicket::whereDate('created_at', $today)
-            ->where('classification', 'WARNING')
+        $majorClose = SweepingTicket::whereDate('created_at', $today)
+            ->where('classification', 'MAJOR')
             ->where('status', 'CLOSED')
             ->count();
 
@@ -46,17 +34,17 @@ class SecondSweepingTTOverview extends BaseWidget
 
 
         return [
-            Stat::make('Warning Site (2 Hari)', $warningOpen . " - " . $warningClose)
+            Stat::make('Major Site (4 Hari)', $majorClose)
                 ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Opened - Closed")
-                ->color('gray'),
+                ->description("Closed today")
+                ->color('success'),
 
-            Stat::make('Un Warning (12 Jam)', $unWarningOpen . " - " . $unWarningClose)
-                ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Opened - Closed")
-                ->color('gray'),
+            Stat::make('Major Site (4 Hari)', $majorOpen)
+                ->descriptionIcon('phosphor-exclamation-mark-duotone')
+                ->description("Opened today")
+                ->color('warning'),
 
-            Stat::make('Overall Open', $todayUp)
+            Stat::make('Overall Up', $todayUp)
                 ->descriptionIcon('phosphor-hourglass-high-duotone')
                 ->description("Site UP today")
                 ->color('success'),

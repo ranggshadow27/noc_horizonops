@@ -123,7 +123,6 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
             'chart' => [
                 'type' => "line",
                 'height' => 350,
-                'foreColor' => "#ccc",
                 'fontFamily' => 'inherit',
                 'toolbar' => [
                     'autoSelected' => "pan",
@@ -179,6 +178,8 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
 
             'legend' => [
                 'position' => 'top',
+                'fontSize' => '14px',
+                'fontWeight' => 400,
                 'markers' => [
                     'size' => 4,
                     'offsetX' => -5,

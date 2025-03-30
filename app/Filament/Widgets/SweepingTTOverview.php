@@ -14,21 +14,31 @@ class SweepingTTOverview extends BaseWidget
 
         $today = Carbon::today();
 
-        $majorOpen = SweepingTicket::whereDate('created_at', $today)
-            ->where('classification', 'MAJOR')
+        $unWarningOpen = SweepingTicket::whereDate('created_at', $today)
+            ->where('classification', 'UN WARNING')
             ->whereNot('status', 'CLOSED')
 
+            ->count();
+
+        $warningOpen = SweepingTicket::whereDate('created_at', $today)
+            ->where('classification', 'WARNING')
+            ->whereNot('status', 'CLOSED')
+            ->count();
+
+
+        $unWarningClose = SweepingTicket::whereDate('created_at', $today)
+            ->where('classification', 'UN WARNING')
+            ->where('status', 'CLOSED')
+            ->count();
+
+        $warningClose = SweepingTicket::whereDate('created_at', $today)
+            ->where('classification', 'WARNING')
+            ->where('status', 'CLOSED')
             ->count();
 
         $minorOpen = SweepingTicket::whereDate('created_at', $today)
             ->where('classification', 'MINOR')
             ->whereNot('status', 'CLOSED')
-            ->count();
-
-
-        $majorClose = SweepingTicket::whereDate('created_at', $today)
-            ->where('classification', 'MAJOR')
-            ->where('status', 'CLOSED')
             ->count();
 
         $minorClose = SweepingTicket::whereDate('created_at', $today)
@@ -38,12 +48,17 @@ class SweepingTTOverview extends BaseWidget
 
 
         return [
-            Stat::make('Major Site (4 Hari)', $majorOpen)
-                ->descriptionIcon('phosphor-exclamation-mark-duotone')
-                ->description("Opened today")
-                ->color('warning'),
+            Stat::make('Un Warning (12 Jam)', $unWarningOpen . " - " . $unWarningClose)
+                ->descriptionIcon('phosphor-check-circle-duotone')
+                ->description("Opened - Closed")
+                ->color('gray'),
 
-            Stat::make('Major Site (4 Hari)', $majorClose)
+            Stat::make('Warning Site (2 Hari)', $warningOpen . " - " . $warningClose)
+                ->descriptionIcon('phosphor-check-circle-duotone')
+                ->description("Opened - Closed")
+                ->color('gray'),
+
+            Stat::make('Minor Site (3 Hari)', $minorClose)
                 ->descriptionIcon('phosphor-check-circle-duotone')
                 ->description("Closed today")
                 ->color('success'),
@@ -52,12 +67,6 @@ class SweepingTTOverview extends BaseWidget
                 ->descriptionIcon('phosphor-exclamation-mark-duotone')
                 ->description("Opened today")
                 ->color('warning'),
-
-            Stat::make('Minor Site (3 Hari)', $minorClose)
-                ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Closed today")
-                ->color('success'),
-
         ];
     }
 }
