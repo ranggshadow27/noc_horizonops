@@ -19,7 +19,6 @@ class FetchNmtTickets extends Command
     public function handle()
     {
         $lastUpdateApiUrl = 'https://script.google.com/macros/s/AKfycbyh7RPiVKhwkPEnjzz2Fkf3e6T3g81I4yQgGd-yCqZSCbSjwTsymytKMzcpy-YUCq5Q2w/exec'; // Ganti dengan API last_update
-        // $tmoDataApiUrl = 'https://example.com/api/tmo_data'; // Ganti dengan API data TMO
 
         // Fetch last_update dari API
         $response = Http::get($lastUpdateApiUrl);
@@ -56,7 +55,7 @@ class FetchNmtTickets extends Command
     private function fetchAndInsertNmtTickets()
     {
         $apiUrl = 'https://script.google.com/macros/s/AKfycbzLIrSJLKpi4zXiTflJNlQaNB0hhj-hXNWN58JZpNwTDZUloZjto8RItot9eAiuEw3tqQ/exec';
-        $response = Http::get($apiUrl);
+        $response = Http::timeout(360)->get($apiUrl);
 
         if ($response->successful()) {
             $data = $response->json();
