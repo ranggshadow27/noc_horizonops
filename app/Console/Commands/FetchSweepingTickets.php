@@ -19,7 +19,7 @@ class FetchSweepingTickets extends Command
 
         try {
             // Fetch data dari API
-            $response = Http::get($apiUrl);
+            $response = Http::timeout(360)->get($apiUrl);
             if (!$response->successful()) {
                 $this->error('Gagal fetch data dari API: ' . $response->status());
                 return;
