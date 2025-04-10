@@ -42,6 +42,7 @@ class SopResource extends Resource
                     ->nullable(),
                 Forms\Components\FileUpload::make('file_path')
                     ->disk('public')
+                    ->preserveFilenames()
                     ->directory('sops')
                     ->required(),
             ])
