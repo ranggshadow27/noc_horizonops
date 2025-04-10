@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     <div class="flex justify-between items-center gap-4">
         <div>
-            <p class="text-lg font-bold text-center">{{ $record->title }}</p>
+            <p class="text-lg font-bold">{{ $record->title }}</p>
             @if ($record->description)
                 <p class="mt-12 text-gray-600 text-justify">Description: <br>{{ $record->description }}</p>
             @endif
