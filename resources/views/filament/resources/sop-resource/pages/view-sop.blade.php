@@ -24,6 +24,7 @@
         <div class="p-1">
             @if ($record->file_path)
                 <div class="space-y-4">
+                    <x-slot name="heading">
                     <div class="flex items-center justify-between">
                         <h3 class="text-base font-medium text-gray-900">Document Preview</h3>
                         <a
@@ -34,6 +35,7 @@
                             Open in New Tab
                         </a>
                     </div>
+                    </x-slot>
                     <div class="border rounded-lg overflow-hidden">
                         <iframe
                             src="{{ asset('storage/' . $record->file_path) }}"
