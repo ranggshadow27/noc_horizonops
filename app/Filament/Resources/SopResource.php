@@ -17,12 +17,23 @@ class SopResource extends Resource
 {
     protected static ?string $model = Sop::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $navigationLabel = 'SOP List';
+    protected static ?string $navigationGroup = 'NOC Team';
+
+    protected static bool $hasTitleCaseModelLabel = false;
+    protected static ?string $pluralModelLabel = 'SOP List';
+    protected static ?string $modelLabel = 'SOP List';
+
+    protected static ?string $navigationIcon = 'phosphor-archive-duotone';
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                Forms\Components\Section::make('SOP Information')
+                    ->schema([
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->maxLength(255),
@@ -33,18 +44,31 @@ class SopResource extends Resource
                     ->disk('public')
                     ->directory('sops')
                     ->required(),
-            ]);
+            ])
+        ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('title')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('description')->limit(50),
-                Tables\Columns\TextColumn::make('file_path'),
-                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('id')
+                    ->label("ID")
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('title')
+                    ->label("Title")
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('description')
+                    ->label("Description")
+                    ->limit(50),
+                Tables\Columns\TextColumn::make('file_path')
+                    ->label("File"),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label("Created At")
+                    ->dateTime()
+                    ->sortable(),
             ])
             ->filters([
                 //
@@ -56,6 +80,14 @@ class SopResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->heading('NOC Mahaga - SOP List')
+            ->description('Standard Operating Procedure (SOP) - Network Operation Center.')
+            ->headerActions([
+                Tables\Actions\CreateAction::make()
+                    ->label("Add New SOP")
+                    ->icon('phosphor-plus-circle-duotone')
+                    ->visible(fn() => auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4) ? true : false),
             ]);
     }
 

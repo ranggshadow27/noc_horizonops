@@ -40,6 +40,9 @@ class AppServiceProvider extends ServiceProvider
         Filament::serving(function () {
             Filament::registerNavigationGroups([
                 NavigationGroup::make()
+                    ->label('NOC Team')
+                    ->icon('phosphor-cpu-duotone'),
+                NavigationGroup::make()
                     ->label('Site Management')
                     ->icon('phosphor-stack-duotone'),
                 NavigationGroup::make()
