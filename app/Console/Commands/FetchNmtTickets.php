@@ -115,6 +115,7 @@ class FetchNmtTickets extends Command
                     }
 
                     $existingTicket->update($updateData);
+
                     $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah diperbarui.");
                 } else {
                     // Insert ticket baru
