@@ -34,15 +34,15 @@ class MainDashboardStatThird extends BaseWidget
             ->count();
 
         return [
-            Stat::make('Warning Site (2 Hari)', $warningOpen)
-                ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Opened")
-                ->color('warning'),
-
             Stat::make('Warning Site (2 Hari)', $warningClose)
                 ->descriptionIcon('phosphor-check-circle-duotone')
                 ->description("Closed")
                 ->color('success'),
+
+            Stat::make('Warning Site (2 Hari)', $warningOpen)
+                ->descriptionIcon('phosphor-check-circle-duotone')
+                ->description("Opened")
+                ->color('warning'),
 
             Stat::make('Un Warning (12 Jam)', $unWarningOpen . " - " . $unWarningClose)
                 ->descriptionIcon('phosphor-check-circle-duotone')
