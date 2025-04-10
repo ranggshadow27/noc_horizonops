@@ -39,6 +39,7 @@ class SopResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Textarea::make('description')
                     ->maxLength(65535)
+                    ->autosize()
                     ->nullable(),
                 Forms\Components\FileUpload::make('file_path')
                     ->disk('public')
