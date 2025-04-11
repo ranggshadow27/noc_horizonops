@@ -77,6 +77,7 @@ class AutoChat extends Page implements HasForms
 
             Select::make('gender')
                 ->label('Gender')
+                ->default('male')
                 ->options([
                     'male' => 'Male',
                     'female' => 'Female',
