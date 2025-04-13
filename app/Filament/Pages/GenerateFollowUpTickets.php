@@ -240,7 +240,7 @@ class GenerateFollowUpTickets extends Page
 - PIC\t\t\t: %s / %s
 - Address\t: %s
 - Koordinat\t: Lat: %s | Long: %s\n
-Terimakasih.\nCC : Om %s (PO Area) & Pak %s (Head PO)",
+Terimakasih.\nCC : Pak %s (PO Area) & Pak %s (Head PO)",
             $this->problem_type,
             $site->pic_name,
             $site->pic_number,
