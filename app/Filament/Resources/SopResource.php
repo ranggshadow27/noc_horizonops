@@ -19,13 +19,13 @@ class SopResource extends Resource
 
 
     protected static ?string $navigationLabel = 'SOP List';
-    protected static ?string $navigationGroup = 'NOC Team';
+    protected static ?string $navigationGroup = 'Operational';
 
     protected static bool $hasTitleCaseModelLabel = false;
     protected static ?string $pluralModelLabel = 'SOP List';
     protected static ?string $modelLabel = 'SOP List';
 
-    protected static ?string $navigationIcon = 'phosphor-archive-duotone';
+    protected static ?string $navigationIcon = 'phosphor-notepad-duotone';
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form

@@ -14,7 +14,17 @@ class AreaList extends Model
     protected $primaryKey = 'province'; // Primary key pakai string (provinsi)
     public $incrementing = false; // Karena primary key bukan angka
     protected $keyType = 'string'; // Supaya province dianggap string
-    protected $fillable = ['province', 'area']; // Kolom yang bisa diisi
+
+    protected $fillable = [
+        'province',
+        'area',
+        'po',
+        'head_po',
+    ]; // Kolom yang bisa diisi
+
+    protected $casts = [
+        'po' => 'array', // Cast JSON ke array untuk kemudahan akses di PHP
+    ];
 
     /**
      * Relasi ke TmoData (One to Many)

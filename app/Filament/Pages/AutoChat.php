@@ -12,7 +12,9 @@ use Filament\Pages\Page;
 use App\Models\SiteDetail;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Split;
 use Filament\Notifications\Notification;
+use Filament\Support\Enums\Alignment;
 use Webbingbrasil\FilamentCopyActions\Pages\Actions\CopyAction;
 
 class AutoChat extends Page implements HasForms
@@ -21,10 +23,21 @@ class AutoChat extends Page implements HasForms
 
     protected static string $view = 'filament.pages.auto-chat';
 
+    protected static ?string $navigationGroup = 'Operational';
+    protected static ?string $navigationIcon = 'phosphor-chat-teardrop-dots-duotone';
+
+    protected ?string $subheading = 'Auto Generate PIC Chat & Site Information';
+
+
     public $gender = '';
     public $siteId = '';
     public $templateId = '';
     public $generatedChat = '';
+
+    public $additionalInfo = '';
+    public $deviceDetail = '';
+
+    public $showDetails = false;
 
     public function mount(): void
     {
@@ -35,8 +48,14 @@ class AutoChat extends Page implements HasForms
     {
         return [
             CopyAction::make()
+                ->label("Copy Chat")
                 ->disabled(fn() => empty($this->generatedChat))
                 ->copyable(fn() => $this->generatedChat),
+
+            CopyAction::make()
+                ->label("Copy Site Information")
+                ->disabled(fn() => empty($this->additionalInfo))
+                ->copyable(fn() => $this->getCopyableContent()),
         ];
     }
 
@@ -61,7 +80,7 @@ class AutoChat extends Page implements HasForms
                     return $site ? "{$site->site_id} - {$site->site_name}" : null;
                 })
                 ->required()
-                ->placeholder('Pilih Site ID'),
+                ->placeholder("Select a site ID or site name"),
 
             Select::make('templateId')
                 ->label('Chat Template')
@@ -70,10 +89,7 @@ class AutoChat extends Page implements HasForms
                 })
                 ->searchable()
                 ->required()
-                ->placeholder('Pilih Template')
-                ->default(function () {
-                    return ChatTemplate::first()?->id;
-                }),
+                ->placeholder("Select a template chat"),
 
             Select::make('gender')
                 ->label('Gender')
@@ -88,13 +104,27 @@ class AutoChat extends Page implements HasForms
             Textarea::make('generatedChat')
                 ->label('Generated Chat')
                 ->autosize()
-                ->disabled(),
+                ->hidden(fn() => ! $this->showDetails),
 
             Actions::make([
                 Actions\Action::make('generate')
                     ->label('Generate Chat')
                     ->action('generateChat'),
-            ]),
+            ])
+                ->fullWidth()
+                ->alignment(Alignment::Center),
+
+            Split::make([
+                Textarea::make('additionalInfo')
+                    ->label('Additional Info')
+                    ->readOnly()
+                    ->autosize(),
+
+                Textarea::make('deviceDetail')
+                    ->label('Device Detail')
+                    ->readOnly()
+                    ->autosize(),
+            ])->hidden(fn() => ! $this->showDetails)
         ];
     }
 
@@ -134,13 +164,58 @@ class AutoChat extends Page implements HasForms
                 array_values($placeholders),
                 $template->template
             );
+
+            // Additional Info
+            $this->additionalInfo = "• Lokasi\t\t\t:\n {$site->site_id} - {$site->site_name}\n\n"
+                . "• Data PIC\t\t:\n"
+                . "PIC Lokasi    " . ($site->pic_name ?? 'N/A') . " / " . ($site->pic_number ?? 'N/A') . "\n"
+                . "Penyedia      " . ($site->installer_name ?? 'N/A') . " / " . ($site->installer_number ?? 'N/A') . "\n\n"
+                . "• Provinsi\t:\n {$site->administrative_area}, {$site->province}\n\n"
+                . "• Alamat\t\t:\n {$site->address}\n\n"
+                . "• Koordinat\t:\n Latitude {$site->latitude} / Longitude {$site->longitude}\n\n"
+                . "• Gateway\t\t\t: {$site->gateway}\n"
+                . "• Spotbeam\t\t: {$site->spotbeam} / {$site->ip_hub}\n"
+                . "• Power Source\t: {$site->power_source}\n"
+                . "• Batch\t\t\t\t: {$site->batch}";
+
+            // Device Detail
+            $device = $site->devices;
+
+            // dd($device);
+            $this->deviceDetail = "• Transceiver\t:\n " . ($device->transceiver_type ?? 'N/A') . "  |  " . ($device->transceiver_sn ?? 'N/A') . "\n\n"
+                . "• Antenna\t\t:\n " . ($device->antenna_type ?? 'N/A') . "  |  " . ($device->antenna_sn ?? 'N/A') . "\n\n"
+                . "• Modem\t\t:\n " . ($device->modem_type ?? 'N/A') . "  |  " . ($device->modem_sn ?? 'N/A') . "\n\n"
+                . "• Router\t\t\t:\n " . ($device->router_type ?? 'N/A') . "  |  " . ($device->router_sn ?? 'N/A') . "\n\n"
+                . "• AP 1\t\t\t\t:\n " . ($device->ap1_type ?? 'N/A') . "  |  " . ($device->ap1_sn ?? 'N/A') . "\n\n"
+                . "• AP 2\t\t\t\t:\n " . ($device->ap2_type ?? 'N/A') . "  |  " . ($device->ap2_sn ?? 'N/A') . "\n\n"
+                . "• Rack\t\t\t\t: " . ($device->rack_sn ?? 'N/A') . "\n"
+                . "• Stabillizer\t\t: " . ($device->stabilizer_type ?? 'N/A') . "  |  " . ($device->stabilizer_sn ?? 'N/A');
+
+            $this->showDetails = true;
         }
 
         $this->form->fill([
             'siteId' => $this->siteId,
             'templateId' => $this->templateId,
+            'gender' => $this->gender,
             'generatedChat' => $this->generatedChat,
+            'additionalInfo' => $this->additionalInfo,
+            'deviceDetail' => $this->deviceDetail,
         ]);
+    }
+
+    public function getCopyableContent(): string
+    {
+        // Pisahkan string berdasarkan 'Gaboleh terkopi'
+        $parts = explode('• Gateway', $this->additionalInfo);
+
+        // Ambil bagian pertama dari hasil explode
+        $copyableContent = trim($parts[0]);
+
+        // Ganti semua kemunculan 'Data' dengan 'Lokasi'
+        $copyableContent = str_replace('• ', '> ', $copyableContent);
+
+        return $copyableContent;
     }
 
     // public function generateChat(): void

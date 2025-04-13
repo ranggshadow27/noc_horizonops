@@ -17,7 +17,8 @@ class ChatTemplateResource extends Resource
 {
     protected static ?string $model = ChatTemplate::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Operational';
+    protected static ?string $navigationIcon = 'phosphor-chat-teardrop-text-duotone';
 
     public static function form(Form $form): Form
     {
@@ -26,9 +27,14 @@ class ChatTemplateResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('type')
+                Forms\Components\Select::make('type')
                     ->required()
-                    ->maxLength(255),
+                    ->native(false)
+                    ->options([
+                        'follow-up' => 'follow-up',
+                        'general' => 'general',
+                        'others' => 'others',
+                    ]),
                 Forms\Components\Textarea::make('template')
                     ->required()
                     ->autosize()

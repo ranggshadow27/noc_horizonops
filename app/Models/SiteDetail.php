@@ -44,7 +44,7 @@ class SiteDetail extends Model
     // Relasi ke Device
     public function devices()
     {
-        return $this->hasMany(Device::class, 'site_id', 'site_id');
+        return $this->hasOne(Device::class, 'site_id', 'site_id');
     }
 
     // Relasi ke DeviceNetwork
