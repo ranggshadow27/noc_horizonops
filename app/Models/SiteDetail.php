@@ -50,7 +50,7 @@ class SiteDetail extends Model
     // Relasi ke DeviceNetwork
     public function deviceNetworks()
     {
-        return $this->hasMany(DeviceNetwork::class, 'site_id', 'site_id');
+        return $this->hasOne(DeviceNetwork::class, 'site_id', 'site_id');
     }
 
     public function siteMonitor()
