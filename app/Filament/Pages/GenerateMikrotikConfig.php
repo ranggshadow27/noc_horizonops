@@ -12,6 +12,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Storage;
 use Filament\Support\Enums\MaxWidth;
+use Illuminate\Contracts\View\View;
 
 class GenerateMikrotikConfig extends Page
 {

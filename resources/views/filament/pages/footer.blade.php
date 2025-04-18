@@ -1,8 +1,8 @@
-<div class="hidden sm:flex w-full justify-between -z-100">
-    <p class="text-gray-400 text-sm font-semibold antialiased">
-        Network Operation Center - MHG©2025
+<div class="hidden flex-col sm:flex w-full items-center gap-2 -z-100">
+    <p class="text-gray-400 text-sm antialiased">
+        &copy;{{ date('Y') }}. Mahaga <b>Network Operation Center</b>.
     </p>
     <p class="text-gray-200 text-sm font-semibold antialiased">
-        .ratipray27.
+        - ratipray27
     </p>
 </div>

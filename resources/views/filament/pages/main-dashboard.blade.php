@@ -2,11 +2,11 @@
     <div class="flex flex-wrap justify-between items-end gap-4 w-full">
         <div>
             <p class="text-xl"><b>Dashboard</b><br>
-            <span class="text-base">Network Operation Center</span>
+            <span class="text-gray-400 text-base">Network Operation Center</span>
             </p>
         </div>
         <div>
-            <p class="text-sm font-medium"><span id="realTimeClock"></span></p>
+            <p class="text-sm font-medium text-gray-800"><span id="realTimeClock"></span></p>
         </div>
     </div>
 
