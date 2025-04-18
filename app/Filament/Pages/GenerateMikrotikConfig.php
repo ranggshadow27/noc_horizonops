@@ -7,6 +7,7 @@ use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Storage;
@@ -15,14 +16,14 @@ use Filament\Support\Enums\MaxWidth;
 class GenerateMikrotikConfig extends Page
 {
     protected static ?string $navigationGroup = 'Operational';
-    protected static ?string $navigationLabel = 'Generate RSC';
+    protected static ?string $navigationLabel = 'Generate Router Config';
     protected static ?string $navigationIcon = 'phosphor-nut-duotone';
 
     // protected static ?string $navigationIcon = 'heroicon-o-document-download';
     protected static string $view = 'filament.pages.generate-mikrotik-config';
 
-    protected static ?string $title = 'Generate RSC';
-    protected ?string $subheading = 'Auto Generate Mikrotik Config (RSC)';
+    protected static ?string $title = 'Generate Configuration';
+    protected ?string $subheading = 'Auto Generate Router Configuration (Mikrotik/Grandstream)';
 
 
     public $siteId = '';
@@ -36,57 +37,113 @@ class GenerateMikrotikConfig extends Page
     public function getFormSchema(): array
     {
         return [
-            Fieldset::make()
-                ->schema([
-                    Select::make('siteId')
-                        ->label('Site ID')
-                        // ->options(SiteDetail::pluck('site_name', 'site_id'))
-                        ->options(function () {
-                            return SiteDetail::pluck('site_name', 'site_id')->mapWithKeys(function ($siteName, $site_id) {
-                                return [$site_id => "$site_id - $siteName"];
-                            })->toArray();
-                        })
-                        ->getSearchResultsUsing(function (string $search): array {
-                            $sites = SiteDetail::where('site_id', 'like', "%{$search}%")
-                                ->orWhere('site_name', 'like', "%{$search}%")
-                                ->limit(10)
-                                ->get();
-                            return $sites->mapWithKeys(function ($site) {
-                                return [$site->site_id => "{$site->site_id} - {$site->site_name}"];
-                            })->toArray();
-                        })
-                        ->getOptionLabelFromRecordUsing(function (SiteDetail $record): string {
-                            return "{$record->site_id} - {$record->site_name}";
-                        })
-                        ->preload()
-                        ->searchable()
-                        ->native(false)
-                        ->required()
-                        ->reactive()
-                        ->afterStateUpdated(function ($state, callable $set) {
-                            // Ambil province dari SiteDetail
-                            $site = SiteDetail::find($state);
-                            $timezone = $site ? $this->getTimezoneByProvince($site->province) : 'Asia/Jakarta';
-                            $set('timezone', $timezone);
+            Tabs::make()
+                ->tabs([
+                    Tabs\Tab::make("Mikrotik RSC")
+                        ->schema([
+                            Select::make('siteId')
+                                ->label('Site ID')
+                                // ->options(SiteDetail::pluck('site_name', 'site_id'))
+                                ->options(function () {
+                                    return SiteDetail::pluck('site_name', 'site_id')->mapWithKeys(function ($siteName, $site_id) {
+                                        return [$site_id => "$site_id - $siteName"];
+                                    })->toArray();
+                                })
+                                ->getSearchResultsUsing(function (string $search): array {
+                                    $sites = SiteDetail::where('site_id', 'like', "%{$search}%")
+                                        ->orWhere('site_name', 'like', "%{$search}%")
+                                        ->limit(10)
+                                        ->get();
+                                    return $sites->mapWithKeys(function ($site) {
+                                        return [$site->site_id => "{$site->site_id} - {$site->site_name}"];
+                                    })->toArray();
+                                })
+                                ->getOptionLabelFromRecordUsing(function (SiteDetail $record): string {
+                                    return "{$record->site_id} - {$record->site_name}";
+                                })
+                                ->preload()
+                                ->searchable()
+                                ->native(false)
+                                ->required()
+                                ->reactive()
+                                ->afterStateUpdated(function ($state, callable $set) {
+                                    // Ambil province dari SiteDetail
+                                    $site = SiteDetail::find($state);
+                                    $timezone = $site ? $this->getTimezoneByProvince($site->province) : 'Asia/Jakarta';
+                                    $set('timezone', $timezone);
 
-                            // dd($timezone);
-                        })
-                        ->placeholder("Select a site ID or site name")
-                        ->columnSpanFull(),
+                                    // dd($timezone);
+                                })
+                                ->placeholder("Select a site ID or site name")
+                                ->columnSpanFull(),
 
-                    TextInput::make('timezone')
-                        ->label('Timezone')
-                        ->required()
-                        ->placeholder("This input is auto generated")
-                        ->disabled()
-                        ->columnSpanFull(),
-                    // ->default('Asia/Jakarta'), // Fallback kalau ga ke-set
+                            TextInput::make('timezone')
+                                ->label('Timezone')
+                                ->required()
+                                ->placeholder("This input is auto generated")
+                                ->disabled()
+                                ->columnSpanFull(),
+                            // ->default('Asia/Jakarta'), // Fallback kalau ga ke-set
 
-                    Forms\Components\Actions::make([
-                        Action::make('generate')
-                            ->label('Generate .rsc')
-                            ->action('generateRsc')
-                    ])->fullWidth()->columnSpanFull(),
+                            Forms\Components\Actions::make([
+                                Action::make('generate')
+                                    ->label('Generate .rsc')
+                                    ->action('generateRsc')
+                            ])->fullWidth()->columnSpanFull(),
+                        ]),
+                    Tabs\Tab::make("Grandstream")
+                        ->schema([
+                            Select::make('siteId')
+                                ->label('Site ID')
+                                // ->options(SiteDetail::pluck('site_name', 'site_id'))
+                                ->options(function () {
+                                    return SiteDetail::pluck('site_name', 'site_id')->mapWithKeys(function ($siteName, $site_id) {
+                                        return [$site_id => "$site_id - $siteName"];
+                                    })->toArray();
+                                })
+                                ->getSearchResultsUsing(function (string $search): array {
+                                    $sites = SiteDetail::where('site_id', 'like', "%{$search}%")
+                                        ->orWhere('site_name', 'like', "%{$search}%")
+                                        ->limit(10)
+                                        ->get();
+                                    return $sites->mapWithKeys(function ($site) {
+                                        return [$site->site_id => "{$site->site_id} - {$site->site_name}"];
+                                    })->toArray();
+                                })
+                                ->getOptionLabelFromRecordUsing(function (SiteDetail $record): string {
+                                    return "{$record->site_id} - {$record->site_name}";
+                                })
+                                ->preload()
+                                ->searchable()
+                                ->native(false)
+                                ->required()
+                                ->reactive()
+                                ->afterStateUpdated(function ($state, callable $set) {
+                                    // Ambil province dari SiteDetail
+                                    $site = SiteDetail::find($state);
+                                    $timezone = $site ? $this->getTimezoneByProvince($site->province) : 'Asia/Jakarta';
+                                    $set('timezone', $timezone);
+
+                                    // dd($timezone);
+                                })
+                                ->placeholder("Select a site ID or site name")
+                                ->columnSpanFull(),
+
+                            TextInput::make('timezone')
+                                ->label('Timezone')
+                                ->required()
+                                ->placeholder("This input is auto generated")
+                                ->disabled()
+                                ->columnSpanFull(),
+                            // ->default('Asia/Jakarta'), // Fallback kalau ga ke-set
+
+                            Forms\Components\Actions::make([
+                                Action::make('generate')
+                                    ->label('Generate Config')
+                                    ->action('generateGsConfig')
+                            ])->fullWidth()->columnSpanFull(),
+                        ]),
+
                 ])
         ];
     }
@@ -109,6 +166,7 @@ class GenerateMikrotikConfig extends Page
         if (count($ipParts) !== 4) {
             throw new \Exception('Format Modem IP tidak valid.');
         }
+
         $ipParts[3] = (int)$ipParts[3] - 1; // Kurangi digit terakhir
         if ($ipParts[3] < 0) {
             throw new \Exception('Digit terakhir Modem IP tidak bisa dikurangi (sudah 0).');
@@ -147,6 +205,57 @@ class GenerateMikrotikConfig extends Page
             storage_path('app/temp/' . $fileName),
             $fileName,
             ['Content-Type' => 'text/plain']
+        )->deleteFileAfterSend(true);
+    }
+
+    public function generateGsConfig()
+    {
+        $site = SiteDetail::where('site_id', $this->siteId)->first();
+        $deviceNetwork = $site->deviceNetworks;
+
+        if (!$deviceNetwork->modem_ip || !filter_var($deviceNetwork->modem_ip, FILTER_VALIDATE_IP)) {
+            throw new \Exception('Modem IP tidak valid atau kosong.');
+        }
+
+        $template = Storage::disk('public')->get('templates/template_gs.txt');
+
+        $replacements = [
+            '{$IP_MODEM}' => $deviceNetwork->modem_ip,
+            '{$IP_ROUTER}' => $deviceNetwork->router_ip,
+            '{$IP_AP1}' => $deviceNetwork->ap1_ip,
+            '{$IP_AP2}' => $deviceNetwork->ap2_ip,
+            '{$NAMA_LOKASI}' => $site->site_name,
+            '{$TIMEZONE}' => $this->timezone,
+        ];
+
+        $configContent = str_replace(
+            array_keys($replacements),
+            array_values($replacements),
+            $template
+        );
+
+        $txtFileName = str_replace(' ', ' ', $site->site_name) . '_gscfg';
+        $binFileName = str_replace(' ', ' ', $site->site_name) . '_gscfg.bin';
+
+        Storage::put('temp/' . $txtFileName, $configContent);
+
+        $txtFilePath = storage_path('app/temp/' . $txtFileName);
+        $binFilePath = base_path('bin/' . $binFileName);
+        $binFolderPath = base_path('bin');
+
+        $command = sprintf('cd "%s" && gscfgtool -t GWN7003 -e "%s"', $binFolderPath, $txtFilePath);
+        $output = shell_exec($command . ' 2>&1');
+
+        if (!file_exists($binFilePath)) {
+            throw new \Exception('Gagal mengenkripsi file ke .bin: ' . $binFilePath . $output);
+        }
+
+        Storage::delete('temp/' . $txtFileName);
+
+        return response()->download(
+            $binFilePath,
+            $binFileName,
+            ['Content-Type' => 'application/octet-stream']
         )->deleteFileAfterSend(true);
     }
 
