@@ -8,13 +8,18 @@ use App\Models\AreaList;
 use App\Models\NmtTickets;
 use Carbon\Carbon;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Artisan;
+use Webbingbrasil\FilamentCopyActions\Tables\Actions\CopyAction;
 
 class NmtTicketsResource extends Resource
 {
@@ -155,6 +160,8 @@ class NmtTicketsResource extends Resource
                             return "Online";
                         }
 
+                        Carbon::setLocale('en');
+
                         return Carbon::parse($state)
                             ->diffForHumans();
                     })
@@ -172,6 +179,7 @@ class NmtTicketsResource extends Resource
                     ->label("Detail")
                     ->formatStateUsing(fn($state) => Str::title($state))
                     ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false)
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('date_start')
@@ -188,6 +196,7 @@ class NmtTicketsResource extends Resource
                         'Belum Ada Info' => 'danger',
                     })
                     ->formatStateUsing(fn($state) => Str::title($state))
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('created_at')
@@ -209,6 +218,35 @@ class NmtTicketsResource extends Resource
                     ->label("Problem Classification")
                     ->native(false)
                     ->options(fn() => NmtTickets::query()->pluck('problem_classification', 'problem_classification')),
+
+                Tables\Filters\SelectFilter::make('aging')
+                    ->label('Aging/Duration')
+                    ->options([
+                        'warning' => '≤ 3 days',
+                        'minor' => '> 4-7 days',
+                        'major' => '> 8-14 days',
+                        'critical' => '> 15-30 days',
+                        'sp1' => '> 30 days',
+                    ])
+                    ->modifyQueryUsing(function (Builder $query, array $state) {
+                        if (!isset($state['value']) || empty($state['value'])) {
+                            return $query; // Jika tidak ada filter yang dipilih, kembalikan query tanpa filter
+                        }
+
+                        return $query->whereHas('siteMonitor', function ($query) use ($state) {
+                            if ($state['value'] === 'warning') {
+                                $query->where('aging', '<=', 3);
+                            } elseif ($state['value'] === 'minor') {
+                                $query->where('aging', '>=', 4)->where('aging', '<=', 7);
+                            } elseif ($state['value'] === 'major') {
+                                $query->where('aging', '>=', 8)->where('aging', '<=', 14);
+                            } elseif ($state['value'] === 'critical') {
+                                $query->where('aging', '>=', 15)->where('aging', '<=', 30);
+                            } elseif ($state['value'] === 'sp1') {
+                                $query->where('aging', '>', 30);
+                            }
+                        });
+                    }),
 
                 Tables\Filters\SelectFilter::make('area')
                     ->label("Area")
@@ -241,13 +279,56 @@ class NmtTicketsResource extends Resource
                                 $query->where('modem_last_up', '<', now()->subDays(3));
                             }
                         });
+                    }),
+
+                Tables\Filters\Filter::make('actual_online')
+                    ->form([
+                        DatePicker::make('actual_online_date')
+                            ->label('Actual Online Date')
+                            // ->default(Carbon::today()) // Default ke hari ini
+                            ->displayFormat('d F Y') // Format Indo: 18 April 2025
+                            ->locale('id'), // Format tanggal dalam bahasa Indonesia
+                    ])
+                    ->query(function ($query, array $data) {
+                        if ($data['actual_online_date']) {
+                            $selectedDate = Carbon::parse($data['actual_online_date'])->startOfDay();
+                            $query->whereDate('closed_date', $selectedDate);
+                        }
                     })
-            ])
+                    ->indicateUsing(function (array $data): ?string {
+                        if ($data['actual_online_date']) {
+                            $formattedDate = Carbon::parse($data['actual_online_date'])->translatedFormat('d F Y');
+                            return "Actual Online: $formattedDate";
+                        }
+                        return null;
+                    }),
+
+            ], layout: FiltersLayout::Modal)
+            ->filtersFormColumns(2)
             ->actions([
                 // Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make()
                     ->label("Details")
                     ->modalHeading("Ticket Detail"),
+            ])
+            ->headerActions([
+                CopyAction::make('generate_report')
+                // ->link()
+                ->color('gray')
+                ->label('Generate PMU Report')
+                ->successNotificationTitle('Report copied to clipboard')
+                ->copyable(function () {
+                    return static::generateReportString();
+                })
+                ->icon('phosphor-file-txt-duotone'),
+
+                Action::make('Import Data')
+                    ->button()
+                    ->label("Get Data from GSheet")
+                    ->action(fn() => Artisan::call('fetch:nmt-tickets'))
+                    ->requiresConfirmation()
+                    ->successNotificationTitle('Data berhasil diimport')
+                    ->icon('phosphor-plus-circle-duotone'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -275,5 +356,124 @@ class NmtTicketsResource extends Resource
             'create' => Pages\CreateNmtTickets::route('/create'),
             // 'edit' => Pages\EditNmtTickets::route('/{record}/edit'),
         ];
+    }
+
+    protected static function generateReportString(): string
+    {
+        // Ambil waktu saat ini
+        Carbon::setLocale('id');
+
+        // Ambil waktu saat ini
+        $now = Carbon::now();
+        $date = $now->translatedFormat('l, d F Y'); // Contoh: Minggu, 20 April 2025
+        $timeOfDay = static::getTimeOfDay($now);
+
+        // Query untuk mengelompokkan data
+        $closed = NmtTickets::where('status', 'CLOSED')
+            ->whereDate('closed_date', $now->startOfDay())
+            ->with('site')
+            ->orderBy('aging', 'desc')
+            ->get();
+
+        $renovasi = NmtTickets::where('status', 'OPEN')
+            ->where('problem_detail', 'LIKE', '%renovasi%')
+            ->with('site')
+            ->orderBy('aging', 'desc')
+            ->get();
+
+        $relokasi = NmtTickets::where('status', 'OPEN')
+            ->where('problem_classification', 'LIKE', '%relokasi%')
+            ->with('site')
+            ->orderBy('aging', 'desc')
+            ->get();
+
+        $liburSekolah = NmtTickets::where('status', 'OPEN')
+            ->where('problem_detail', 'LIKE', '%libur%')
+            ->with('site')
+            ->orderBy('aging', 'desc')
+            ->get();
+
+        $bencanaAlam = NmtTickets::where('status', 'OPEN')
+            ->where('problem_detail', 'LIKE', '%bencana%')
+            ->with('site')
+            ->orderBy('aging', 'desc')
+            ->get();
+
+        $open = NmtTickets::where('status', 'OPEN')
+            ->where('problem_detail', 'NOT LIKE', '%renovasi%')
+            ->where('problem_classification', 'NOT LIKE', '%relokasi%')
+            ->where('problem_detail', 'NOT LIKE', '%libur%')
+            ->where('problem_detail', 'NOT LIKE', '%bencana%')
+            ->with('site')
+            ->orderBy('aging', 'desc')
+            ->get();
+
+        // Hitung total
+        $totalClosed = $closed->count();
+        $totalRenovasi = $renovasi->count();
+        $totalRelokasi = $relokasi->count();
+        $totalLiburSekolah = $liburSekolah->count();
+        $totalBencanaAlam = $bencanaAlam->count();
+        $totalOpen = $open->count();
+
+        $totalTickets = $totalOpen + $totalClosed + $totalBencanaAlam + $totalLiburSekolah + $totalRelokasi + $totalRenovasi;
+
+        // Buat string header report
+        $report = "Selamat $timeOfDay,\n\n";
+        $report .= "Berikut Report TT tanggal $date:\n\n";
+        $report .= "> CATEGORY SL\n";
+        $report .= "* ✅ Closed\t: $totalClosed\t\n";
+        $report .= "* ❌ Open\t: $totalOpen\t\n";
+        $report .= "* ⚠️ Renovasi\t: $totalRenovasi\t\n";
+        $report .= "* 🚫 Relokasi\t: $totalRelokasi\t\n";
+        $report .= "* ❕ Libur Sekolah\t: $totalLiburSekolah\t\n";
+        $report .= "* ❗ Bencana Alam\t: $totalBencanaAlam\t\n\n";
+        $report .= "* Total TT\t: $totalTickets\n\n";
+
+        // Detail per kategori
+        $report .= static::generateCategoryDetails('✅ TT CLOSED', $closed, true);
+        $report .= static::generateCategoryDetails('❌ TT OPEN', $open);
+        $report .= static::generateCategoryDetails('🚫 RELOKASI', $relokasi);
+        $report .= static::generateCategoryDetails('⚠️ RENOVASI', $renovasi);
+        $report .= static::generateCategoryDetails('❕ LIBUR SEKOLAH', $liburSekolah);
+        $report .= static::generateCategoryDetails('❗ BENCANA ALAM', $bencanaAlam);
+
+        $report .= "Terimakasih, CC: Pak @Dodo.";
+
+        return $report;
+    }
+
+    protected static function getTimeOfDay(Carbon $time): string
+    {
+        $hour = $time->hour;
+        if ($hour >= 5 && $hour < 11) return 'Pagi';
+        if ($hour >= 11 && $hour < 15) return 'Siang';
+        if ($hour >= 15 && $hour < 18) return 'Sore';
+        return 'Malam';
+    }
+
+    protected static function generateCategoryDetails(string $title, $tickets, bool $isClosed = false): string
+    {
+        if ($tickets->isEmpty()) {
+            return "========================================================\n$title :\n> Tidak ada data\n\n";
+        }
+
+        $details = "========================================================\n\n$title :\n\n";
+        foreach ($tickets as $ticket) {
+            $siteName = $ticket->site ? $ticket->site->site_name : 'Unknown';
+            $details .= "> {$ticket->site_id} $siteName " . ($isClosed ? '✅' : '❌') . "\n";
+            if ($isClosed) {
+                $actualOnline = Carbon::parse($ticket->actual_online)->format('d M Y');
+                $details .= "Actual Online\t: $actualOnline\n";
+            } else {
+                $details .= "Durasi TT Open\t: {$ticket->aging} Hari\n";
+                $targetOnline = Carbon::parse($ticket->target_online)->format('d M Y');
+                $details .= "Target Online\t: $targetOnline\n";
+                $details .= "Progress\t\t: {$ticket->update_progress}\n";
+            }
+            $details .= "\n";
+        }
+
+        return $details;
     }
 }
