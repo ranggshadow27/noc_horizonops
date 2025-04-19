@@ -120,15 +120,25 @@ class NmtTicketsResource extends Resource
                     ->label("Status")
                     ->badge()
                     ->color(function ($state) {
-                        if ($state === "OPEN") {
+                        if (str_contains($state, "OPEN")) {
                             return "warning";
-                        } elseif ($state === "CLOSED") {
+                        } elseif (str_contains($state, "CLOSE")) {
                             return 'success';
                         } else {
                             return 'gray';
                         }
                     })
-                    ->formatStateUsing(fn($state) => Str::title($state))
+                    ->formatStateUsing(function($state) {
+                        $data = $state;
+
+                        if (str_contains($data, "OPEN")) {
+                            $data = "OPEN";
+                        } else if (str_contains($data, "CLOSE")) {
+                            $data = "CLOSED";
+                        }
+
+                        return Str::title($data);
+                    } )
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('aging')
