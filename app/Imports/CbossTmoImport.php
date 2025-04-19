@@ -8,12 +8,22 @@ use Maatwebsite\Excel\Concerns\WithStartRow;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CbossTmoImport implements ToModel, WithStartRow
 {
     public function startRow(): int
     {
         return 5; // Mulai dari baris ke-5 (data, setelah header di baris ke-4)
+    }
+
+    private function properCase(string $value = null): ?string
+    {
+        if (is_null($value) || trim($value) === '') {
+            return $value;
+        }
+        // Ubah ke huruf kecil dulu, lalu kapitalisasi huruf pertama setiap kata
+        return Str::of($value)->lower()->title()->trim();
     }
 
     public function model(array $row)
@@ -31,20 +41,20 @@ class CbossTmoImport implements ToModel, WithStartRow
         $mappedRow = [
             'tmo number' => $row[1] ?? null, // Kolom B: TMO Number
             'subscriber number' => $row[7] ?? null, // Kolom G: Subscriber Number
-            'province' => $row[26] ?? null, // Kolom Y: Province
+            'province' => $this->properCase($row[26] ?? null), // Kolom Y: Province
             'spk number' => $row[12] ?? null, // Kolom L: SPK Number
-            'kiko/technician' => $row[14] ?? null, // Kolom N: KIKO/Technician
+            'kiko/technician' => $this->properCase($row[14] ?? null), // Kolom N: KIKO/Technician
             'kiko/technician phone' => $row[15] ?? null, // Kolom O: KIKO/Technician Phone
-            'pic location' => $row[27] ?? null, // Kolom Z: PIC Location
+            'pic location' => $this->properCase($row[27] ?? null), // Kolom Z: PIC Location
             'pic location number' => $row[28] ?? null, // Kolom AA: PIC Location Number
-            'tmo by' => $row[18] ?? null, // Kolom R: TMO By
+            'tmo by' => $this->properCase($row[18] ?? null), // Kolom R: TMO By
             'tmo code' => $row[2] ?? null, // Kolom C: TMO Code
             'es no' => $row[21] ?? null, // Kolom U: Es No
             'eb no' => $row[20] ?? null, // Kolom T: EB No
             'ifl cable' => $row[17] ?? null, // Kolom Q: IFL Cable
             'problem' => $row[22] ?? null, // Kolom V: Problem
             'action' => $row[23] ?? null, // Kolom W: Action
-            'homebase name' => $row[23] ?? null, // Kolom AE: Homebase Name
+            'homebase name' => $this->properCase($row[32] ?? null), // Kolom AE: Homebase Name
             'tmo date' => $row[19] ?? null, // Kolom S: TMO Date
         ];
 
@@ -78,7 +88,7 @@ class CbossTmoImport implements ToModel, WithStartRow
 
         // Konversi Action ke JSON
         $actions = !empty($mappedRow['action']) && $mappedRow['action'] !== '-' ? explode(',', $mappedRow['action']) : [];
-        $actionJson = json_encode(array_map('trim', $actions));
+        // dd($actions);
 
         // Konversi TMO Date ke format datetime
         $tmoDate = Carbon::parse($mappedRow['tmo date'])->format('Y-m-d H:i:s');
@@ -98,7 +108,7 @@ class CbossTmoImport implements ToModel, WithStartRow
             'sqf' => $mappedRow['eb no'],
             'ifl_cable' => $mappedRow['ifl cable'],
             'problem' => $mappedRow['problem'] === '-' ? null : $mappedRow['problem'],
-            'action' => $actionJson,
+            'action' => $actions,
             'homebase' => $mappedRow['homebase name'],
             'tmo_date' => $tmoDate,
             'created_at' => now(),
