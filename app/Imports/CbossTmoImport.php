@@ -93,26 +93,28 @@ class CbossTmoImport implements ToModel, WithStartRow
         // Konversi TMO Date ke format datetime
         $tmoDate = Carbon::parse($mappedRow['tmo date'])->format('Y-m-d H:i:s');
 
-        return new CbossTmo([
-            'tmo_id' => $mappedRow['tmo number'],
-            'site_id' => $mappedRow['subscriber number'],
-            'province' => $mappedRow['province'],
-            'spmk_number' => $mappedRow['spk number'],
-            'techinican_name' => $mappedRow['kiko/technician'],
-            'techinican_number' => $mappedRow['kiko/technician phone'],
-            'pic_name' => $mappedRow['pic location'],
-            'pic_number' => $mappedRow['pic location number'],
-            'tmo_by' => $mappedRow['tmo by'],
-            'tmo_code' => $mappedRow['tmo code'],
-            'esno' => $mappedRow['es no'],
-            'sqf' => $mappedRow['eb no'],
-            'ifl_cable' => $mappedRow['ifl cable'],
-            'problem' => $mappedRow['problem'] === '-' ? null : $mappedRow['problem'],
-            'action' => $actions,
-            'homebase' => $mappedRow['homebase name'],
-            'tmo_date' => $tmoDate,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        return CbossTmo::updateOrCreate(
+            ['tmo_id' => $mappedRow['tmo number']],
+            [
+                'site_id' => $mappedRow['subscriber number'],
+                'province' => $mappedRow['province'],
+                'spmk_number' => $mappedRow['spk number'],
+                'techinican_name' => $mappedRow['kiko/technician'],
+                'techinican_number' => $mappedRow['kiko/technician phone'],
+                'pic_name' => $mappedRow['pic location'],
+                'pic_number' => $mappedRow['pic location number'],
+                'tmo_by' => $mappedRow['tmo by'],
+                'tmo_code' => $mappedRow['tmo code'],
+                'esno' => $mappedRow['es no'],
+                'sqf' => $mappedRow['eb no'],
+                'ifl_cable' => $mappedRow['ifl cable'],
+                'problem' => $mappedRow['problem'] === '-' ? null : $mappedRow['problem'],
+                'action' => $actions,
+                'homebase' => $mappedRow['homebase name'],
+                'tmo_date' => $tmoDate,
+                // 'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
     }
 }
