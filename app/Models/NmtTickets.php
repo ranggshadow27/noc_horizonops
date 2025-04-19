@@ -22,6 +22,7 @@ class NmtTickets extends Model
         'date_start',
         'aging',
         'closed_date',
+        'target_online',
         'problem_classification',
         'problem_detail',
         'problem_type',

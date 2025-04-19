@@ -45,6 +45,7 @@ class ListNmtTickets extends ListRecords
                             })
                     ]),
 
+
                 ExportAction::make('xlsx')
                     ->icon('phosphor-file-xls-duotone')
                     ->label("Export to XLSX")
@@ -69,6 +70,13 @@ class ListNmtTickets extends ListRecords
                             })
                     ]),
 
+                CopyAction::make('generate_report')
+                    ->label('Generate PMU Report')
+                    ->copyable(function () {
+                        return static::generateReportString();
+                    })
+                    ->icon('phosphor-file-txt-duotone'),
+
             ])
                 ->icon('heroicon-m-arrow-down-tray')
                 ->label("Export Data")
@@ -79,70 +87,118 @@ class ListNmtTickets extends ListRecords
                 ->action(fn() => Artisan::call('fetch:nmt-tickets'))
                 ->requiresConfirmation()
                 ->successNotificationTitle('Data berhasil diimport'),
-
-            CopyAction::make()
-                ->label('Copy Data to Clipboard')
-                ->hidden()
-                ->copyable(function () {
-                    // Cek waktu saat ini
-                    $hour = date('H');
-                    $salam = ($hour < 12) ? 'Selamat Pagi' : (($hour < 18) ? 'Selamat Siang' : 'Selamat Malam');
-
-                    // Format tanggal
-                    $tanggal = date('l, j F Y'); // Contoh: Selasa, 2 April 2024
-
-                    // Ambil data tiket dengan status OPEN dan aging di atas 20
-                    $data = NmtTickets::with('site')
-                        ->where('status', 'OPEN')
-                        ->where('aging', '>', 20)
-                        ->get();
-
-                    // Kelompokkan berdasarkan problem_category
-                    $groupedData = $data->groupBy('problem_detail');
-
-                    // Siapkan string untuk hasil
-                    $result = "$salam,\n\nBerikut Report Site $tanggal:\n\n";
-
-                    // Daftar kategori yang ingin dipisahkan
-                    $categoriesToSeparate = ['BENCANA ALAM', 'LIBUR SEKOLAH', 'RENOVASI'];
-
-                    // Loop untuk kategori yang dipisahkan
-                    foreach ($categoriesToSeparate as $category) {
-                        // Filter data yang mengandung kategori
-                        $filteredItems = $groupedData->filter(function ($items, $key) use ($category) {
-                            return Str::contains($key, $category);
-                        });
-
-                        if ($filteredItems->isNotEmpty()) {
-                            $result .= "$category:\n";
-                            $result .= $filteredItems->flatten()->map(function ($item) {
-                                return "Site Name: " . $item->site->site_name . "\nProvinsi: " . $item->site_province . "\nKeterangan: " . $item->update_progress;
-                            })->implode("\n\n") . "\n\n";
-                        }
-                    }
-
-                    // Ambil tiket OPEN yang tidak termasuk dalam kategori di atas
-                    $openTickets = $data->filter(function ($item) use ($categoriesToSeparate) {
-                        foreach ($categoriesToSeparate as $category) {
-                            if (Str::contains($item->problem_detail, $category)) {
-                                return false; // Jika mengandung kategori, jangan masukkan
-                            }
-                        }
-                        return true; // Masukkan jika tidak mengandung kategori
-                    });
-
-                    if ($openTickets->isNotEmpty()) {
-                        $result .= "OPEN:\n";
-                        $result .= $openTickets->map(function ($item) {
-                            return "Site Name: " . $item->site->site_name . "\nProvinsi: " . $item->site_province . "\nKeterangan: " . $item->update_progress;
-                        })->implode("\n\n") . "\n\n";
-                    }
-
-                    // Tambahkan penutup
-                    $result .= "Terimakasih.";
-
-                    return $result;
-                }),
         ];
+    }
+
+    protected static function generateReportString(): string
+    {
+        // Ambil waktu saat ini
+        Carbon::setLocale('id');
+
+        // Ambil waktu saat ini
+        $now = Carbon::now();
+        $date = $now->translatedFormat('l, d F Y'); // Contoh: Minggu, 20 April 2025
+        $timeOfDay = static::getTimeOfDay($now);
+
+        // Query untuk mengelompokkan data
+        $closed = NmtTickets::where('status', 'CLOSED')
+            ->whereDate('closed_date', $now->startOfDay())
+            ->with('site')
+            ->get();
+
+        $renovasi = NmtTickets::where('status', 'OPEN')
+            ->where('problem_detail', 'LIKE', '%renovasi%')
+            ->with('site')
+            ->get();
+
+        $relokasi = NmtTickets::where('status', 'OPEN')
+            ->where('problem_classification', 'LIKE', '%relokasi%')
+            ->with('site')
+            ->get();
+
+        $liburSekolah = NmtTickets::where('status', 'OPEN')
+            ->where('problem_detail', 'LIKE', '%libur%')
+            ->with('site')
+            ->get();
+
+        $bencanaAlam = NmtTickets::where('status', 'OPEN')
+            ->where('problem_detail', 'LIKE', '%bencana%')
+            ->with('site')
+            ->get();
+
+        $open = NmtTickets::where('status', 'OPEN')
+            ->where('problem_detail', 'NOT LIKE', '%renovasi%')
+            ->where('problem_classification', 'NOT LIKE', '%relokasi%')
+            ->where('problem_detail', 'NOT LIKE', '%libur%')
+            ->where('problem_detail', 'NOT LIKE', '%bencana%')
+            ->with('site')
+            ->get();
+
+        // Hitung total
+        $totalClosed = $closed->count();
+        $totalRenovasi = $renovasi->count();
+        $totalRelokasi = $relokasi->count();
+        $totalLiburSekolah = $liburSekolah->count();
+        $totalBencanaAlam = $bencanaAlam->count();
+        $totalOpen = $open->count();
+        $totalTickets = $totalOpen + $totalClosed;
+
+        // Buat string header report
+        $report = "Selamat $timeOfDay,\n\n";
+        $report .= "Berikut Report TT tanggal $date:\n\n";
+        $report .= "> CATEGORY SL\n";
+        $report .= "* ✅ Closed\t: $totalClosed\t\n";
+        $report .= "* ❌ Open\t: $totalOpen\t\n";
+        $report .= "* ⚠️ Renovasi\t: $totalRenovasi\t\n";
+        $report .= "* 🚫 Relokasi\t: $totalRelokasi\t\n";
+        $report .= "* ❕ Libur Sekolah\t: $totalLiburSekolah\t\n";
+        $report .= "* ❗ Bencana Alam\t: $totalBencanaAlam\t\n\n";
+        $report .= "* Total TT\t: $totalTickets\n\n";
+
+        // Detail per kategori
+        $report .= static::generateCategoryDetails('✅ TT CLOSED', $closed, true);
+        $report .= static::generateCategoryDetails('❌ TT OPEN', $open);
+        $report .= static::generateCategoryDetails('🚫 RELOKASI', $relokasi);
+        $report .= static::generateCategoryDetails('⚠️ RENOVASI', $renovasi);
+        $report .= static::generateCategoryDetails('❕ LIBUR SEKOLAH', $liburSekolah);
+        $report .= static::generateCategoryDetails('❗ BENCANA ALAM', $bencanaAlam);
+
+        $report .= "Terimakasih, CC: Pak @Dodo.";
+
+        return $report;
+    }
+
+    protected static function getTimeOfDay(Carbon $time): string
+    {
+        $hour = $time->hour;
+        if ($hour >= 5 && $hour < 11) return 'Pagi';
+        if ($hour >= 11 && $hour < 15) return 'Siang';
+        if ($hour >= 15 && $hour < 18) return 'Sore';
+        return 'Malam';
+    }
+
+    protected static function generateCategoryDetails(string $title, $tickets, bool $isClosed = false): string
+    {
+        if ($tickets->isEmpty()) {
+            return "========================================================\n$title :\n> Tidak ada data\n\n";
+        }
+
+        $details = "========================================================\n\n$title :\n\n";
+        foreach ($tickets as $ticket) {
+            $siteName = $ticket->site ? $ticket->site->site_name : 'Unknown';
+            $details .= "> {$ticket->site_id} $siteName " . ($isClosed ? '✅' : '❌') . "\n";
+            if ($isClosed) {
+                $actualOnline = Carbon::parse($ticket->actual_online)->format('d M Y');
+                $details .= "Actual Online\t: $actualOnline\n";
+            } else {
+                $details .= "Durasi TT Open\t: {$ticket->aging} Hari\n";
+                $targetOnline = Carbon::parse($ticket->target_online)->format('d M Y');
+                $details .= "Target Online\t: $targetOnline\n";
+                $details .= "Progress\t\t: {$ticket->update_progress}\n";
+            }
+            $details .= "\n";
+        }
+
+        return $details;
     }
 }

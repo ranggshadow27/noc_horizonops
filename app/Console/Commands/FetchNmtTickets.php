@@ -54,11 +54,13 @@ class FetchNmtTickets extends Command
 
     private function fetchAndInsertNmtTickets()
     {
-        $apiUrl = 'https://script.google.com/macros/s/AKfycbzLIrSJLKpi4zXiTflJNlQaNB0hhj-hXNWN58JZpNwTDZUloZjto8RItot9eAiuEw3tqQ/exec';
+        $apiUrl = 'https://script.google.com/macros/s/AKfycbx9fiTGPUF9r6SjXBZTwWvgwvlCE6twte9xSJjpTfnUn3bDAi2yLUdCbdhrEmRJHtREVA/exec';
         $response = Http::timeout(360)->get($apiUrl);
 
         if ($response->successful()) {
             $data = $response->json();
+
+            // dd($data);
 
             foreach ($data as $item) {
                 $site = SiteDetail::where('site_id', $item['SITE ID'])->first();
@@ -71,6 +73,7 @@ class FetchNmtTickets extends Command
                 $ticketId = str_replace('/', '-', $item['TICKET ID']);
                 $apiStatus = $item['STATUS'];
                 $status = ($apiStatus === "CLOSED" && !isset($item['ACTUAL ONLINE'])) ? "OPEN" : $apiStatus;
+                $targetOnline = (!isset($item['TARGET ONLINE'])) ? null : $item['TARGET ONLINE'];
 
                 $ticketDate = Carbon::parse($item['DATE START TT'], 'Asia/Jakarta')
                     ->addDay()
@@ -86,6 +89,7 @@ class FetchNmtTickets extends Command
                     'status' => $status,
                     'date_start' => $ticketDate,
                     'aging' => $item['DOWN TIME'],
+                    'target_online' => $targetOnline,
                     'problem_classification' => $item['PROBLEM CLASSIFICATION'],
                     'problem_detail' => $item['DETAIL PROBLEM'],
                     'problem_type' => $item['TEKNIS/NON TEKNIS'],
