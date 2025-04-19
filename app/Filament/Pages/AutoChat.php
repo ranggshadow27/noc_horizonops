@@ -176,9 +176,9 @@ class AutoChat extends Page implements HasForms
             // Additional Info
             $this->additionalInfo = "• Lokasi\t\t\t:\n{$site->site_id} - {$site->site_name}\n\n"
                 . "• Data PIC\t\t:\n"
-                . "PIC Lokasi\t\t\t" . ($site->pic_name ?? 'N/A') . " / " . ($site->pic_number ?? 'N/A') . "\n"
-                . "PIC Penyedia\t\t" . ($site->installer_name ?? 'N/A') . " / " . ($site->installer_number ?? 'N/A') . "\n"
-                . "PIC Last TMO\t\t" . ($cbossTmo->pic_name ?? 'N/A') . " / " . ($cbossTmo->pic_number ?? 'N/A') . "\n\n"
+                . "PIC Lokasi\t\t\t" . ($site->pic_name ?? '') . " - " . ($site->pic_number ?? '') . "\n"
+                . "PIC Penyedia\t\t" . ($site->installer_name ?? '') . " - " . ($site->installer_number ?? '') . "\n"
+                . "PIC Last TMO\t\t" . ($cbossTmo->pic_name ?? '') . " - " . ($cbossTmo->pic_number ?? '') . "\n\n"
                 . "• Provinsi\t:\n{$site->administrative_area}, {$site->province}\n\n"
                 . "• Alamat\t\t:\n{$site->address}\n\n"
                 . "• Koordinat\t:\nLatitude {$site->latitude} / Longitude {$site->longitude}\n\n"
