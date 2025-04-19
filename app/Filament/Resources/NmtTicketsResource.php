@@ -443,12 +443,12 @@ class NmtTicketsResource extends Resource
         $report .= "* Total TT\t: $totalTickets\n\n";
 
         // Detail per kategori
-        $report .= static::generateCategoryDetails('✅ TT CLOSED', $closed, true);
-        $report .= static::generateCategoryDetails('❌ TT OPEN', $open);
-        $report .= static::generateCategoryDetails('🚫 RELOKASI', $relokasi);
-        $report .= static::generateCategoryDetails('⚠️ RENOVASI', $renovasi);
-        $report .= static::generateCategoryDetails('❕ LIBUR SEKOLAH', $liburSekolah);
-        $report .= static::generateCategoryDetails('❗ BENCANA ALAM', $bencanaAlam);
+        $report .= static::generateCategoryDetails('✅ TT CLOSED', $closed, true, false);
+        $report .= static::generateCategoryDetails('❌ TT OPEN', $open, false, false);
+        $report .= static::generateCategoryDetails('🚫 RELOKASI', $relokasi, false, true);
+        $report .= static::generateCategoryDetails('⚠️ RENOVASI', $renovasi, false, true);
+        $report .= static::generateCategoryDetails('❕ LIBUR SEKOLAH', $liburSekolah, false, false);
+        $report .= static::generateCategoryDetails('❗ BENCANA ALAM', $bencanaAlam, false, false);
 
         $report .= "Terimakasih, CC: Pak @Dodo.";
 
@@ -464,23 +464,28 @@ class NmtTicketsResource extends Resource
         return 'Malam';
     }
 
-    protected static function generateCategoryDetails(string $title, $tickets, bool $isClosed = false): string
+    protected static function generateCategoryDetails(string $title, $tickets, $isClosed, $isNoTargetOnline): string
     {
         if ($tickets->isEmpty()) {
             return "========================================================\n$title :\n> Tidak ada data\n\n";
         }
 
         $details = "========================================================\n\n$title :\n\n";
+
         foreach ($tickets as $ticket) {
             $siteName = $ticket->site ? $ticket->site->site_name : 'Unknown';
             $details .= "> {$ticket->site_id} $siteName " . ($isClosed ? '✅' : '❌') . "\n";
             if ($isClosed) {
                 $actualOnline = Carbon::parse($ticket->actual_online)->format('d M Y');
                 $details .= "Actual Online\t: $actualOnline\n";
-            } else {
+            } else if (!$isNoTargetOnline) {
                 $details .= "Durasi TT Open\t: {$ticket->aging} Hari\n";
                 $targetOnline = Carbon::parse($ticket->target_online)->format('d M Y');
                 $details .= "Target Online\t: $targetOnline\n";
+                $details .= "Progress\t\t: {$ticket->update_progress}\n";
+            } else {
+                $details .= "Durasi TT Open\t: {$ticket->aging} Hari\n";
+                $details .= "Target Online\t: -\n";
                 $details .= "Progress\t\t: {$ticket->update_progress}\n";
             }
             $details .= "\n";

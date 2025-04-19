@@ -72,4 +72,9 @@ class SiteDetail extends Model
     {
         return $this->hasMany(SweepingTicket::class, 'site_id', 'site_id');
     }
+
+    public function cbossTmo()
+    {
+        return $this->hasMany(CbossTmo::class, 'site_id', 'site_id');
+    }
 }
