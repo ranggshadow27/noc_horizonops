@@ -64,23 +64,29 @@ class AutoChat extends Page implements HasForms
         return [
             Select::make('siteId')
                 ->label('Site ID')
-                ->searchable()
+                ->options(function () {
+                    return SiteDetail::pluck('site_name', 'site_id')->mapWithKeys(function ($siteName, $site_id) {
+                        return [$site_id => "$site_id - $siteName"];
+                    })->toArray();
+                })
                 ->getSearchResultsUsing(function (string $search): array {
-                    return SiteDetail::where('site_id', 'like', "%{$search}%")
+                    $sites = SiteDetail::where('site_id', 'like', "%{$search}%")
                         ->orWhere('site_name', 'like', "%{$search}%")
-                        ->limit(50)
-                        ->get()
-                        ->mapWithKeys(function ($site) {
-                            return [$site->site_id => "{$site->site_id} - {$site->site_name}"];
-                        })
-                        ->toArray();
+                        ->limit(10)
+                        ->get();
+                    return $sites->mapWithKeys(function ($site) {
+                        return [$site->site_id => "{$site->site_id} - {$site->site_name}"];
+                    })->toArray();
                 })
-                ->getOptionLabelUsing(function ($value): ?string {
-                    $site = SiteDetail::where('site_id', $value)->first();
-                    return $site ? "{$site->site_id} - {$site->site_name}" : null;
+                ->getOptionLabelFromRecordUsing(function (SiteDetail $record): string {
+                    return "{$record->site_id} - {$record->site_name}";
                 })
+                ->preload()
+                ->searchable()
+                ->native(false)
                 ->required()
-                ->placeholder("Select a site ID or site name"),
+                ->placeholder("Select a site ID or site name")
+                ->columnSpanFull(),
 
             Select::make('templateId')
                 ->label('Chat Template')
@@ -130,7 +136,7 @@ class AutoChat extends Page implements HasForms
 
     public function generateChat(): void
     {
-        $site = SiteDetail::where('site_id', $this->siteId)->first();
+        $site = SiteDetail::findOrFail($this->siteId);
         $template = ChatTemplate::find($this->templateId);
 
         if (!$site) {
@@ -165,14 +171,17 @@ class AutoChat extends Page implements HasForms
                 $template->template
             );
 
+            $cbossTmo = $site->cbossTmo->last();
+
             // Additional Info
-            $this->additionalInfo = "• Lokasi\t\t\t:\n {$site->site_id} - {$site->site_name}\n\n"
+            $this->additionalInfo = "• Lokasi\t\t\t:\n{$site->site_id} - {$site->site_name}\n\n"
                 . "• Data PIC\t\t:\n"
-                . "PIC Lokasi    " . ($site->pic_name ?? 'N/A') . " / " . ($site->pic_number ?? 'N/A') . "\n"
-                . "Penyedia      " . ($site->installer_name ?? 'N/A') . " / " . ($site->installer_number ?? 'N/A') . "\n\n"
-                . "• Provinsi\t:\n {$site->administrative_area}, {$site->province}\n\n"
-                . "• Alamat\t\t:\n {$site->address}\n\n"
-                . "• Koordinat\t:\n Latitude {$site->latitude} / Longitude {$site->longitude}\n\n"
+                . "PIC Lokasi\t\t\t" . ($site->pic_name ?? 'N/A') . " / " . ($site->pic_number ?? 'N/A') . "\n"
+                . "PIC Penyedia\t\t" . ($site->installer_name ?? 'N/A') . " / " . ($site->installer_number ?? 'N/A') . "\n"
+                . "PIC Last TMO\t\t" . ($cbossTmo->pic_name ?? 'N/A') . " / " . ($cbossTmo->pic_number ?? 'N/A') . "\n\n"
+                . "• Provinsi\t:\n{$site->administrative_area}, {$site->province}\n\n"
+                . "• Alamat\t\t:\n{$site->address}\n\n"
+                . "• Koordinat\t:\nLatitude {$site->latitude} / Longitude {$site->longitude}\n\n"
                 . "• Gateway\t\t\t: {$site->gateway}\n"
                 . "• Spotbeam\t\t: {$site->spotbeam} / {$site->ip_hub}\n"
                 . "• Power Source\t: {$site->power_source}\n"
@@ -182,13 +191,13 @@ class AutoChat extends Page implements HasForms
             $device = $site->devices;
 
             // dd($device);
-            $this->deviceDetail = "• Transceiver\t:\n " . ($device->transceiver_type ?? 'N/A') . "  |  " . ($device->transceiver_sn ?? 'N/A') . "\n\n"
-                . "• Antenna\t\t:\n " . ($device->antenna_type ?? 'N/A') . "  |  " . ($device->antenna_sn ?? 'N/A') . "\n\n"
-                . "• Modem\t\t:\n " . ($device->modem_type ?? 'N/A') . "  |  " . ($device->modem_sn ?? 'N/A') . "\n\n"
-                . "• Router\t\t\t:\n " . ($device->router_type ?? 'N/A') . "  |  " . ($device->router_sn ?? 'N/A') . "\n\n"
-                . "• AP 1\t\t\t\t:\n " . ($device->ap1_type ?? 'N/A') . "  |  " . ($device->ap1_sn ?? 'N/A') . "\n\n"
-                . "• AP 2\t\t\t\t:\n " . ($device->ap2_type ?? 'N/A') . "  |  " . ($device->ap2_sn ?? 'N/A') . "\n\n"
-                . "• Rack\t\t\t\t: " . ($device->rack_sn ?? 'N/A') . "\n"
+            $this->deviceDetail = "• Transceiver\t:\n" . ($device->transceiver_type ?? 'N/A') . "  |  " . ($device->transceiver_sn ?? 'N/A') . "\n\n"
+                . "• Antenna\t\t:\n" . ($device->antenna_type ?? 'N/A') . "  |  " . ($device->antenna_sn ?? 'N/A') . "\n\n"
+                . "• Modem\t\t:\n" . ($device->modem_type ?? 'N/A') . "  |  " . ($device->modem_sn ?? 'N/A') . "\n\n"
+                . "• Router\t\t\t:\n" . ($device->router_type ?? 'N/A') . "  |  " . ($device->router_sn ?? 'N/A') . "\n\n"
+                . "• AP 1\t\t\t\t:\n" . ($device->ap1_type ?? 'N/A') . "  |  " . ($device->ap1_sn ?? 'N/A') . "\n\n"
+                . "• AP 2\t\t\t\t:\n" . ($device->ap2_type ?? 'N/A') . "  |  " . ($device->ap2_sn ?? 'N/A') . "\n\n"
+                . "• Rack\t\t\t\t: " . ($device->rack_sn ?? 'N/A') . "\n\n"
                 . "• Stabillizer\t\t: " . ($device->stabilizer_type ?? 'N/A') . "  |  " . ($device->stabilizer_sn ?? 'N/A');
 
             $this->showDetails = true;

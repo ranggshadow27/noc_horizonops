@@ -76,55 +76,59 @@ class CbossTmoResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-        ->query(static::getEloquentQuery()->orderByDesc('tmo_date'))
+            ->query(static::getEloquentQuery()->orderByDesc('tmo_date'))
             ->columns([
                 Tables\Columns\TextColumn::make('tmo_id')
-                ->label("TMO ID")
-                ->formatStateUsing(function($state) {
-                    return explode("/", $state)[3];
-                })
+                    ->label("TMO ID")
+                    ->formatStateUsing(function ($state) {
+                        return explode("/", $state)[3];
+                    })
+                    ->copyable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('site_id')
-                ->label("Site Name")
-                ->description(fn($record): string => $record->siteDetail->site_name)
+                    ->label("Site Name")
+                    ->description(fn($record): string => $record->siteDetail->site_name)
+                    ->copyable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('province')
-                ->label("Province")
+                    ->label("Province")
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('spmk_number')
+                    ->label("SPMK Number")
                     ->toggleable(isToggledHiddenByDefault: true)
+                    ->copyable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('techinican_name')
-                ->label("Technician")
+                    ->label("Technician")
                     ->description(fn($record): string => $record->techinican_number)
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('pic_name')
-                ->label("PIC")
+                    ->label("PIC")
                     ->description(fn($record): string => $record->pic_number)
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('tmo_code')
-                ->label("TMO Code")
+                    ->label("TMO Code")
+                    ->copyable()
                     ->badge()
                     ->searchable(),
 
-                    Tables\Columns\TextColumn::make('action')
-                ->label("Action")
-                    // ->badge()
+                Tables\Columns\TextColumn::make('action')
+                    ->label("Action")
                     ->searchable(),
 
-                    Tables\Columns\TextColumn::make('tmo_by')
-                ->label("TMO By")
-                ->description(fn($record): string => "Date: " .Carbon::parse($record->tmo_date)->format("d M Y H:i"))
+                Tables\Columns\TextColumn::make('tmo_by')
+                    ->label("TMO By")
+                    ->description(fn($record): string => "Date: " . Carbon::parse($record->tmo_date)->format("d M Y H:i"))
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('homebase')
-                ->label("Homebase")
+                    ->label("Homebase")
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
 

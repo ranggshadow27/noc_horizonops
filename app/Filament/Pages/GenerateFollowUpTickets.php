@@ -46,21 +46,31 @@ class GenerateFollowUpTickets extends Page
     protected function getFormSchema(): array
     {
         return [
-            Select::make('site_id')
-                ->label('Site')
-                // ->options(SiteDetail::pluck('site_name', 'site_id'))
-                ->getSearchResultsUsing(function (string $search): array {
-                    return SiteDetail::where('site_id', 'like', "%{$search}%")
-                        ->orWhere('site_name', 'like', "%{$search}%")
-                        ->limit(50)
-                        ->get()
-                        ->mapWithKeys(function ($site) {
-                            return [$site->site_id => "{$site->site_id} - {$site->site_name}"];
-                        })
-                        ->toArray();
+            Select::make('siteId')
+                ->label('Site ID')
+                ->options(function () {
+                    return SiteDetail::pluck('site_name', 'site_id')->mapWithKeys(function ($siteName, $site_id) {
+                        return [$site_id => "$site_id - $siteName"];
+                    })->toArray();
                 })
+                ->getSearchResultsUsing(function (string $search): array {
+                    $sites = SiteDetail::where('site_id', 'like', "%{$search}%")
+                        ->orWhere('site_name', 'like', "%{$search}%")
+                        ->limit(10)
+                        ->get();
+                    return $sites->mapWithKeys(function ($site) {
+                        return [$site->site_id => "{$site->site_id} - {$site->site_name}"];
+                    })->toArray();
+                })
+                ->getOptionLabelFromRecordUsing(function (SiteDetail $record): string {
+                    return "{$record->site_id} - {$record->site_name}";
+                })
+                ->preload()
+                ->searchable()
+                ->native(false)
+                ->required()
                 ->placeholder("Select a site ID or site name")
-                ->searchable(),
+                ->columnSpanFull(),
             // ->reactive()
             // ->afterStateUpdated(fn($state, callable $set) => $set('generated_text', null)),
 
