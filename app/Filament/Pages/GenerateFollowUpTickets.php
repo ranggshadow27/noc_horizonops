@@ -24,7 +24,7 @@ class GenerateFollowUpTickets extends Page
 
     protected static string $view = 'filament.pages.generate-follow-up-tickets';
 
-    public $site_id;
+    public $siteId;
     public $problem_category;
     public $problem_type;
     public $generated_text;
@@ -121,11 +121,11 @@ class GenerateFollowUpTickets extends Page
     public function generateMessage()
     {
         $this->validate([
-            'site_id' => 'required',
+            'siteId' => 'required',
             'problem_type' => 'required',
         ]);
 
-        $site = SiteDetail::with('area')->findOrFail($this->site_id);
+        $site = SiteDetail::with('area')->findOrFail($this->siteId);
         $area = $site->area; // Ambil AreaList via relasi
         $head_po = $area->head_po;
 
