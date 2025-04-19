@@ -337,6 +337,8 @@ class NmtTicketsResource extends Resource
             ])
             ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(10)
+            ->heading("Mahaga NMT Tickets")
+            ->description("Summary of BAKTI Akses Internet Trouble Ticket - Network Operation Center. ")
             ->emptyStateHeading('No NMT Ticket yet')
             ->emptyStateDescription('Once you have been import NMT Ticket, it will appear here.')
             ->emptyStateIcon('phosphor-ticket-duotone');
