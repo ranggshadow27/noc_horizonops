@@ -128,7 +128,7 @@ class NmtTicketsResource extends Resource
                             return 'gray';
                         }
                     })
-                    ->formatStateUsing(function($state) {
+                    ->formatStateUsing(function ($state) {
                         $data = $state;
 
                         if (str_contains($data, "OPEN")) {
@@ -138,7 +138,7 @@ class NmtTicketsResource extends Resource
                         }
 
                         return Str::title($data);
-                    } )
+                    })
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('aging')
@@ -323,14 +323,14 @@ class NmtTicketsResource extends Resource
             ])
             ->headerActions([
                 CopyAction::make('generate_report')
-                // ->link()
-                ->color('gray')
-                ->label('Generate PMU Report')
-                ->successNotificationTitle('Report copied to clipboard')
-                ->copyable(function () {
-                    return static::generateReportString();
-                })
-                ->icon('phosphor-file-txt-duotone'),
+                    // ->link()
+                    ->color('gray')
+                    ->label('Generate PMU Report')
+                    ->successNotificationTitle('Report copied to clipboard')
+                    ->copyable(function () {
+                        return static::generateReportString();
+                    })
+                    ->icon('phosphor-file-txt-duotone'),
 
                 Action::make('Import Data')
                     ->button()
@@ -432,23 +432,48 @@ class NmtTicketsResource extends Resource
 
         // Buat string header report
         $report = "Selamat $timeOfDay,\n\n";
-        $report .= "Berikut Report TT tanggal $date:\n\n";
+        $report .= "Berikut Update TT PT. MAHAGA PRATAMA $date:\n\n";
         $report .= "> CATEGORY SL\n";
-        $report .= "* ✅ Closed\t: $totalClosed\t\n";
-        $report .= "* ❌ Open\t: $totalOpen\t\n";
-        $report .= "* ⚠️ Renovasi\t: $totalRenovasi\t\n";
-        $report .= "* 🚫 Relokasi\t: $totalRelokasi\t\n";
-        $report .= "* ❕ Libur Sekolah\t: $totalLiburSekolah\t\n";
-        $report .= "* ❗ Bencana Alam\t: $totalBencanaAlam\t\n\n";
-        $report .= "* Total TT\t: $totalTickets\n\n";
+        $report .= "* ✅ Closed\t\t\t: $totalClosed\t\n";
+
+        // Tambahkan hanya kategori dengan jumlah > 0 ke summary
+        if ($totalOpen > 0) {
+            $report .= "* ❌ Open\t\t\t: $totalOpen\t\n";
+        }
+        if ($totalRenovasi > 0) {
+            $report .= "* ⚠️ Renovasi\t\t: $totalRenovasi\t\n";
+        }
+        if ($totalRelokasi > 0) {
+            $report .= "* 🚫 Relokasi\t\t: $totalRelokasi\t\n";
+        }
+        if ($totalLiburSekolah > 0) {
+            $report .= "* ❕ Libur Sekolah\t: $totalLiburSekolah\t\n";
+        }
+        if ($totalBencanaAlam > 0) {
+            $report .= "* ❗ Bencana Alam\t: $totalBencanaAlam\t\n";
+        }
+
+        $report .= "\n* Total Ticket\t\t: $totalTickets\n\n";
 
         // Detail per kategori
-        $report .= static::generateCategoryDetails('✅ TT CLOSED', $closed, true, false);
-        $report .= static::generateCategoryDetails('❌ TT OPEN', $open, false, false);
-        $report .= static::generateCategoryDetails('🚫 RELOKASI', $relokasi, false, true);
-        $report .= static::generateCategoryDetails('⚠️ RENOVASI', $renovasi, false, true);
-        $report .= static::generateCategoryDetails('❕ LIBUR SEKOLAH', $liburSekolah, false, false);
-        $report .= static::generateCategoryDetails('❗ BENCANA ALAM', $bencanaAlam, false, false);
+        if ($totalClosed > 0) {
+            $report .= static::generateCategoryDetails('✅ TT CLOSED', $closed, true, false, '✅');
+        }
+        if ($totalOpen > 0) {
+            $report .= static::generateCategoryDetails('❌ TT OPEN', $open, false, false, '❌');
+        }
+        if ($totalRenovasi > 0) {
+            $report .= static::generateCategoryDetails('🚫 RELOKASI', $relokasi, false, true, '🚫');
+        }
+        if ($totalRelokasi > 0) {
+            $report .= static::generateCategoryDetails('⚠️ RENOVASI', $renovasi, false, true, '⚠️');
+        }
+        if ($totalLiburSekolah > 0) {
+            $report .= static::generateCategoryDetails('❕ LIBUR SEKOLAH', $liburSekolah, false, false, '❕');
+        }
+        if ($totalBencanaAlam > 0) {
+            $report .= static::generateCategoryDetails('❗ BENCANA ALAM', $bencanaAlam, false, false, '❗');
+        }
 
         $report .= "Terimakasih, CC: Pak @Dodo.";
 
@@ -458,33 +483,29 @@ class NmtTicketsResource extends Resource
     protected static function getTimeOfDay(Carbon $time): string
     {
         $hour = $time->hour;
-        if ($hour >= 5 && $hour < 11) return 'Pagi';
+        if ($hour >= 4 && $hour < 11) return 'Pagi';
         if ($hour >= 11 && $hour < 15) return 'Siang';
         if ($hour >= 15 && $hour < 18) return 'Sore';
         return 'Malam';
     }
 
-    protected static function generateCategoryDetails(string $title, $tickets, $isClosed, $isNoTargetOnline): string
+    protected static function generateCategoryDetails(string $title, $tickets, bool $isClosed, bool $isNoTargetOnline, string $emoji): string
     {
-        if ($tickets->isEmpty()) {
-            return "========================================================\n$title :\n> Tidak ada data\n\n";
-        }
-
         $details = "========================================================\n\n$title :\n\n";
 
         foreach ($tickets as $ticket) {
             $siteName = $ticket->site ? $ticket->site->site_name : 'Unknown';
-            $details .= "> {$ticket->site_id} $siteName " . ($isClosed ? '✅' : '❌') . "\n";
+            $details .= "> {$ticket->site_id} $siteName $emoji" . "\n";
             if ($isClosed) {
                 $actualOnline = Carbon::parse($ticket->actual_online)->format('d M Y');
                 $details .= "Actual Online\t: $actualOnline\n";
             } else if (!$isNoTargetOnline) {
-                $details .= "Durasi TT Open\t: {$ticket->aging} Hari\n";
+                $details .= "Durasi Open\t: {$ticket->aging} Hari\n";
                 $targetOnline = Carbon::parse($ticket->target_online)->format('d M Y');
                 $details .= "Target Online\t: $targetOnline\n";
                 $details .= "Progress\t\t: {$ticket->update_progress}\n";
             } else {
-                $details .= "Durasi TT Open\t: {$ticket->aging} Hari\n";
+                $details .= "Durasi Open\t: {$ticket->aging} Hari\n";
                 $details .= "Target Online\t: -\n";
                 $details .= "Progress\t\t: {$ticket->update_progress}\n";
             }
