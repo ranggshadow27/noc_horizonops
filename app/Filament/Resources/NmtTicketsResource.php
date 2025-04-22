@@ -472,7 +472,7 @@ class NmtTicketsResource extends Resource
             $report .= static::generateCategoryDetails('❕ LIBUR SEKOLAH', $liburSekolah, false, false, '❕');
         }
         if ($totalBencanaAlam > 0) {
-            $report .= static::generateCategoryDetails('❗ BENCANA ALAM', $bencanaAlam, false, false, '❗');
+            $report .= static::generateCategoryDetails('❗ BENCANA ALAM', $bencanaAlam, false, true, '❗');
         }
 
         $report .= "Terimakasih, CC: Pak @Dodo.";
