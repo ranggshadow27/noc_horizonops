@@ -218,10 +218,23 @@ class GenerateMikrotikConfig extends Page
             throw new \Exception('Modem IP tidak valid atau kosong.');
         }
 
+        // Hitung ip_network dari modem_ip (digit terakhir -1)
+        $ipParts = explode('.', $deviceNetwork->ap2_ip);
+        if (count($ipParts) !== 4) {
+            throw new \Exception('Format Modem IP tidak valid.');
+        }
+
+        $ipParts[3] = (int)$ipParts[3] + 1; // Kurangi digit terakhir
+        if ($ipParts[3] < 0) {
+            throw new \Exception('Digit terakhir Modem IP tidak bisa dikurangi (sudah 0).');
+        }
+        $ipNetwork = implode('.', $ipParts);
+
         $template = Storage::disk('public')->get('templates/template_gs.txt');
 
         $replacements = [
             '{$IP_MODEM}' => $deviceNetwork->modem_ip,
+            '{$IP_BACKUP}' => $ipNetwork,
             '{$IP_ROUTER}' => $deviceNetwork->router_ip,
             '{$IP_AP1}' => $deviceNetwork->ap1_ip,
             '{$IP_AP2}' => $deviceNetwork->ap2_ip,

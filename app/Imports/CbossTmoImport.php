@@ -14,7 +14,7 @@ class CbossTmoImport implements ToModel, WithStartRow
 {
     public function startRow(): int
     {
-        return 5; // Mulai dari baris ke-5 (data, setelah header di baris ke-4)
+        return 5;
     }
 
     private function properCase(string $value = null): ?string
@@ -22,7 +22,7 @@ class CbossTmoImport implements ToModel, WithStartRow
         if (is_null($value) || trim($value) === '') {
             return $value;
         }
-        // Ubah ke huruf kecil dulu, lalu kapitalisasi huruf pertama setiap kata
+
         return Str::of($value)->lower()->title()->trim();
     }
 

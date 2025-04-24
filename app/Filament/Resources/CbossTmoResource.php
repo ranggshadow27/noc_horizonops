@@ -104,12 +104,14 @@ class CbossTmoResource extends Resource
 
                 Tables\Columns\TextColumn::make('techinican_name')
                     ->label("Technician")
-                    ->description(fn($record): string => $record->techinican_number)
+                    ->default("-")
+                    ->description(fn($record): string => $record->techinican_number ?? "-")
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('pic_name')
                     ->label("PIC")
-                    ->description(fn($record): string => $record->pic_number)
+                    ->default("-")
+                    ->description(fn($record): string => $record->pic_number ?? "-")
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('tmo_code')
