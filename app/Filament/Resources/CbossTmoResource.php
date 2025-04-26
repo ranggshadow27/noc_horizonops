@@ -64,6 +64,7 @@ class CbossTmoResource extends Resource
                 Forms\Components\TextInput::make('ifl_cable')
                     ->maxLength(20),
                 Forms\Components\Textarea::make('problem')
+                    ->autosize()
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('action')
                     ->required(),
@@ -92,7 +93,7 @@ class CbossTmoResource extends Resource
                     ->label("SPMK Number")
                     ->tooltip(fn($state) => $state)
                     ->formatStateUsing(function ($state) {
-                        if (str_contains($state, "NA1-MHG/NOM/" )) {
+                        if (str_contains($state, "NA1-MHG/NOM/")) {
                             return explode("/", $state)[2] . "/" . explode("/", $state)[3];
                         }
 
@@ -120,6 +121,7 @@ class CbossTmoResource extends Resource
 
                 Tables\Columns\TextColumn::make('province')
                     ->label("Province")
+                    ->formatStateUsing(fn($state) => ucwords(strtolower($state)))
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('techinican_name')
@@ -137,6 +139,7 @@ class CbossTmoResource extends Resource
                         // Only render the tooltip if the column content exceeds the length limit.
                         return $state;
                     })
+                    ->formatStateUsing(fn($state) => ucwords(strtolower($state)))
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('pic_name')
@@ -154,6 +157,7 @@ class CbossTmoResource extends Resource
                         // Only render the tooltip if the column content exceeds the length limit.
                         return $state;
                     })
+                    ->formatStateUsing(fn($state) => ucwords(strtolower($state)))
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('tmo_code')
@@ -164,6 +168,19 @@ class CbossTmoResource extends Resource
 
                 Tables\Columns\TextColumn::make('action')
                     ->label("Action")
+                    ->limit(20)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+
+                        $implodeState = implode(', ', $state);
+
+                        if (strlen($implodeState) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        // Only render the tooltip if the column content exceeds the length limit.
+                        return $implodeState;
+                    })
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('tmo_by')
