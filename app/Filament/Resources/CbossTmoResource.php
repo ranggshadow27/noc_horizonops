@@ -316,7 +316,7 @@ class CbossTmoResource extends Resource
         $formattedDate = $now->translatedFormat('d F Y'); // Contoh: Minggu, 20 April 2025
 
         // Fetch TMO records for the given date
-        $tmos = CbossTmo::whereDate('tmo_date', $now->subDay()->startOfDay())
+        $tmos = CbossTmo::whereDate('tmo_date', $now->startOfDay())
             ->with('siteDetail')
             ->get();
 
