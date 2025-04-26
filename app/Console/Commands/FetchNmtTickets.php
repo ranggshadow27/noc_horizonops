@@ -106,10 +106,11 @@ class FetchNmtTickets extends Command
                     if ($status === "CLOSED" && isset($item['ACTUAL ONLINE'])) {
                         if ($item['ACTUAL ONLINE'] !== null && $item['ACTUAL ONLINE'] !== "-") {
                             // Hanya update closed_date jika sebelumnya null
-                            if ($existingTicket->closed_date === null) {
-                                $updateData['closed_date'] = Carbon::parse($item['ACTUAL ONLINE'], 'Asia/Jakarta')
-                                    ->format('Y-m-d H:i:s');
-                            }
+                            // if ($existingTicket->closed_date === null) {
+
+                            // }
+                            $updateData['closed_date'] = Carbon::parse($item['ACTUAL ONLINE'], 'Asia/Jakarta')
+                                ->format('Y-m-d H:i:s');
                         }
                     }
 

@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Webbingbrasil\FilamentCopyActions\Tables\Actions\CopyAction;
 
 class CbossTmoResource extends Resource
 {
@@ -80,15 +81,40 @@ class CbossTmoResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('tmo_id')
                     ->label("TMO ID")
+                    // ->toggleable(isToggledHiddenByDefault: true)
                     ->formatStateUsing(function ($state) {
                         return explode("/", $state)[3];
                     })
                     ->copyable()
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('site_id')
+                Tables\Columns\TextColumn::make('spmk_number')
+                    ->label("SPMK Number")
+                    ->tooltip(fn($state) => $state)
+                    ->formatStateUsing(function ($state) {
+                        if (str_contains($state, "NA1-MHG/NOM/" )) {
+                            return explode("/", $state)[2] . "/" . explode("/", $state)[3];
+                        }
+
+                        return $state;
+                    })
+                    ->copyable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('siteDetail.site_name')
                     ->label("Site Name")
-                    ->description(fn($record): string => $record->siteDetail->site_name)
+                    ->description(fn($record): string => $record->site_id, 'above')
+                    ->limit(35)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        // Only render the tooltip if the column content exceeds the length limit.
+                        return $state;
+                    })
                     ->copyable()
                     ->searchable(),
 
@@ -96,22 +122,38 @@ class CbossTmoResource extends Resource
                     ->label("Province")
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('spmk_number')
-                    ->label("SPMK Number")
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->copyable()
-                    ->searchable(),
-
                 Tables\Columns\TextColumn::make('techinican_name')
                     ->label("Technician")
                     ->default("-")
                     ->description(fn($record): string => $record->techinican_number ?? "-")
+                    ->limit(20)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        // Only render the tooltip if the column content exceeds the length limit.
+                        return $state;
+                    })
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('pic_name')
                     ->label("PIC")
                     ->default("-")
                     ->description(fn($record): string => $record->pic_number ?? "-")
+                    ->limit(20)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        // Only render the tooltip if the column content exceeds the length limit.
+                        return $state;
+                    })
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('tmo_code')
@@ -127,6 +169,17 @@ class CbossTmoResource extends Resource
                 Tables\Columns\TextColumn::make('tmo_by')
                     ->label("TMO By")
                     ->description(fn($record): string => "Date: " . Carbon::parse($record->tmo_date)->format("d M Y H:i"))
+                    ->limit(25)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        // Only render the tooltip if the column content exceeds the length limit.
+                        return $state;
+                    })
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('homebase')
@@ -162,6 +215,15 @@ class CbossTmoResource extends Resource
             ->heading("Mahaga CBOSS TMO")
             ->description("BAKTI RTGS Maintenance Data - Network Operation Center. ")
             ->headerActions([
+                CopyAction::make('generate_report')
+                    ->label('Generate TMO Report')
+                    ->copyable(function () {
+                        return static::generateTmoReport();
+                    })
+                    ->successNotificationTitle('TMO Report copied to clipboard!')
+                    ->color('gray')
+                    ->icon('phosphor-file-txt-duotone'),
+
                 Tables\Actions\Action::make('import_excel')
                     ->label('Import from Excel')
                     ->icon('phosphor-file-xls-duotone')
@@ -227,6 +289,79 @@ class CbossTmoResource extends Resource
                         }
                     }),
             ]);
+    }
+
+    public static function generateTmoReport(): string
+    {
+        Carbon::setLocale('id');
+
+        $now = Carbon::now();
+        $formattedDate = $now->translatedFormat('d F Y'); // Contoh: Minggu, 20 April 2025
+
+        // Fetch TMO records for the given date
+        $tmos = CbossTmo::whereDate('tmo_date', $now->subDay()->startOfDay())
+            ->with('siteDetail')
+            ->get();
+
+        // Initialize counters
+        $preventiveCount = 0;
+        $correctiveCount = 0;
+
+        // Process each TMO to categorize based on action
+        foreach ($tmos as $tmo) {
+            $action = is_string($tmo->action) ? json_decode($tmo->action, true) : $tmo->action;
+            $actionString = is_array($action) ? implode(', ', $action) : $action;
+
+            if (is_array($action) && in_array('PM', $action)) {
+                $preventiveCount++;
+            } else {
+                $correctiveCount++;
+            }
+        }
+
+        $totalTmo = $preventiveCount + $correctiveCount;
+
+        // Group TMO by Approver (tmo_by) and count occurrences
+        $tmoByCounts = $tmos->groupBy('tmo_by')
+            ->map(function ($group) {
+                return [
+                    'count' => $group->count(),
+                    'tmos' => $group // Sort TMO by tmo_date desc within each Approver
+                ];
+            })
+            ->sortByDesc('count'); // Sort Approvers by TMO count desc
+
+        // Start building the report
+        $report = "Dear All,\n\n";
+        $report .= "Berikut summary TMO Maintenance RTGS Mahaga, {$formattedDate} :\n\n";
+        $report .= "> Maintenance Category\n";
+        $report .= "- Preventive\t: {$preventiveCount}\n";
+        $report .= "- Corrective\t: {$correctiveCount}\n";
+        $report .= "\n- Total TMO\t\t: {$totalTmo}\n\n";
+
+        // Detailed site information
+        $index = 1;
+        foreach ($tmoByCounts as $approver => $data) {
+            foreach ($data['tmos'] as $tmo) {
+                $action = is_string($tmo->action) ? json_decode($tmo->action, true) : $tmo->action;
+                $actionString = is_array($action) ? implode(', ', $action) : $action;
+
+                $splitSpmk = explode("/", $tmo->spmk_number);
+                $spmkFormat = $splitSpmk[2] . "/" . $splitSpmk[3];
+                $siteName = $tmo->siteDetail ? $tmo->siteDetail->site_name : 'N/A';
+                $siteProvince = $tmo->siteDetail ? $tmo->siteDetail->province : 'N/A';
+
+                $report .= "> {$index}. SPMK : *{$spmkFormat}* - {$tmo->site_id} - {$siteName} - {$siteProvince}\n";
+                $report .= "EoS : *{$tmo->techinican_name}*\n";
+                $report .= "Action : {$actionString}\n";
+                $report .= "Approver : *{$tmo->tmo_by}*  |  Kode Lapor : *{$tmo->tmo_code}*\n\n";
+                $index++;
+            }
+        }
+
+        $report .= "Terimakasih";
+
+        return $report;
     }
 
     public static function getRelations(): array

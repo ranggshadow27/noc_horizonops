@@ -377,7 +377,7 @@ class NmtTicketsResource extends Resource
 
         // Ambil waktu saat ini
         $now = Carbon::now();
-        $date = $now->translatedFormat('l, d F Y'); // Contoh: Minggu, 20 April 2025
+        $date = $now->translatedFormat('d F Y'); // Contoh: Minggu, 20 April 2025
         $timeOfDay = static::getTimeOfDay($now);
 
         // Query untuk mengelompokkan data
@@ -495,7 +495,7 @@ class NmtTicketsResource extends Resource
 
         foreach ($tickets as $ticket) {
             $siteName = $ticket->site ? $ticket->site->site_name : 'Unknown';
-            $details .= "> {$ticket->site_id} $siteName $emoji" . "\n";
+            $details .= "> {$ticket->site_id} - $siteName $emoji" . "\n";
             if ($isClosed) {
                 $actualOnline = Carbon::parse($ticket->actual_online)->format('d M Y');
                 $details .= "Actual Online\t: $actualOnline\n";
