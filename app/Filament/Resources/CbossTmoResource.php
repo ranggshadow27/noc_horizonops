@@ -82,7 +82,7 @@ class CbossTmoResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('tmo_id')
                     ->label("TMO ID")
-                    // ->toggleable(isToggledHiddenByDefault: true)
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->formatStateUsing(function ($state) {
                         return explode("/", $state)[3];
                     })
@@ -168,7 +168,7 @@ class CbossTmoResource extends Resource
 
                 Tables\Columns\TextColumn::make('action')
                     ->label("Action")
-                    ->limit(20)
+                    ->limit(30)
                     ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
                         $state = $column->getState();
 
