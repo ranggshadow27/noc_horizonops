@@ -70,6 +70,7 @@ class GenerateMikrotikConfig extends Page
                                 ->afterStateUpdated(function ($state, callable $set) {
                                     // Ambil province dari SiteDetail
                                     $site = SiteDetail::find($state);
+
                                     $timezone = $site ? $this->getTimezoneByProvince($site->province) : 'Asia/Jakarta';
                                     $set('timezone', $timezone);
 
@@ -84,12 +85,13 @@ class GenerateMikrotikConfig extends Page
                                 ->placeholder("This input is auto generated")
                                 ->disabled()
                                 ->columnSpanFull(),
-                            // ->default('Asia/Jakarta'), // Fallback kalau ga ke-set
+                            // ->default('Asia/Jakarta'),
 
                             Forms\Components\Actions::make([
                                 Action::make('generate')
                                     ->label('Generate .rsc')
                                     ->action('generateRsc')
+                                    ->disabled(fn() => empty($this->timezone) && empty($this->siteId))
                             ])->fullWidth()->columnSpanFull(),
                         ]),
                     Tabs\Tab::make("Grandstream")
@@ -142,6 +144,7 @@ class GenerateMikrotikConfig extends Page
                                 Action::make('generate')
                                     ->label('Generate Config')
                                     ->action('generateGsConfig')
+                                    ->disabled(fn() => empty($this->timezone))
                             ])->fullWidth()->columnSpanFull(),
                         ]),
 
@@ -153,6 +156,10 @@ class GenerateMikrotikConfig extends Page
     {
         // Ambil data dari SiteDetail berdasarkan site_id
         $site = SiteDetail::where('site_id', $this->siteId)->first();
+
+        if (!$site) {
+            throw new \Exception('Site ID tidak ditemukan.');
+        }
 
         // Ambil data dari relasi DeviceNetwork
         $deviceNetwork = $site->deviceNetworks;
@@ -212,6 +219,11 @@ class GenerateMikrotikConfig extends Page
     public function generateGsConfig()
     {
         $site = SiteDetail::where('site_id', $this->siteId)->first();
+
+        if (!$site) {
+            throw new \Exception('Site ID tidak ditemukan.');
+        }
+
         $deviceNetwork = $site->deviceNetworks;
 
         if (!$deviceNetwork->modem_ip || !filter_var($deviceNetwork->modem_ip, FILTER_VALIDATE_IP)) {
@@ -234,7 +246,7 @@ class GenerateMikrotikConfig extends Page
 
         $replacements = [
             '{$IP_MODEM}' => $deviceNetwork->modem_ip,
-            '{$IP_BACKUP}' => $ipNetwork,
+            'IP BACKUP' => $ipNetwork,
             '{$IP_ROUTER}' => $deviceNetwork->router_ip,
             '{$IP_AP1}' => $deviceNetwork->ap1_ip,
             '{$IP_AP2}' => $deviceNetwork->ap2_ip,
