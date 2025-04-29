@@ -4,9 +4,12 @@ namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
 use Illuminate\Contracts\View\View;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 
 class NMTTicketDashboard extends Page
 {
+    use HasPageShield;
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static string $view = 'filament.pages.n-m-t-ticket-dashboard';

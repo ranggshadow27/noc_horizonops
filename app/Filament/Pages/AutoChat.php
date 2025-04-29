@@ -16,9 +16,12 @@ use Filament\Forms\Components\Split;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\Alignment;
 use Webbingbrasil\FilamentCopyActions\Pages\Actions\CopyAction;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 
 class AutoChat extends Page implements HasForms
 {
+    use HasPageShield;
+
     use InteractsWithForms;
 
     protected static string $view = 'filament.pages.auto-chat';

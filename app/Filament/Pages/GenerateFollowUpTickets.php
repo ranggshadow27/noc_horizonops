@@ -11,10 +11,14 @@ use Filament\Pages\Page;
 use Filament\Support\Enums\Alignment;
 use Illuminate\Support\Arr;
 use Webbingbrasil\FilamentCopyActions\Pages\Actions\CopyAction;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+
 
 
 class GenerateFollowUpTickets extends Page
 {
+    use HasPageShield;
+
     protected static ?string $navigationGroup = 'Operational';
     protected static ?string $navigationLabel = 'Follow Up Tickets';
     protected static ?string $navigationIcon = 'phosphor-hand-deposit-duotone';

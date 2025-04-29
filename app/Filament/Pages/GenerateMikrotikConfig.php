@@ -13,9 +13,13 @@ use Filament\Pages\Page;
 use Illuminate\Support\Facades\Storage;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Contracts\View\View;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+
 
 class GenerateMikrotikConfig extends Page
 {
+    use HasPageShield;
+
     protected static ?string $navigationGroup = 'Operational';
     protected static ?string $navigationLabel = 'Generate Router Config';
     protected static ?string $navigationIcon = 'phosphor-nut-duotone';
