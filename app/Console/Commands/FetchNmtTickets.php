@@ -54,7 +54,7 @@ class FetchNmtTickets extends Command
 
     private function fetchAndInsertNmtTickets()
     {
-        $apiUrl = 'https://script.google.com/macros/s/AKfycbx9fiTGPUF9r6SjXBZTwWvgwvlCE6twte9xSJjpTfnUn3bDAi2yLUdCbdhrEmRJHtREVA/exec';
+        $apiUrl = 'https://script.google.com/macros/s/AKfycbzbhQSS07lD8FSN68pKDtwFjfIaxKgfjQarPWLgvFV6Bu7aOEldxPOVTUgNHunfQ1IclA/exec';
         $response = Http::timeout(360)->get($apiUrl);
 
         if ($response->successful()) {
