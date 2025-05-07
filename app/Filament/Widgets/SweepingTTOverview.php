@@ -49,12 +49,12 @@ class SweepingTTOverview extends BaseWidget
             Stat::make('Warning (6 Jam)', $warningClose)
                 ->descriptionIcon('phosphor-check-circle-duotone')
                 ->description("Closed today")
-                ->color('gray'),
+                ->color('success'),
 
             Stat::make('Warning Site (6 Jam)', $warningOpen)
                 ->descriptionIcon('phosphor-check-circle-duotone')
                 ->description("Opened today")
-                ->color('gray'),
+                ->color('warning'),
 
             Stat::make('Minor Site (12 Jam)', $minorClose)
                 ->descriptionIcon('phosphor-check-circle-duotone')
