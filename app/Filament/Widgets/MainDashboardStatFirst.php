@@ -23,22 +23,18 @@ class MainDashboardStatFirst extends BaseWidget
             ->where('status', 'CLOSED')
             ->count();
 
-        $todayUp = SweepingTicket::whereDate('created_at', $today)
-            ->where('status', 'CLOSED')
-            ->count();
-
         return [
-            Stat::make('Major Site (4 Hari)', $majorClose)
+            Stat::make('Major Site (30 Jam)', $majorClose)
                 ->descriptionIcon('phosphor-check-circle-duotone')
                 ->description("Closed today")
                 ->color('success'),
 
-            Stat::make('Major Site (4 Hari)', $majorOpen)
+            Stat::make('Major Site (30 Jam)', $majorOpen)
                 ->descriptionIcon('phosphor-exclamation-mark-duotone')
                 ->description("Opened today")
                 ->color('warning'),
 
-            Stat::make('Overall Up', $todayUp)
+            Stat::make('Overall Major', $majorClose + $majorOpen)
                 ->descriptionIcon('phosphor-check-circle-duotone')
                 ->description("Site UP today")
                 ->color('success'),

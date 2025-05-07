@@ -46,22 +46,22 @@ class SweepingTTOverview extends BaseWidget
 
 
         return [
-            Stat::make('Un Warning (12 Jam)', $unWarningOpen . " - " . $unWarningClose)
+            Stat::make('Warning (12 Jam)', $warningClose)
                 ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Opened - Closed")
+                ->description("Closed today")
                 ->color('gray'),
 
-            Stat::make('Warning Site (2 Hari)', $warningOpen . " - " . $warningClose)
+            Stat::make('Warning Site (6 Jam)', $warningOpen)
                 ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Opened - Closed")
+                ->description("Opened today")
                 ->color('gray'),
 
-            Stat::make('Minor Site (3 Hari)', $minorClose)
+            Stat::make('Minor Site (12 Jam)', $minorClose)
                 ->descriptionIcon('phosphor-check-circle-duotone')
                 ->description("Closed today")
                 ->color('success'),
 
-            Stat::make('Minor Site (3 Hari)', $minorOpen)
+            Stat::make('Minor Site (12 Jam)', $minorOpen)
                 ->descriptionIcon('phosphor-exclamation-mark-duotone')
                 ->description("Opened today")
                 ->color('warning'),
