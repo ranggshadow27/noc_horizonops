@@ -12,9 +12,9 @@
 </div>
 
 <div class="flex flex-wrap justify-center items-center gap-4 w-full">
-    <div class="flex-1 sm:w-1/2">
+    {{-- <div class="flex-1 sm:w-1/2">
         @livewire(\App\Filament\Widgets\SweepingTicketUnWarningTableChart::class)
-    </div>
+    </div> --}}
 
     <div class="flex-1 sm:w-1/2">
         @livewire(\App\Filament\Widgets\SweepingTicketWarningTableChart::class)
