@@ -26,17 +26,17 @@ class MainDashboardStatThird extends BaseWidget
         return [
             Stat::make('Warning Site (6 Jam)', $warningClose)
                 ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Closed")
+                ->description("Closed today")
                 ->color('success'),
 
             Stat::make('Warning Site (6 Jam)', $warningOpen)
                 ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Opened")
+                ->description("Opened today")
                 ->color('warning'),
 
             Stat::make('Overall Warning', $warningClose + $warningOpen)
                 ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Opened - Closed")
+                ->description("Warning today")
                 ->color('gray'),
 
 

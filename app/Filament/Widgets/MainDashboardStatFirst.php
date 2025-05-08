@@ -36,7 +36,7 @@ class MainDashboardStatFirst extends BaseWidget
 
             Stat::make('Overall Major', $majorClose + $majorOpen)
                 ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Site UP today")
+                ->description("Major today")
                 ->color('success'),
         ];
     }
