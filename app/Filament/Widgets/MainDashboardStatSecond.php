@@ -40,7 +40,7 @@ class MainDashboardStatSecond extends BaseWidget
 
             Stat::make('Overall Minor', $minorClose + $minorOpen)
                 ->descriptionIcon('phosphor-exclamation-mark-duotone')
-                ->description("Site Down today")
+                ->description("Minor today")
                 ->color('danger'),
         ];
     }
