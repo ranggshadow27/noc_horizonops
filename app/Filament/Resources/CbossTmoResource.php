@@ -90,11 +90,11 @@ class CbossTmoResource extends Resource
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('spmk_number')
-                    ->label("SPMK Number")
+                    ->label("ST/SPMK Number")
                     ->tooltip(fn($state) => $state)
                     ->formatStateUsing(function ($state) {
                         if (str_contains($state, "NA1-MHG/NOM/")) {
-                            return explode("/", $state)[2] . "/" . explode("/", $state)[3];
+                            return explode("-", $state)[0] . "/" .explode("/", $state)[2] . "/" . explode("/", $state)[3];
                         }
 
                         return $state;
@@ -363,15 +363,22 @@ class CbossTmoResource extends Resource
                 $action = is_string($tmo->action) ? json_decode($tmo->action, true) : $tmo->action;
                 $actionString = is_array($action) ? implode(', ', $action) : $action;
 
-                $splitSpmk = explode("/", $tmo->spmk_number);
-                $spmkFormat = $splitSpmk[2] . "/" . $splitSpmk[3];
+                $spmkSuffix = $tmo->spmk_number ? explode("/", $tmo->spmk_number): "-";
+                $spmkPreffix = $tmo->spmk_number ? explode("-", $tmo->spmk_number): "-";
+
+                $spmkFormat = $tmo->spmk_number ? $spmkPreffix[0] . "/" . $spmkSuffix[2] . "/" . $spmkSuffix[3] : "-";
+
                 $siteName = $tmo->siteDetail ? $tmo->siteDetail->site_name : 'N/A';
                 $siteProvince = $tmo->siteDetail ? $tmo->siteDetail->province : 'N/A';
+                $technicianName = $tmo->techinican_name ? $tmo->techinican_name : 'N/A';
+
+                $tmoBy = $tmo->tmo_by ? $tmo->tmo_by : 'N/A';
+                $tmoCode = $tmo->tmo_code ? $tmo->tmo_code : 'N/A';
 
                 $report .= "> {$index}. SPMK : *{$spmkFormat}* - {$tmo->site_id} - {$siteName} - {$siteProvince}\n";
-                $report .= "EoS : *{$tmo->techinican_name}*\n";
+                $report .= "EoS : *{$technicianName}*\n";
                 $report .= "Action : {$actionString}\n";
-                $report .= "Approver : *{$tmo->tmo_by}*  |  Kode Lapor : *{$tmo->tmo_code}*\n\n";
+                $report .= "Approver : *{$tmoBy}*  |  Kode Lapor : *{$tmoCode}*\n\n";
                 $index++;
             }
         }

@@ -43,6 +43,7 @@ class CbossTmoImport implements ToModel, WithStartRow
             'subscriber number' => $row[7] ?? null, // Kolom G: Subscriber Number
             'province' => $this->properCase($row[26] ?? null), // Kolom Y: Province
             'spk number' => $row[12] ?? null, // Kolom L: SPK Number
+            'st number' => $row[13] ?? null, // Kolom L: SPK Number
             'kiko/technician' => $this->properCase($row[14] ?? null), // Kolom N: KIKO/Technician
             'kiko/technician phone' => $row[15] ?? null, // Kolom O: KIKO/Technician Phone
             'pic location' => $this->properCase($row[27] ?? null), // Kolom Z: PIC Location
@@ -90,6 +91,8 @@ class CbossTmoImport implements ToModel, WithStartRow
         $actions = !empty($mappedRow['action']) && $mappedRow['action'] !== '-' ? explode(',', $mappedRow['action']) : [];
         // dd($actions);
 
+        $spkNumber = !$mappedRow['spk number'] ? $mappedRow['st number'] : $mappedRow['spk number'];
+
         // Konversi TMO Date ke format datetime
         $tmoDate = Carbon::parse($mappedRow['tmo date'])->format('Y-m-d H:i:s');
 
@@ -98,7 +101,7 @@ class CbossTmoImport implements ToModel, WithStartRow
             [
                 'site_id' => $mappedRow['subscriber number'],
                 'province' => $mappedRow['province'],
-                'spmk_number' => $mappedRow['spk number'],
+                'spmk_number' => $spkNumber,
                 'techinican_name' => $mappedRow['kiko/technician'],
                 'techinican_number' => $mappedRow['kiko/technician phone'],
                 'pic_name' => $mappedRow['pic location'],

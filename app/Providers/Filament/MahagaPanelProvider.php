@@ -65,6 +65,7 @@ class MahagaPanelProvider extends PanelProvider
             ->plugins([
                 FilamentApexChartsPlugin::make(),
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+                \TomatoPHP\FilamentPWA\FilamentPWAPlugin::make()
             ])
             ->middleware([
                 EncryptCookies::class,
