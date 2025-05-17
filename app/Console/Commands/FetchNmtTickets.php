@@ -66,7 +66,7 @@ class FetchNmtTickets extends Command
                 $site = SiteDetail::where('site_id', $item['SITE ID'])->first();
 
                 if (!$site) {
-                    $this->info("Data dengan site_id {$item['SITE ID']} di-skip karena tidak ditemukan di site_details.");
+                    // $this->info("Data dengan site_id {$item['SITE ID']} di-skip karena tidak ditemukan di site_details.");
                     continue;
                 }
 
