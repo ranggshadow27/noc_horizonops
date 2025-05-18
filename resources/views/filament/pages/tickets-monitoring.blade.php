@@ -29,7 +29,7 @@
                                 </x-filament::badge>
                             </x-slot> --}}
 
-                            <div class="flex gap-6 text-sm items-center flex-wrap">
+                            <div class="flex gap-6 text-sm md:flex-row md:items-center flex-col inline-block">
                                 <div class="flex-2 flex-col">
                                     <p class="text-xs text-gray-600 dark:text-gray-400 py-1">Modem Status : </p>
                                     <x-filament::badge color="success" icon="phosphor-arrow-circle-up-duotone"
@@ -42,16 +42,16 @@
                                     {{-- <x-filament::icon
                                             icon="phosphor-ticket-duotone"
                                             class="h-5 w-5 text-xs text-gray-600 dark:text-gray-400" /> --}}
-                                    <p class="text-xs text-gray-600 dark:text-gray-400 py-1">Ticket ID:</p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 py-1">Ticket ID :</p>
                                     <p class="font-medium text-gray-800">
                                         {{ $section['ticket_id'] }}</p>
                                 </div>
-                                <div class="flex-1 flex-col">
-                                    <p class="text-xs text-gray-600 dark:text-gray-400 py-1">Site Detail:</p>
-                                    <p class="font-medium text-gray-800">
-                                        {{ $section['site_id'] }} {{ $section['site_name'] }}
-                                    </p>
 
+                                <div class="flex-1 flex-col">
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 py-1">Site Detail : {{ $section['site_id'] }}</p>
+                                    <p class="font-medium text-gray-800">
+                                        {{ $section['site_name'] }}
+                                    </p>
                                 </div>
 
                                 <div class="flex-1 flex-col">
@@ -82,13 +82,13 @@
                                 </div>
 
                                 <div class="flex-2 flex-col">
-                                    <p class="text-xs text-gray-600 dark:text-gray-400">Target Online:</p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">Target Online :</p>
                                     <p class="font-medium text-gray-800py-1">
                                         {{ $section['target_online'] }}</p>
                                 </div>
 
                                 <div class="flex-2 flex-col">
-                                    <p class="text-xs text-gray-600 dark:text-gray-400">Problem Type:</p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">Problem Type :</p>
                                     <p class="font-medium text-gray-800py-1">
                                         {{ $section['problem_type'] }}</p>
                                 </div>
