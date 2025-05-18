@@ -121,6 +121,7 @@ class CbossTmoResource extends Resource
 
                 Tables\Columns\TextColumn::make('province')
                     ->label("Province")
+                    ->description(fn($record): string => $record->area->area)
                     ->formatStateUsing(fn($state) => ucwords(strtolower($state)))
                     ->searchable(),
 

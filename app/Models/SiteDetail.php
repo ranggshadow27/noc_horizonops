@@ -77,4 +77,9 @@ class SiteDetail extends Model
     {
         return $this->hasMany(CbossTmo::class, 'site_id', 'site_id');
     }
+
+    public function cbossTicket()
+    {
+        return $this->hasMany(CbossTicket::class, 'site_id');
+    }
 }

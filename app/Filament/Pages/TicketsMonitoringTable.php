@@ -12,7 +12,7 @@ class TicketsMonitoringTable extends Page
     protected static string $view = 'filament.pages.tickets-monitoring-table';
 
     protected static ?string $navigationLabel = 'NMT Ticket Mon';
-    protected static ?string $navigationGroup = 'Trouble Tickets';
+    protected static ?string $navigationGroup = 'Filament Shield';
 
     protected function getHeaderWidgets(): array
     {

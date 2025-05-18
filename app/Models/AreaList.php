@@ -34,13 +34,18 @@ class AreaList extends Model
         return $this->hasMany(TmoData::class, 'site_province', 'province');
     }
 
-    public function siteDetails()
+    public function siteDetails(): HasMany
     {
         return $this->hasMany(SiteDetail::class, 'province', 'province');
     }
 
-    public function cbossTmo()
+    public function cbossTmo(): HasMany
     {
         return $this->hasMany(CbossTmo::class, 'province', 'province');
+    }
+
+    public function cbossTicket(): HasMany
+    {
+        return $this->hasMany(CbossTicket::class, 'province', 'province');
     }
 }
