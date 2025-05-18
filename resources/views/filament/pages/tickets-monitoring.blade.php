@@ -8,7 +8,7 @@
         @if (count($this->getSections()) > 0)
             <x-filament::section>
                 <x-slot name="heading">
-                    User details
+                    NMT Tickets Monitoring
                 </x-slot>
 
                 <x-slot name="description">
