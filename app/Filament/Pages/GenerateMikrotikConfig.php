@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Contracts\View\View;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use Illuminate\Support\Str;
 
 
 class GenerateMikrotikConfig extends Page
@@ -207,15 +208,16 @@ class GenerateMikrotikConfig extends Page
         );
 
         // Nama file berdasarkan site_name
-        $fileName = str_replace(' ', '_', $site->site_name) . '.rsc';
+        $fileName = str_replace(' ', ' ', $site->site_name) . '.rsc';
+        $cleanFileName = Str::replace(['-', '.', '(', ')', "'"], '', $fileName);
 
         // Simpan file sementara di storage
-        Storage::put('temp/' . $fileName, $rscContent);
+        Storage::put('temp/' . $cleanFileName, $rscContent);
 
         // Kirim file untuk di-download
         return response()->download(
-            storage_path('app/temp/' . $fileName),
-            $fileName,
+            storage_path('app/temp/' . $cleanFileName),
+            $cleanFileName,
             ['Content-Type' => 'text/plain']
         )->deleteFileAfterSend(true);
     }
@@ -265,12 +267,15 @@ class GenerateMikrotikConfig extends Page
         );
 
         $txtFileName = str_replace(' ', ' ', $site->site_name) . '_gscfg';
+        $cleantxtFileName = Str::replace(['-', '.', '(', ')', "'"], '', $txtFileName);
+
         $binFileName = str_replace(' ', ' ', $site->site_name) . '_gscfg.bin';
+        $cleanbinFileName = Str::replace(['-', '.', '(', ')', "'"], '', $binFileName);
 
-        Storage::put('temp/' . $txtFileName, $configContent);
+        Storage::put('temp/' . $cleantxtFileName, $configContent);
 
-        $txtFilePath = storage_path('app/temp/' . $txtFileName);
-        $binFilePath = base_path('bin/' . $binFileName);
+        $txtFilePath = storage_path('app/temp/' . $cleantxtFileName);
+        $binFilePath = base_path('bin/' . $cleanbinFileName);
         $binFolderPath = base_path('bin');
 
         $command = sprintf('cd "%s" && ./gscfgtool -t GWN7003 -e "%s"', $binFolderPath, $txtFilePath);
@@ -280,11 +285,11 @@ class GenerateMikrotikConfig extends Page
             throw new \Exception('Gagal mengenkripsi file ke .bin: ' . $binFilePath . $output);
         }
 
-        Storage::delete('temp/' . $txtFileName);
+        Storage::delete('temp/' . $cleantxtFileName);
 
         return response()->download(
             $binFilePath,
-            $binFileName,
+            $cleanbinFileName,
             ['Content-Type' => 'application/octet-stream']
         )->deleteFileAfterSend(true);
     }
