@@ -94,7 +94,6 @@ class GenerateMikrotikConfig extends Page
                                     ->disabled(function (callable $get): bool {
                                         return empty($get('siteId')) || empty($get('timezone'));
                                     })
-                                    ->reactive()
                             ])->fullWidth()->columnSpanFull(),
                         ]),
                     Tabs\Tab::make("Grandstream")
@@ -146,7 +145,6 @@ class GenerateMikrotikConfig extends Page
                                     ->disabled(function (callable $get): bool {
                                         return empty($get('siteId')) || empty($get('timezone'));
                                     })
-                                    ->reactive()
                             ])->fullWidth()->columnSpanFull(),
                         ]),
                 ])
