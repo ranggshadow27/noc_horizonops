@@ -34,7 +34,6 @@ class GenerateMikrotikConfig extends Page
 
     public $siteId = '';
     public $timezone = '';
-    public $actionDisabled = true;
 
     public function getMaxContentWidth(): MaxWidth
     {
@@ -78,7 +77,6 @@ class GenerateMikrotikConfig extends Page
                                     $site = SiteDetail::find($state);
 
                                     $timezone = $site ? $this->getTimezoneByProvince($site->province) : 'Asia/Jakarta';
-                                    $set('actionDisabled', false);
                                     $set('timezone', $timezone);
 
                                     // dd($timezone);
@@ -98,7 +96,7 @@ class GenerateMikrotikConfig extends Page
                                 Action::make('generatersc')
                                     ->label('Generate .rsc')
                                     ->action('generateRsc')
-                                    ->disabled($this->actionDisabled)
+                                    ->disabled(fn() => empty($this->timezone) && empty($this->siteId))
                             ])->fullWidth()->columnSpanFull(),
                         ]),
                     Tabs\Tab::make("Grandstream")
@@ -132,8 +130,6 @@ class GenerateMikrotikConfig extends Page
                                     // Ambil province dari SiteDetail
                                     $site = SiteDetail::find($state);
                                     $timezone = $site ? $this->getTimezoneByProvince($site->province) : 'Asia/Jakarta';
-
-                                    $set('actionDisabled', false);
                                     $set('timezone', $timezone);
 
                                     // dd($timezone);
@@ -153,7 +149,7 @@ class GenerateMikrotikConfig extends Page
                                 Action::make('generategscfg')
                                     ->label('Generate Config')
                                     ->action('generateGsConfig')
-                                    ->disabled($this->actionDisabled)
+                                    ->disabled(fn() => empty($this->timezone) && empty($this->siteId))
                             ])->fullWidth()->columnSpanFull(),
                         ]),
 
