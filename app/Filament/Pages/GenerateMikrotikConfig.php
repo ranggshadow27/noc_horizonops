@@ -34,7 +34,7 @@ class GenerateMikrotikConfig extends Page
 
     public $siteId = '';
     public $timezone = '';
-    public $actionDisabled = false;
+    public $actionDisabled = true;
 
     public function getMaxContentWidth(): MaxWidth
     {
@@ -78,7 +78,7 @@ class GenerateMikrotikConfig extends Page
                                     $site = SiteDetail::find($state);
 
                                     $timezone = $site ? $this->getTimezoneByProvince($site->province) : 'Asia/Jakarta';
-                                    $set('actionDisabled', true);
+                                    $set('actionDisabled', false);
                                     $set('timezone', $timezone);
 
                                     // dd($timezone);
@@ -133,7 +133,7 @@ class GenerateMikrotikConfig extends Page
                                     $site = SiteDetail::find($state);
                                     $timezone = $site ? $this->getTimezoneByProvince($site->province) : 'Asia/Jakarta';
 
-                                    $set('actionDisabled', true);
+                                    $set('actionDisabled', false);
                                     $set('timezone', $timezone);
 
                                     // dd($timezone);
