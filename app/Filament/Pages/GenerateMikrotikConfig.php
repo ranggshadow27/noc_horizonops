@@ -208,7 +208,7 @@ class GenerateMikrotikConfig extends Page
         );
 
         // Nama file berdasarkan site_name
-        $fileName = str_replace(' ', ' ', trim($site->site_name)) . '.rsc';
+        $fileName = str_replace(' ', '_', trim($site->site_name)) . '.rsc';
         $cleanFileName = Str::replace(['-', '.', '(', ')', "'"], '', $fileName);
 
         // Simpan file sementara di storage
