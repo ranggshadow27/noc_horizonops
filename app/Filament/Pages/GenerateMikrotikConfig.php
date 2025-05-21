@@ -149,7 +149,7 @@ class GenerateMikrotikConfig extends Page
                                 Action::make('generate')
                                     ->label('Generate Config')
                                     ->action('generateGsConfig')
-                                    ->disabled(fn() => empty($this->timezone))
+                                    ->disabled(fn() => empty($this->timezone) && empty($this->siteId))
                             ])->fullWidth()->columnSpanFull(),
                         ]),
 
