@@ -49,7 +49,6 @@ class GenerateMikrotikConfig extends Page
                         ->schema([
                             Select::make('siteId')
                                 ->label('Site ID')
-                                // ->options(SiteDetail::pluck('site_name', 'site_id'))
                                 ->options(function () {
                                     return SiteDetail::pluck('site_name', 'site_id')->mapWithKeys(function ($siteName, $site_id) {
                                         return [$site_id => "$site_id - $siteName"];
@@ -72,14 +71,11 @@ class GenerateMikrotikConfig extends Page
                                 ->native(false)
                                 ->required()
                                 ->reactive()
-                                ->afterStateUpdated(function ($state, callable $set) {
+                                ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                     // Ambil province dari SiteDetail
                                     $site = SiteDetail::find($state);
-
                                     $timezone = $site ? $this->getTimezoneByProvince($site->province) : 'Asia/Jakarta';
                                     $set('timezone', $timezone);
-
-                                    // dd($timezone);
                                 })
                                 ->placeholder("Select a site ID or site name")
                                 ->columnSpanFull(),
@@ -90,20 +86,21 @@ class GenerateMikrotikConfig extends Page
                                 ->placeholder("This input is auto generated")
                                 ->disabled()
                                 ->columnSpanFull(),
-                            // ->default('Asia/Jakarta'),
 
                             Forms\Components\Actions::make([
                                 Action::make('generatersc')
                                     ->label('Generate .rsc')
                                     ->action('generateRsc')
-                                    ->disabled(fn() => empty($this->timezone) && empty($this->siteId))
+                                    ->disabled(function (callable $get): bool {
+                                        return empty($get('siteId')) || empty($get('timezone'));
+                                    })
+                                    ->reactive()
                             ])->fullWidth()->columnSpanFull(),
                         ]),
                     Tabs\Tab::make("Grandstream")
                         ->schema([
                             Select::make('siteId')
                                 ->label('Site ID')
-                                // ->options(SiteDetail::pluck('site_name', 'site_id'))
                                 ->options(function () {
                                     return SiteDetail::pluck('site_name', 'site_id')->mapWithKeys(function ($siteName, $site_id) {
                                         return [$site_id => "$site_id - $siteName"];
@@ -126,13 +123,11 @@ class GenerateMikrotikConfig extends Page
                                 ->native(false)
                                 ->required()
                                 ->reactive()
-                                ->afterStateUpdated(function ($state, callable $set) {
+                                ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                     // Ambil province dari SiteDetail
                                     $site = SiteDetail::find($state);
                                     $timezone = $site ? $this->getTimezoneByProvince($site->province) : 'Asia/Jakarta';
                                     $set('timezone', $timezone);
-
-                                    // dd($timezone);
                                 })
                                 ->placeholder("Select a site ID or site name")
                                 ->columnSpanFull(),
@@ -143,16 +138,17 @@ class GenerateMikrotikConfig extends Page
                                 ->placeholder("This input is auto generated")
                                 ->disabled()
                                 ->columnSpanFull(),
-                            // ->default('Asia/Jakarta'), // Fallback kalau ga ke-set
 
                             Forms\Components\Actions::make([
                                 Action::make('generategscfg')
                                     ->label('Generate Config')
                                     ->action('generateGsConfig')
-                                    ->disabled(fn() => empty($this->timezone) && empty($this->siteId))
+                                    ->disabled(function (callable $get): bool {
+                                        return empty($get('siteId')) || empty($get('timezone'));
+                                    })
+                                    ->reactive()
                             ])->fullWidth()->columnSpanFull(),
                         ]),
-
                 ])
         ];
     }
