@@ -208,8 +208,8 @@ class GenerateMikrotikConfig extends Page
         );
 
         // Nama file berdasarkan site_name
-        $fileName = str_replace(' ', ' ', trim($site->site_name)) . '.rsc';
-        $cleanFileName = preg_replace("/[-.()']/", '', $fileName);
+        $fileName = str_replace(' ', ' ', trim($site->site_name));
+        $cleanFileName = Str::replace(['-', '.', '(', ')', "'"], '', $fileName) . '.rsc';
 
         // Simpan file sementara di storage
         Storage::put('temp/' . $cleanFileName, $rscContent);
@@ -266,11 +266,11 @@ class GenerateMikrotikConfig extends Page
             $template
         );
 
-        $txtFileName = str_replace(' ', ' ', trim($site->site_name)) . '_gscfg';
-        $cleantxtFileName = Str::replace(['-', '.', '(', ')', "'"], '', $txtFileName);
+        $txtFileName = str_replace(' ', ' ', trim($site->site_name));
+        $cleantxtFileName = Str::replace(['-', '.', '(', ')', "'"], '', $txtFileName) . '_gscfg';
 
-        $binFileName = str_replace(' ', ' ', trim($site->site_name)) . '_gscfg.bin';
-        $cleanbinFileName = Str::replace(['-', '.', '(', ')', "'"], '', $binFileName);
+        $binFileName = str_replace(' ', ' ', trim($site->site_name));
+        $cleanbinFileName = Str::replace(['-', '.', '(', ')', "'"], '', $binFileName) . '_gscfg.bin';
 
         Storage::put('temp/' . $cleantxtFileName, $configContent);
 
