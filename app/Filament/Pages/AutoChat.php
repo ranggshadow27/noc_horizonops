@@ -157,7 +157,7 @@ class AutoChat extends Page implements HasForms
                 ->danger()
                 ->send();
         } else {
-            $timeOfDay = now()->hour < 12 ? 'Pagi' : (now()->hour < 17 ? 'Siang' : 'Malam');
+            $timeOfDay = now()->hour < 5 ? 'Malam' : (now()->hour < 11 ? 'Pagi' : (now()->hour < 15 ? 'Siang' : (now()->hour < 18 ? 'Sore' : 'Malam')));
             $genderText = $this->gender === 'male' ? 'Bapak' : 'Ibu';
 
             $placeholders = [
