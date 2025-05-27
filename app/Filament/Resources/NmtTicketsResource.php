@@ -293,38 +293,13 @@ class NmtTicketsResource extends Resource
                     }),
 
                 DateRangeFilter::make('target_online')
-                    ->label('Target Online Date')
-                    ->displayFormat('d F Y'),
+                    ->label('Target Online Date'),
 
                 DateRangeFilter::make('start_date')
-                    ->label('Start Date')
-                    ->displayFormat('d F Y'),
+                    ->label('Start Date'),
 
                 DateRangeFilter::make('closed_date')
-                    ->label('Actual Online Date')
-                    ->displayFormat('d F Y'),
-
-                // Tables\Filters\Filter::make('actual_online')
-                //     ->form([
-                //         DatePicker::make('actual_online_date')
-                //             ->label('Actual Online Date')
-                //             // ->default(Carbon::today()) // Default ke hari ini
-                //             ->displayFormat('d F Y') // Format Indo: 18 April 2025
-                //             ->locale('id'), // Format tanggal dalam bahasa Indonesia
-                //     ])
-                //     ->query(function ($query, array $data) {
-                //         if ($data['actual_online_date']) {
-                //             $selectedDate = Carbon::parse($data['actual_online_date'])->startOfDay();
-                //             $query->whereDate('closed_date', $selectedDate);
-                //         }
-                //     })
-                //     ->indicateUsing(function (array $data): ?string {
-                //         if ($data['actual_online_date']) {
-                //             $formattedDate = Carbon::parse($data['actual_online_date'])->translatedFormat('d F Y');
-                //             return "Actual Online: $formattedDate";
-                //         }
-                //         return null;
-                //     }),
+                    ->label('Actual Online Date'),
 
             ], layout: FiltersLayout::Modal)
             ->filtersFormColumns(2)
