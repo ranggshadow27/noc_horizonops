@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Artisan;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 use Webbingbrasil\FilamentCopyActions\Tables\Actions\CopyAction;
 
 class NmtTicketsResource extends Resource
@@ -272,8 +273,8 @@ class NmtTicketsResource extends Resource
                     ->label('Modem Last Up')
                     ->options([
                         'now' => 'Up (Online)',
-                        'recent' => '≤ 3 days ago',
-                        'old' => '> 3 days ago',
+                        'recent' => '≤ 1 days ago',
+                        'old' => '> 2 days ago',
                     ])
                     ->modifyQueryUsing(function (Builder $query, array $state) {
                         if (!isset($state['value']) || empty($state['value'])) {
@@ -284,12 +285,16 @@ class NmtTicketsResource extends Resource
                             if ($state['value'] === 'now') {
                                 $query->whereNull('modem_last_up');
                             } elseif ($state['value'] === 'recent') {
-                                $query->where('modem_last_up', '>=', now()->subDays(2))->orWhere('modem_last_up', '=', null);
+                                $query->where('modem_last_up', '>=', now()->subDays(1))->orWhereNull('modem_last_up');
                             } elseif ($state['value'] === 'old') {
-                                $query->where('modem_last_up', '<', now()->subDays(3));
+                                $query->where('modem_last_up', '<', now()->subDays(2));
                             }
                         });
                     }),
+
+                DateRangeFilter::make('actual_online')
+                    ->label('Actual Online Date')
+                    ->singleCalendar(),
 
                 Tables\Filters\Filter::make('actual_online')
                     ->form([

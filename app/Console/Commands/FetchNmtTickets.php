@@ -12,7 +12,6 @@ use App\Models\TmoData;
 
 class FetchNmtTickets extends Command
 {
-
     protected $signature = 'fetch:nmt-tickets';
     protected $description = 'Ambil data dari API Apps Script dan simpan ke database nmt_tickets';
 
@@ -30,7 +29,6 @@ class FetchNmtTickets extends Command
         $apiLastUpdate = Carbon::parse($response->json()['last_update'])
             ->setTimezone('Asia/Jakarta')
             ->format('Y-m-d'); // Sesuaikan key JSON
-        // ->format('Y-m-d H:i:s'); // Sesuaikan key JSON
 
         // Cek last_update di DB
         $dbLastUpdate = CheckUpdate::where('update_name', 'NMT Ticket')->first();
@@ -60,13 +58,34 @@ class FetchNmtTickets extends Command
         if ($response->successful()) {
             $data = $response->json();
 
-            // dd($data);
+            // Collect all ticket_ids from API response
+            $apiTicketIds = collect($data)->pluck('TICKET ID')->map(function ($ticketId) {
+                return str_replace('/', '-', $ticketId);
+            })->toArray();
 
+            // Fetch only ticket_ids with status OPEN from database
+            $dbTicketIds = NmtTickets::where('status', 'OPEN')->pluck('ticket_id')->toArray();
+
+            // Identify OPEN tickets in DB but not in API
+            $ticketsToClose = array_diff($dbTicketIds, $apiTicketIds);
+
+            // Update OPEN tickets not in API to CLOSED
+            foreach ($ticketsToClose as $ticketId) {
+                $ticket = NmtTickets::where('ticket_id', $ticketId)->where('status', 'OPEN')->first();
+                if ($ticket) {
+                    $ticket->update([
+                        'status' => 'CLOSED',
+                        'closed_date' => Carbon::now('Asia/Jakarta')->subDay(1)->startOfDay()->format('Y-m-d H:i:s'),
+                    ]);
+                    $this->info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED.");
+                }
+            }
+
+            // Process API data as per existing logic
             foreach ($data as $item) {
                 $site = SiteDetail::where('site_id', $item['SITE ID'])->first();
 
                 if (!$site) {
-                    // $this->info("Data dengan site_id {$item['SITE ID']} di-skip karena tidak ditemukan di site_details.");
                     continue;
                 }
 
@@ -105,10 +124,6 @@ class FetchNmtTickets extends Command
                     // Logika untuk status CLOSED
                     if ($status === "CLOSED" && isset($item['ACTUAL ONLINE'])) {
                         if ($item['ACTUAL ONLINE'] !== null && $item['ACTUAL ONLINE'] !== "-") {
-                            // Hanya update closed_date jika sebelumnya null
-                            // if ($existingTicket->closed_date === null) {
-
-                            // }
                             $updateData['closed_date'] = Carbon::parse($item['ACTUAL ONLINE'], 'Asia/Jakarta')
                                 ->format('Y-m-d H:i:s');
                         }
