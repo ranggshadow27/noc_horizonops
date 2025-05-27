@@ -294,7 +294,7 @@ class NmtTicketsResource extends Resource
 
                 DateRangeFilter::make('actual_online')
                     ->label('Actual Online Date')
-                    ->singleCalendar(),
+                    ->linkedCalendars(),
 
                 Tables\Filters\Filter::make('actual_online')
                     ->form([
