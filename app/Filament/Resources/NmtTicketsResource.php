@@ -292,9 +292,17 @@ class NmtTicketsResource extends Resource
                         });
                     }),
 
-                DateRangeFilter::make('actual_online')
+                DateRangeFilter::make('target_online')
+                    ->label('Target Online Date')
+                    ->displayFormat('d F Y'),
+
+                DateRangeFilter::make('start_date')
+                    ->label('Start Date')
+                    ->displayFormat('d F Y'),
+
+                DateRangeFilter::make('closed_date')
                     ->label('Actual Online Date')
-                    ->linkedCalendars(),
+                    ->displayFormat('d F Y'),
 
                 // Tables\Filters\Filter::make('actual_online')
                 //     ->form([
