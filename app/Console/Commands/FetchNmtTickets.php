@@ -9,6 +9,7 @@ use App\Models\NmtTickets;
 use App\Models\SiteDetail;
 use Illuminate\Support\Facades\Http;
 use App\Models\TmoData;
+use Illuminate\Support\Facades\Log;
 
 class FetchNmtTickets extends Command
 {
@@ -69,15 +70,29 @@ class FetchNmtTickets extends Command
             // Identify OPEN tickets in DB but not in API
             $ticketsToClose = array_diff($dbTicketIds, $apiTicketIds);
 
+            Log::info("Ini datanya apiTicketIds: " . print_r($apiTicketIds, true));
+
+            Log::info("Ini datanya dbTicketIds: " . print_r($dbTicketIds, true));
+
+            Log::info("Ini datanya ticketsToClose: " . print_r($ticketsToClose, true));
+
             // Update OPEN tickets not in API to CLOSED
             foreach ($ticketsToClose as $ticketId) {
                 $ticket = NmtTickets::where('ticket_id', $ticketId)->where('status', 'OPEN')->first();
+
                 if ($ticket) {
+                    $yesterdayDate = Carbon::now('Asia/Jakarta')
+                        ->subDay()
+                        ->startOfDay()
+                        ->translatedFormat('Y-m-d H:i:s');
+
                     $ticket->update([
                         'status' => 'CLOSED',
-                        'closed_date' => Carbon::now('Asia/Jakarta')->subDay(1)->startOfDay()->format('Y-m-d H:i:s'),
+                        'closed_date' => $yesterdayDate,
                     ]);
-                    $this->info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED.");
+
+                    Log::info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED pada {$yesterdayDate}.");
+                    $this->info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED pada {$yesterdayDate}.");
                 }
             }
 
@@ -136,6 +151,7 @@ class FetchNmtTickets extends Command
 
                     $existingTicket->update($updateData);
 
+                    Log::info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah diperbarui.");
                     $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah diperbarui.");
                 } else {
                     // Insert ticket baru
@@ -147,6 +163,8 @@ class FetchNmtTickets extends Command
                     }
 
                     NmtTickets::create($ticketData);
+
+                    Log::info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah ditambahkan.");
                     $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah ditambahkan.");
                 }
             }
