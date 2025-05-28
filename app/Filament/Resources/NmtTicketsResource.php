@@ -422,7 +422,7 @@ class NmtTicketsResource extends Resource
         $report = "Selamat $timeOfDay,\n\n";
         $report .= "Berikut Update TT PT. MAHAGA PRATAMA $date:\n\n";
         $report .= "> CATEGORY SL\n";
-        $report .= "\n* Total Ticket\t\t: $totalTickets\n";
+        $report .= "\n*Total Ticket*\t\t: $totalTickets\n";
         $report .= "* ✅ Closed\t\t\t: $totalClosed\t\n";
 
         // Tambahkan hanya kategori dengan jumlah > 0 ke summary
