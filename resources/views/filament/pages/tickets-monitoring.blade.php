@@ -48,7 +48,8 @@
                                 </div>
 
                                 <div class="flex-1 flex-col">
-                                    <p class="text-xs text-gray-600 dark:text-gray-400 py-1">Site Detail : {{ $section['site_id'] }}</p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 py-1">Site Detail :
+                                        {{ $section['site_id'] }}</p>
                                     <p class="font-medium text-gray-800">
                                         {{ $section['site_name'] }}
                                     </p>
@@ -57,8 +58,7 @@
                                 <div class="flex-1 flex-col">
                                     <p class="text-xs text-gray-600 dark:text-gray-400 py-1">Area / Provinsi :</p>
                                     {{-- <div class="flex gap-2 flex-col py-2"> --}}
-                                        <x-filament::badge color="gray"
-                                        class="w-fit px-2 text-sm py-2 align-start">
+                                    <x-filament::badge color="gray" class="w-fit px-2 text-sm py-2 align-start">
                                         {{ $section['area'] }} - {{ $section['province'] }}
                                     </x-filament::badge>
 
