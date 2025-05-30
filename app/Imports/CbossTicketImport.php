@@ -77,9 +77,9 @@ class CbossTicketImport implements ToModel, WithStartRow, WithChunkReading
         }
 
         // Konversi tanggal dari Excel serial number
-        $formatTicketEnd = $mappedRow['ticket end'] ? Carbon::createFromTimestamp(($mappedRow['ticket end'] - 25569) * 86400) : null;
-        $formatTicketStart = $mappedRow['ticket start'] ? Carbon::createFromTimestamp(($mappedRow['ticket start'] - 25569) * 86400) : null;
-        $formatTicketLastUpdate = $mappedRow['ticket last update'] ? Carbon::createFromTimestamp(($mappedRow['ticket last update'] - 25569) * 86400) : null;
+        $formatTicketEnd = $mappedRow['ticket end'] ? Carbon::createFromTimestamp(($mappedRow['ticket end'] - 25569) * 86400, 'Asia/Jakarta') : null;
+        $formatTicketStart = $mappedRow['ticket start'] ? Carbon::createFromTimestamp(($mappedRow['ticket start'] - 25569) * 86400, 'Asia/Jakarta') : null;
+        $formatTicketLastUpdate = $mappedRow['ticket last update'] ? Carbon::createFromTimestamp(($mappedRow['ticket last update'] - 25569) * 86400, 'Asia/Jakarta') : null;
 
         $ticketEnd = $formatTicketEnd ? $formatTicketEnd->format('Y-m-d H:i:s') : null;
         $ticketStart = $formatTicketStart ? $formatTicketStart->format('Y-m-d H:i:s') : null;
