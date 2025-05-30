@@ -29,7 +29,7 @@ class NmtTicketsResourceOverview extends BaseWidget
         return [
             Stat::make('Ticket Online', $ticketsUp)
                 ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Ticket Currently Online")
+                ->description("Ticket ready to Close (Modem Online)")
                 ->color('success'),
 
             Stat::make('Today Target Online', $todayTargetOnline)
