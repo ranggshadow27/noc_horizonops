@@ -18,6 +18,11 @@ class CbossTicketImport implements ToModel, WithStartRow
         return 5;
     }
 
+    public function chunkSize(): int
+    {
+        return 1000; // Process 1000 rows at a time
+    }
+
     private function properCase(string $value = null): ?string
     {
         if (is_null($value) || trim($value) === '') {
@@ -43,6 +48,8 @@ class CbossTicketImport implements ToModel, WithStartRow
 
     public function model(array $row)
     {
+        set_time_limit(300); // Increase timeout to 5 minutes for each row
+
         Log::info('ZZ Processing row: ' . json_encode($row));
 
         if (empty(trim($row[0] ?? ''))) {
