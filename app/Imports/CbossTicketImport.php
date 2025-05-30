@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\CbossTicket;
+use App\Models\SiteDetail; // Add this to query SiteDetail
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 use Illuminate\Support\Carbon;
@@ -62,6 +63,12 @@ class CbossTicketImport implements ToModel, WithStartRow
             'ticket end' => $row[15] ?? null,
             'ticket last update' => $row[19] ?? null,
         ];
+
+        // Check if subscriber number exists in SiteDetail
+        if (!SiteDetail::where('site_id', $mappedRow['subscriber number'])->exists()) {
+            Log::info('Skipping row: Subscriber number ' . $mappedRow['subscriber number'] . ' not found in SiteDetail');
+            return null;
+        }
 
         // Konversi tanggal dari Excel serial number
         $formatTicketEnd = $mappedRow['ticket end'] ? Carbon::createFromTimestamp(($mappedRow['ticket end'] - 25569) * 86400) : null;
