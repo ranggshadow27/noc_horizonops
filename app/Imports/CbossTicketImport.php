@@ -77,13 +77,19 @@ class CbossTicketImport implements ToModel, WithStartRow, WithChunkReading
         }
 
         // Konversi tanggal dari Excel serial number
-        $formatTicketEnd = $mappedRow['ticket end'] ? Carbon::createFromTimestamp(($mappedRow['ticket end'] - 25569) * 86400, 'Asia/Jakarta') : null;
-        $formatTicketStart = $mappedRow['ticket start'] ? Carbon::createFromTimestamp(($mappedRow['ticket start'] - 25569) * 86400, 'Asia/Jakarta') : null;
-        $formatTicketLastUpdate = $mappedRow['ticket last update'] ? Carbon::createFromTimestamp(($mappedRow['ticket last update'] - 25569) * 86400, 'Asia/Jakarta') : null;
+        $formatTicketEnd = $mappedRow['ticket end'] ? Carbon::createFromTimestampUTC(($mappedRow['ticket end'] - 25569) * 86400) : null;
+        $formatTicketStart = $mappedRow['ticket start'] ? Carbon::createFromTimestampUTC(($mappedRow['ticket start'] - 25569) * 86400) : null;
+        $formatTicketLastUpdate = $mappedRow['ticket last update'] ? Carbon::createFromTimestampUTC(($mappedRow['ticket last update'] - 25569) * 86400) : null;
 
         $ticketEnd = $formatTicketEnd ? $formatTicketEnd->format('Y-m-d H:i:s') : null;
         $ticketStart = $formatTicketStart ? $formatTicketStart->format('Y-m-d H:i:s') : null;
         $ticketLastUpdate = $formatTicketLastUpdate ? $formatTicketLastUpdate->format('Y-m-d H:i:s') : null;
+
+        // dd("Ini Datanya Timezone: {$formatTicketStart} - {$ticketStart}" . $mappedRow['subscriber number'] . $mappedRow['ticket start']) . Carbon::now()->timezoneName;
+
+        // Log::info('Ticket End Raw: ' . $mappedRow['ticket start']);
+        // Log::info("Ticket End Converted: {$formatTicketStart}");
+        // Log::info("Ticket End: {$ticketStart}");
 
         // Validasi data
         $validator = Validator::make($mappedRow, [
