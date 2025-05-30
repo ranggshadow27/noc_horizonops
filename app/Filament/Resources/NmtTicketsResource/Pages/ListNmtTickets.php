@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\NmtTicketsResource\Pages;
 
 use App\Filament\Resources\NmtTicketsResource;
+use App\Filament\Resources\NmtTicketsResource\Widgets\NmtTicketsResourceOverview;
+use App\Filament\Resources\NmtTicketsResource\Widgets\NmtTTResourceOverview;
 use App\Models\NmtTickets;
 use Carbon\Carbon;
 use Filament\Actions;
@@ -20,6 +22,13 @@ use Webbingbrasil\FilamentCopyActions\Pages\Actions\CopyAction;
 class ListNmtTickets extends ListRecords
 {
     protected static string $resource = NmtTicketsResource::class;
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            NmtTicketsResourceOverview::class
+        ];
+    }
 
     protected function getHeaderActions(): array
     {

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\NmtTicketsResource\Pages;
 use App\Filament\Resources\NmtTicketsResource\RelationManagers;
+use App\Filament\Resources\NmtTicketsResource\Widgets\NmtTicketsResourceOverview;
 use App\Models\AreaList;
 use App\Models\NmtTickets;
 use Carbon\Carbon;
@@ -36,11 +37,18 @@ class NmtTicketsResource extends Resource
     protected static ?string $navigationIcon = 'phosphor-tag-chevron-duotone';
     protected static ?int $navigationSort = 1;
 
+    public static function getWidgets(): array
+    {
+        return [
+            NmtTicketsResourceOverview::class,
+        ];
+    }
+
     public static function getNavigationBadge(): ?string
     {
         return NmtTickets::where('status', "OPEN")
             ->whereHas('siteMonitor', function ($query) {
-                $query->where('modem_last_up', '=', null)->orWhere('modem_last_up', '>=', now()->subDays(2));
+                $query->where('modem_last_up', '=', null)->orWhere('modem_last_up', '>=', now()->subDay());
             })
             ->count(); // Hitung total data
     }
