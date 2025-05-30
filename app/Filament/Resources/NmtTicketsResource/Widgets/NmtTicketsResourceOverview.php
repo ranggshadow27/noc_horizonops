@@ -27,9 +27,9 @@ class NmtTicketsResourceOverview extends BaseWidget
         $todayClosed = NmtTickets::where('status', '=', 'CLOSED')->whereDate('closed_date', $today)->count();
 
         return [
-            Stat::make('Ticket Online', $ticketsUp)
+            Stat::make('Ticket Up (Modem Online)', $ticketsUp)
                 ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Ticket ready to Close (Modem Online)")
+                ->description("Ticket ready to be Close")
                 ->color('success'),
 
             Stat::make('Today Target Online', $todayTargetOnline)
