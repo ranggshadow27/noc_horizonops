@@ -35,7 +35,7 @@ class NmtTicketsResourceOverview extends BaseWidget
             Stat::make('Today Target Online', $todayTargetOnline)
                 ->descriptionIcon('phosphor-hourglass-high-duotone')
                 ->description("Ticket with Today Target Online")
-                ->color('warning'),
+                ->color('gray'),
 
             Stat::make('Trouble Ticket Open', $todayOpen)
                 ->descriptionIcon('phosphor-exclamation-mark-duotone')
