@@ -10,8 +10,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class CbossTicketImport implements ToModel, WithStartRow
+class CbossTicketImport implements ToModel, WithStartRow, WithChunkReading
 {
     public function startRow(): int
     {
@@ -48,8 +49,6 @@ class CbossTicketImport implements ToModel, WithStartRow
 
     public function model(array $row)
     {
-        set_time_limit(300); // Increase timeout to 5 minutes for each row
-
         Log::info('ZZ Processing row: ' . json_encode($row));
 
         if (empty(trim($row[0] ?? ''))) {
