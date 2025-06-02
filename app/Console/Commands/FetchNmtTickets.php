@@ -65,7 +65,10 @@ class FetchNmtTickets extends Command
             })->toArray();
 
             // Fetch only ticket_ids with status OPEN from database
-            $dbTicketIds = NmtTickets::where('status', 'OPEN')->pluck('ticket_id')->toArray();
+            $dbTicketIds = NmtTickets::where(function ($query) {
+                $query->where('status', 'OPEN')
+                    ->orWhere('actual_online', '>=', Carbon::today('Asia/Jakarta')->startOfDay());
+            })->pluck('ticket_id')->toArray();
 
             // Identify OPEN tickets in DB but not in API
             $ticketsToClose = array_diff($dbTicketIds, $apiTicketIds);
@@ -78,7 +81,7 @@ class FetchNmtTickets extends Command
 
             // Update OPEN tickets not in API to CLOSED
             foreach ($ticketsToClose as $ticketId) {
-                $ticket = NmtTickets::where('ticket_id', $ticketId)->where('status', 'OPEN')->first();
+                $ticket = NmtTickets::where('ticket_id', $ticketId)->first();
 
                 if ($ticket) {
                     $yesterdayDate = Carbon::now('Asia/Jakarta')
