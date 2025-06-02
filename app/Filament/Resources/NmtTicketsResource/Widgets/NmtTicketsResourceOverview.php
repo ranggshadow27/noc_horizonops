@@ -9,6 +9,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class NmtTicketsResourceOverview extends BaseWidget
 {
+    protected static ?string $pollingInterval = '20s';
+
     protected function getStats(): array
     {
         $today = Carbon::today();
