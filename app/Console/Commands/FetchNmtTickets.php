@@ -53,128 +53,131 @@ class FetchNmtTickets extends Command
 
     private function fetchAndInsertNmtTickets()
     {
-        $apiUrl = 'https://script.google.com/macros/s/AKfycbzbhQSS07lD8FSN68pKDtwFjfIaxKgfjQarPWLgvFV6Bu7aOEldxPOVTUgNHunfQ1IclA/exec';
-        $response = Http::timeout(360)->get($apiUrl);
 
-        if ($response->successful()) {
-            $data = $response->json();
+        try {
+            $apiUrl = 'https://script.google.com/macros/s/AKfycbzbhQSS07lD8FSN68pKDtwFjfIaxKgfjQarPWLgvFV6Bu7aOEldxPOVTUgNHunfQ1IclA/exec';
+            $response = Http::timeout(360)->get($apiUrl);
 
-            // Collect all ticket_ids from API response
-            $apiTicketIds = collect($data)->pluck('TICKET ID')->map(function ($ticketId) {
-                return str_replace('/', '-', $ticketId);
-            })->toArray();
+            if ($response->successful()) {
+                $data = $response->json();
 
-            // Fetch only ticket_ids with status OPEN from database
-            $dbTicketIds = NmtTickets::where(function ($query) {
-                $query->where('status', 'OPEN')
-                    ->orWhere('closed_date', '>=', Carbon::today('Asia/Jakarta')->startOfDay());
-            })->pluck('ticket_id')->toArray();
+                // Collect all ticket_ids from API response
+                $apiTicketIds = collect($data)->pluck('TICKET ID')->map(function ($ticketId) {
+                    return str_replace('/', '-', $ticketId);
+                })->toArray();
 
-            // Identify OPEN tickets in DB but not in API
-            $ticketsToClose = array_diff($dbTicketIds, $apiTicketIds);
+                // Fetch only ticket_ids with status OPEN from database
+                $dbTicketIds = NmtTickets::where(function ($query) {
+                    $query->where('status', 'OPEN')
+                        ->orWhere('closed_date', '>=', Carbon::today('Asia/Jakarta')->startOfDay());
+                })->pluck('ticket_id')->toArray();
 
-            // Log::info("Ini datanya apiTicketIds: " . print_r($apiTicketIds, true));
+                // Identify OPEN tickets in DB but not in API
+                $ticketsToClose = array_diff($dbTicketIds, $apiTicketIds);
 
-            // Log::info("Ini datanya dbTicketIds: " . print_r($dbTicketIds, true));
+                // Log::info("Ini datanya apiTicketIds: " . print_r($apiTicketIds, true));
 
-            // Log::info("Ini datanya ticketsToClose: " . print_r($ticketsToClose, true));
+                // Log::info("Ini datanya dbTicketIds: " . print_r($dbTicketIds, true));
 
-            // Update OPEN tickets not in API to CLOSED
-            foreach ($ticketsToClose as $ticketId) {
-                $ticket = NmtTickets::where('ticket_id', $ticketId)->first();
+                // Log::info("Ini datanya ticketsToClose: " . print_r($ticketsToClose, true));
 
-                if ($ticket) {
-                    $yesterdayDate = Carbon::now('Asia/Jakarta')
-                        ->subDay()
+                // Update OPEN tickets not in API to CLOSED
+                foreach ($ticketsToClose as $ticketId) {
+                    $ticket = NmtTickets::where('ticket_id', $ticketId)->first();
+
+                    if ($ticket) {
+                        $yesterdayDate = Carbon::now('Asia/Jakarta')
+                            ->subDay()
+                            ->startOfDay()
+                            ->translatedFormat('Y-m-d H:i:s');
+
+                        $ticket->update([
+                            'status' => 'CLOSED',
+                            'closed_date' => $yesterdayDate,
+                        ]);
+
+                        // Log::info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED pada {$yesterdayDate}.");
+                        $this->info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED pada {$yesterdayDate}.");
+                    }
+                }
+
+                // Process API data as per existing logic
+                foreach ($data as $item) {
+                    $site = SiteDetail::where('site_id', $item['SITE ID'])->first();
+
+                    if (!$site) {
+                        continue;
+                    }
+
+                    $ticketId = str_replace('/', '-', $item['TICKET ID']);
+                    $apiStatus = $item['STATUS'];
+                    $status = ($apiStatus === "CLOSED" && !isset($item['ACTUAL ONLINE'])) ? "OPEN" : $apiStatus;
+                    $targetOnline = (!isset($item['TARGET ONLINE'])) ? null : $item['TARGET ONLINE'];
+
+                    $ticketDate = Carbon::parse($item['DATE START TT'], 'Asia/Jakarta')
+                        ->addDay()
                         ->startOfDay()
                         ->translatedFormat('Y-m-d H:i:s');
 
-                    $ticket->update([
-                        'status' => 'CLOSED',
-                        'closed_date' => $yesterdayDate,
-                    ]);
+                    $existingTicket = NmtTickets::where('ticket_id', $ticketId)->first();
 
-                    // Log::info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED pada {$yesterdayDate}.");
-                    $this->info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED pada {$yesterdayDate}.");
-                }
-            }
+                    // Data dasar yang akan digunakan untuk update atau create
+                    $ticketData = [
+                        'ticket_id' => $ticketId,
+                        'site_id' => $item['SITE ID'],
+                        'status' => $status,
+                        'date_start' => $ticketDate,
+                        'aging' => $item['DOWN TIME'],
+                        'target_online' => $targetOnline,
+                        'problem_classification' => $item['PROBLEM CLASSIFICATION'],
+                        'problem_detail' => $item['DETAIL PROBLEM'],
+                        'problem_type' => $item['TEKNIS/NON TEKNIS'],
+                        'update_progress' => $item['UPDATE PROGRESS'],
+                    ];
 
-            // Process API data as per existing logic
-            foreach ($data as $item) {
-                $site = SiteDetail::where('site_id', $item['SITE ID'])->first();
+                    if ($existingTicket) {
+                        // Update ticket yang sudah ada
+                        $updateData = array_merge($ticketData, [
+                            'closed_date' => $existingTicket->closed_date // Pertahankan nilai existing jika ada
+                        ]);
 
-                if (!$site) {
-                    continue;
-                }
-
-                $ticketId = str_replace('/', '-', $item['TICKET ID']);
-                $apiStatus = $item['STATUS'];
-                $status = ($apiStatus === "CLOSED" && !isset($item['ACTUAL ONLINE'])) ? "OPEN" : $apiStatus;
-                $targetOnline = (!isset($item['TARGET ONLINE'])) ? null : $item['TARGET ONLINE'];
-
-                $ticketDate = Carbon::parse($item['DATE START TT'], 'Asia/Jakarta')
-                    ->addDay()
-                    ->startOfDay()
-                    ->translatedFormat('Y-m-d H:i:s');
-
-                $existingTicket = NmtTickets::where('ticket_id', $ticketId)->first();
-
-                // Data dasar yang akan digunakan untuk update atau create
-                $ticketData = [
-                    'ticket_id' => $ticketId,
-                    'site_id' => $item['SITE ID'],
-                    'status' => $status,
-                    'date_start' => $ticketDate,
-                    'aging' => $item['DOWN TIME'],
-                    'target_online' => $targetOnline,
-                    'problem_classification' => $item['PROBLEM CLASSIFICATION'],
-                    'problem_detail' => $item['DETAIL PROBLEM'],
-                    'problem_type' => $item['TEKNIS/NON TEKNIS'],
-                    'update_progress' => $item['UPDATE PROGRESS'],
-                ];
-
-                if ($existingTicket) {
-                    // Update ticket yang sudah ada
-                    $updateData = array_merge($ticketData, [
-                        'closed_date' => $existingTicket->closed_date // Pertahankan nilai existing jika ada
-                    ]);
-
-                    // Logika untuk status CLOSED
-                    if ($status === "CLOSED" && isset($item['ACTUAL ONLINE'])) {
-                        if ($item['ACTUAL ONLINE'] !== null && $item['ACTUAL ONLINE'] !== "-") {
-                            $updateData['closed_date'] = Carbon::parse($item['ACTUAL ONLINE'], 'Asia/Jakarta')
-                                ->format('Y-m-d H:i:s');
+                        // Logika untuk status CLOSED
+                        if ($status === "CLOSED" && isset($item['ACTUAL ONLINE'])) {
+                            if ($item['ACTUAL ONLINE'] !== null && $item['ACTUAL ONLINE'] !== "-") {
+                                $updateData['closed_date'] = Carbon::parse($item['ACTUAL ONLINE'], 'Asia/Jakarta')
+                                    ->format('Y-m-d H:i:s');
+                            }
                         }
-                    }
 
-                    // Jika status menjadi OPEN, set closed_date ke null
-                    if ($status === "OPEN") {
-                        $updateData['closed_date'] = null;
-                    }
-
-                    $existingTicket->update($updateData);
-
-                    // Log::info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah diperbarui.");
-                    $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah diperbarui.");
-                } else {
-                    // Insert ticket baru
-                    if ($status === "CLOSED" && isset($item['ACTUAL ONLINE'])) {
-                        if ($item['ACTUAL ONLINE'] !== null && $item['ACTUAL ONLINE'] !== "-") {
-                            $ticketData['closed_date'] = Carbon::parse($item['ACTUAL ONLINE'], 'Asia/Jakarta')
-                                ->format('Y-m-d H:i:s');
+                        // Jika status menjadi OPEN, set closed_date ke null
+                        if ($status === "OPEN") {
+                            $updateData['closed_date'] = null;
                         }
+
+                        $existingTicket->update($updateData);
+
+                        // Log::info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah diperbarui.");
+                        // $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah diperbarui.");
+                    } else {
+                        // Insert ticket baru
+                        if ($status === "CLOSED" && isset($item['ACTUAL ONLINE'])) {
+                            if ($item['ACTUAL ONLINE'] !== null && $item['ACTUAL ONLINE'] !== "-") {
+                                $ticketData['closed_date'] = Carbon::parse($item['ACTUAL ONLINE'], 'Asia/Jakarta')
+                                    ->format('Y-m-d H:i:s');
+                            }
+                        }
+
+                        NmtTickets::create($ticketData);
+
+                        // Log::info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah ditambahkan.");
+                        // $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah ditambahkan.");
                     }
-
-                    NmtTickets::create($ticketData);
-
-                    // Log::info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah ditambahkan.");
-                    $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah ditambahkan.");
                 }
-            }
 
-            $this->info('Data berhasil diperbarui dari API.');
-        } else {
-            $this->error('Gagal mengambil data dari API.');
+                $this->info('Data berhasil diperbarui dari API.');
+            }
+        } catch (\Exception $e) {
+            $this->error('Gagal mengambil data dari API. Err : ' . $e->getMessage());
         }
     }
 }

@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\SweepingTicket;
-use App\Models\SiteDetail; // Asumsi model SiteDetail ada
+use App\Models\SiteDetail;
 use Illuminate\Support\Facades\Http;
 
 class FetchSweepingTickets extends Command
