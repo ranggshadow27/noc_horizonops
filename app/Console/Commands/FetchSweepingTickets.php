@@ -15,7 +15,7 @@ class FetchSweepingTickets extends Command
     public function handle()
     {
         // URL API dari Apps Script (ganti dengan URL deploy-mu)
-        $apiUrl = 'https://script.google.com/macros/s/AKfycbwQiSkWercELZCI0q2KHb5tXRaubNVdWAGTZA7QwLVGhWFaLkOBM-lRyyh75AvbarYYlg/exec';
+        $apiUrl = 'https://script.google.com/macros/s/AKfycbzb5McYQiskbsMfZDWENTj9PXrNlHEqUV2LOzEshCN_Hdlcm0mNbH6VZp0SYgxun-Syzg/exec';
 
         try {
             // Fetch data dari API
