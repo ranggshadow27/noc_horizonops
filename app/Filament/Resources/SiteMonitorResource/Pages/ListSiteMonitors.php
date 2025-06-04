@@ -79,7 +79,7 @@ class ListSiteMonitors extends ListRecords
                                 Column::make('updated_at'),
                             ])
                     ]),
-                ExportAction::make('xlsx')
+                ExportAction::make('xlsx_timestamp')
                     ->icon('phosphor-file-xls-duotone')
                     ->label("Export to XLSX (Timestamp)")
                     ->exports([
