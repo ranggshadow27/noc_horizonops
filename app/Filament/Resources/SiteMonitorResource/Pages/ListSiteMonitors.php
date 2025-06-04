@@ -76,6 +76,18 @@ class ListSiteMonitors extends ListRecords
                             ->withFilename(fn($resource) => $resource::getModelLabel() . '-' . date('Y-m-d'))
                             ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
                             ->withColumns([
+                                Column::make('updated_at'),
+                            ])
+                    ]),
+                ExportAction::make('xlsx')
+                    ->icon('phosphor-file-xls-duotone')
+                    ->label("Export to XLSX (Timestamp)")
+                    ->exports([
+                        ExcelExport::make()
+                            ->fromTable()
+                            ->withFilename(fn($resource) => $resource::getModelLabel() . '-' . date('Y-m-d'))
+                            ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
+                            ->withColumns([
                                 Column::make('modem_last_up'),
                                 Column::make('mikrotik_last_up'),
                                 Column::make('ap1_last_up'),
