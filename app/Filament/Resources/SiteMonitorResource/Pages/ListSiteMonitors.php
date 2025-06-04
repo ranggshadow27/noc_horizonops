@@ -77,9 +77,9 @@ class ListSiteMonitors extends ListRecords
                             ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
                             ->withColumns([
                                 Column::make('modem_last_up'),
-                                Column::make('mikrotik_last_up '),
-                                Column::make('ap1_last_up '),
-                                Column::make('ap2_last_up '),
+                                Column::make('mikrotik_last_up'),
+                                Column::make('ap1_last_up'),
+                                Column::make('ap2_last_up'),
                                 Column::make('updated_at'),
                             ])
                     ]),
