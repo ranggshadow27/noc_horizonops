@@ -247,6 +247,7 @@ class NmtTicketsResource extends Resource
                         'critical' => '> 15-30 days',
                         'sp1' => '> 30 days',
                     ])
+                    ->native(false)
                     ->modifyQueryUsing(function (Builder $query, array $state) {
                         if (!isset($state['value']) || empty($state['value'])) {
                             return $query; // Jika tidak ada filter yang dipilih, kembalikan query tanpa filter
@@ -270,6 +271,7 @@ class NmtTicketsResource extends Resource
                 Tables\Filters\SelectFilter::make('area')
                     ->label("Area")
                     ->options(fn() => AreaList::all()->pluck('area', 'area'))
+                    ->native(false)
                     ->modifyQueryUsing(function (Builder $query, $state) {
                         if (! $state['value']) {
                             return $query;
@@ -279,6 +281,7 @@ class NmtTicketsResource extends Resource
 
                 Tables\Filters\SelectFilter::make('modem_last_up')
                     ->label('Modem Last Up')
+                    ->native(false)
                     ->options([
                         'now' => 'Up (Online)',
                         'recent' => '≤ 1 days ago',
@@ -302,6 +305,7 @@ class NmtTicketsResource extends Resource
 
                 Tables\Filters\SelectFilter::make('sensorStatus')
                     ->label("Sensor Status")
+                    ->native(false)
                     ->options(fn() => SiteMonitor::all()->pluck('status', 'status'))
                     ->modifyQueryUsing(function (Builder $query, $state) {
                         if (! $state['value']) {
