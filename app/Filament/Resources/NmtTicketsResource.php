@@ -185,7 +185,6 @@ class NmtTicketsResource extends Resource
                         return Carbon::parse($state)
                             ->diffForHumans();
                     })
-
                     ->sortable()
                     ->searchable(),
 
@@ -199,7 +198,7 @@ class NmtTicketsResource extends Resource
                     ->label("Detail")
                     ->formatStateUsing(fn($state) => Str::title($state))
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: false)
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('date_start')
