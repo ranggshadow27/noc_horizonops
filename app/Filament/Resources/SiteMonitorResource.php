@@ -110,9 +110,10 @@ class SiteMonitorResource extends Resource
                     ->sortable()
                     ->color(fn(string $state): string => match ($state) {
                         'Critical' => 'danger',
-                        'Normal' => 'success',
-                        'Minor' => 'primary',
                         'Major' => 'warning',
+                        'Minor' => 'apricot',
+                        'Warning' => 'primary',
+                        'Normal' => 'success',
                     }),
 
                 Tables\Columns\TextColumn::make('modem')->label('Modem')

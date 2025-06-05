@@ -29,134 +29,137 @@ class SiteMonitorService
             $data = array_merge($data1, $data2);
 
             // Proses dan simpan data ke database
-            foreach ($data as $item) {
+            foreach ($data as $apiItem) {
                 // Ambil data berdasarkan site_id
-                $apiData = SiteMonitor::where('site_id', $item['terminal_id'])->first();
+                $dbData = SiteMonitor::where('site_id', $apiItem['terminal_id'])->first();
 
                 // Jika data ditemukan, lakukan update, jika tidak buat data baru
-                if ($apiData) {
-                    $apiData->update([
-                        'site_id' => $item['terminal_id'] ?? 'Failed',
-                        'modem' => $item['modem'] ?? 'Failed',
-                        'mikrotik' => $item['mikrotik'] ?? 'Failed',
-                        'ap1' => $item['AP1'] ?? 'Failed',
-                        'ap2' => $item['AP2'] ?? 'Failed',
+                if ($dbData) {
+                    $dbData->update([
+                        'site_id' => $apiItem['terminal_id'] ?? 'Failed',
+                        'modem' => $apiItem['modem'] ?? 'Failed',
+                        'mikrotik' => $apiItem['mikrotik'] ?? 'Failed',
+                        'ap1' => $apiItem['AP1'] ?? 'Failed',
+                        'ap2' => $apiItem['AP2'] ?? 'Failed',
 
                         'modem_last_up' =>
-                        $item['modem'] === 'Down' && !$apiData->modem_last_up ?
+                        $apiItem['modem'] === 'Down' && !$dbData->modem_last_up ?
                             Carbon::now() : (
-                                $item['modem'] !== 'Up' ?
-                                $apiData->modem_last_up : null
+                                $apiItem['modem'] !== 'Up' ?
+                                $dbData->modem_last_up : null
                             ),
 
                         'mikrotik_last_up' =>
-                        $item['mikrotik'] === 'Down' && !$apiData->mikrotik_last_up ?
+                        $apiItem['mikrotik'] === 'Down' && !$dbData->mikrotik_last_up ?
                             Carbon::now() : (
-                                $item['mikrotik'] !== 'Up' ?
-                                $apiData->mikrotik_last_up : null
+                                $apiItem['mikrotik'] !== 'Up' ?
+                                $dbData->mikrotik_last_up : null
                             ),
 
                         'ap1_last_up' =>
-                        $item['AP1'] === 'Down' && !$apiData->ap1_last_up ?
+                        $apiItem['AP1'] === 'Down' && !$dbData->ap1_last_up ?
                             Carbon::now() : (
-                                $item['AP1'] !== 'Up' ?
-                                $apiData->ap1_last_up : null
+                                $apiItem['AP1'] !== 'Up' ?
+                                $dbData->ap1_last_up : null
                             ),
 
                         'ap2_last_up' =>
-                        $item['AP2'] === 'Down' && !$apiData->ap2_last_up ?
+                        $apiItem['AP2'] === 'Down' && !$dbData->ap2_last_up ?
                             Carbon::now() : (
-                                $item['AP2'] !== 'Up' ?
-                                $apiData->ap2_last_up : null
+                                $apiItem['AP2'] !== 'Up' ?
+                                $dbData->ap2_last_up : null
                             ),
 
                     ]);
                 } else {
                     // Jika data tidak ada, buat data baru
-                    $apiData = SiteMonitor::updateOrCreate([
-                        'site_id' => $item['terminal_id'] ?? 'Failed',
-                        'sitecode' => $item['sitecode'] ?? 'Failed',
-                        'modem' => $item['modem'] ?? 'Failed',
-                        'mikrotik' => $item['mikrotik'] ?? 'Failed',
-                        'ap1' => $item['AP1'] ?? 'Failed',
-                        'ap2' => $item['AP2'] ?? 'Failed',
+                    $dbData = SiteMonitor::updateOrCreate([
+                        'site_id' => $apiItem['terminal_id'] ?? 'Failed',
+                        'sitecode' => $apiItem['sitecode'] ?? 'Failed',
+                        'modem' => $apiItem['modem'] ?? 'Failed',
+                        'mikrotik' => $apiItem['mikrotik'] ?? 'Failed',
+                        'ap1' => $apiItem['AP1'] ?? 'Failed',
+                        'ap2' => $apiItem['AP2'] ?? 'Failed',
 
-                        // 'modem_last_up' => $item['modem'] === 'Down' ? Carbon::now() : null,
-                        // 'mikrotik_last_up' => $item['mikrotik'] === 'Down' ? Carbon::now() : null,
-                        // 'ap1_last_up' => $item['AP1'] === 'Down' ? Carbon::now() : null,
-                        // 'ap2_last_up' => $item['AP2'] === 'Down' ? Carbon::now() : null,
+                        // 'modem_last_up' => $apiItem['modem'] === 'Down' ? Carbon::now() : null,
+                        // 'mikrotik_last_up' => $apiItem['mikrotik'] === 'Down' ? Carbon::now() : null,
+                        // 'ap1_last_up' => $apiItem['AP1'] === 'Down' ? Carbon::now() : null,
+                        // 'ap2_last_up' => $apiItem['AP2'] === 'Down' ? Carbon::now() : null,
 
                         'modem_last_up' =>
-                        $item['modem'] === 'Down' && !$apiData->modem_last_up ?
+                        $apiItem['modem'] === 'Down' && !$dbData->modem_last_up ?
                             Carbon::now() : (
-                                $item['modem'] !== 'Up' ?
-                                $apiData->modem_last_up : null
+                                $apiItem['modem'] !== 'Up' ?
+                                $dbData->modem_last_up : null
                             ),
 
                         'mikrotik_last_up' =>
-                        $item['mikrotik'] === 'Down' && !$apiData->mikrotik_last_up ?
+                        $apiItem['mikrotik'] === 'Down' && !$dbData->mikrotik_last_up ?
                             Carbon::now() : (
-                                $item['mikrotik'] !== 'Up' ?
-                                $apiData->mikrotik_last_up : null
+                                $apiItem['mikrotik'] !== 'Up' ?
+                                $dbData->mikrotik_last_up : null
                             ),
 
                         'ap1_last_up' =>
-                        $item['AP1'] === 'Down' && !$apiData->ap1_last_up ?
+                        $apiItem['AP1'] === 'Down' && !$dbData->ap1_last_up ?
                             Carbon::now() : (
-                                $item['AP1'] !== 'Up' ?
-                                $apiData->ap1_last_up : null
+                                $apiItem['AP1'] !== 'Up' ?
+                                $dbData->ap1_last_up : null
                             ),
 
                         'ap2_last_up' =>
-                        $item['AP2'] === 'Down' && !$apiData->ap2_last_up ?
+                        $apiItem['AP2'] === 'Down' && !$dbData->ap2_last_up ?
                             Carbon::now() : (
-                                $item['AP2'] !== 'Up' ?
-                                $apiData->ap2_last_up : null
+                                $apiItem['AP2'] !== 'Up' ?
+                                $dbData->ap2_last_up : null
                             ),
                     ]);
                 }
 
                 // Update status berdasarkan kondisi 'last_up'
-                $this->updateStatus($apiData);
+                $this->updateStatus($dbData);
             }
         }
     }
 
-    private function updateStatus(SiteMonitor $apiData)
+    private function updateStatus(SiteMonitor $dbData)
     {
         $status = 'Normal';
 
         // Cek apakah salah satu dari modem, mikrotik, ap1, atau ap2 last_up lebih dari 5 hari
-        $status = $this->checkStatusBasedOnLastUp($apiData);
+        $status = $this->checkStatusBasedOnLastUp($dbData);
 
         // Update status ke database
-        $apiData->update(['status' => $status]);
+        $dbData->update(['status' => $status]);
     }
 
-    private function checkStatusBasedOnLastUp(SiteMonitor $apiData)
+    private function checkStatusBasedOnLastUp(SiteMonitor $dbData)
     {
         $status = 'Normal';
 
         // List of fields yang harus diperiksa
         $lastUps = [
-            'modem_last_up' => $apiData->modem_last_up,
-            'mikrotik_last_up' => $apiData->mikrotik_last_up,
-            'ap1_last_up' => $apiData->ap1_last_up,
-            'ap2_last_up' => $apiData->ap2_last_up,
+            'modem_last_up' => $dbData->modem_last_up,
+            'mikrotik_last_up' => $dbData->mikrotik_last_up,
+            'ap1_last_up' => $dbData->ap1_last_up,
+            'ap2_last_up' => $dbData->ap2_last_up,
         ];
 
         foreach ($lastUps as $field => $lastUpTime) {
             // Cek jika data last_up tidak null
             if ($lastUpTime !== null) {
                 $diffInDays = $lastUpTime->diffInDays(Carbon::now());
+                $diffInHours = $lastUpTime->diffInHours(Carbon::now());
 
                 // Periksa status berdasarkan selisih hari
-                if ($diffInDays >= 5) {
+                if ($diffInDays >= 3) {
                     $status = 'Critical';
-                } elseif ($diffInDays >= 3 && $diffInDays < 5) {
+                } elseif ($diffInHours >= 30 && $diffInDays < 3) {
                     $status = 'Major';
-                } elseif ($diffInDays > 1 && $diffInDays < 3) {
+                } elseif ($diffInHours >= 12 && $diffInHours < 30) {
                     $status = 'Minor';
+                } elseif ($diffInHours > 6 && $diffInHours < 12) {
+                    $status = 'Warning';
                 }
             }
         }

@@ -39,7 +39,9 @@ class MahagaPanelProvider extends PanelProvider
             ->profile(EditProfile::class)
             ->colors([
                 'primary' => '#80b918',
-                'secondary' => '#6b7280'
+                'secondary' => '#6b7280',
+                'celadon' => '#A9FBD7',
+                'apricot' => '#F9EA9A',
             ])
             ->spa()
             ->font('Inter')

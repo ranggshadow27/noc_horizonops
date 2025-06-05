@@ -25,11 +25,11 @@ class NmtTicketObserver
             }
         }
 
-        if ($nmtTickets->status == "CLOSED") {
-            $nmtTickets->update([
-                'closed_date' => Carbon::parse(now())->format('Y-m-d H:i:s')
-            ]);
-        }
+        // if ($nmtTickets->status == "CLOSED") {
+        //     $nmtTickets->update([
+        //         'closed_date' => Carbon::parse(now())->format('Y-m-d H:i:s')
+        //     ]);
+        // }
     }
 
     /**

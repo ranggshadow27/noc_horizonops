@@ -29,10 +29,14 @@ class ListSiteMonitors extends ListRecords
                 ->modifyQueryUsing(fn(Builder $query) => $query->where('status', '=', 'normal'))
                 ->badge(SiteMonitor::query()->where('status', '=', 'normal')->count())
                 ->badgeColor('success'),
+            'warning' => Tab::make()
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', '=', 'warning'))
+                ->badge(SiteMonitor::query()->where('status', '=', 'warning')->count())
+                ->badgeColor('celadon'),
             'minor' => Tab::make()
                 ->modifyQueryUsing(fn(Builder $query) => $query->where('status', '=', 'minor'))
                 ->badge(SiteMonitor::query()->where('status', '=', 'minor')->count())
-                ->badgeColor('primary'),
+                ->badgeColor('apricot'),
             'major' => Tab::make()
                 ->modifyQueryUsing(fn(Builder $query) => $query->where('status', '=', 'major'))
                 ->badge(SiteMonitor::query()->where('status', '=', 'major')->count())
