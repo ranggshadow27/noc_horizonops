@@ -112,7 +112,7 @@ class SiteMonitorResource extends Resource
                         'Critical' => 'danger',
                         'Major' => 'warning',
                         'Minor' => 'apricot',
-                        'Warning' => 'primary',
+                        'Warning' => 'celadon',
                         'Normal' => 'success',
                     }),
 
