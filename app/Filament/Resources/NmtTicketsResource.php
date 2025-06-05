@@ -7,6 +7,7 @@ use App\Filament\Resources\NmtTicketsResource\RelationManagers;
 use App\Filament\Resources\NmtTicketsResource\Widgets\NmtTicketsResourceOverview;
 use App\Models\AreaList;
 use App\Models\NmtTickets;
+use App\Models\SiteDetail;
 use App\Models\SiteMonitor;
 use Carbon\Carbon;
 use Filament\Forms;
@@ -15,6 +16,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\TextColumn\TextColumnSize;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
@@ -83,6 +85,11 @@ class NmtTicketsResource extends Resource
             ]);
     }
 
+    public static function getTableQuery(): Builder
+    {
+        return parent::getTableQuery()->with(['site']);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -91,15 +98,12 @@ class NmtTicketsResource extends Resource
                 Tables\Columns\TextColumn::make('ticket_id')
                     ->label("Ticket ID")
                     ->copyable()
+                    ->description(fn($record): string => "Target Online: " . Carbon::parse($record->target_online)->format("d M Y"))
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('site_id')
                     ->copyable()
                     ->label("Site ID")
-                    ->searchable(),
-
-                Tables\Columns\TextColumn::make('site.site_name')
-                    ->label("Site Name")
                     ->limit(30)
                     ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
                         $state = $column->getState();
@@ -110,11 +114,17 @@ class NmtTicketsResource extends Resource
 
                         return $state;
                     })
-                    ->searchable(),
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query
+                            ->where('site_id', 'like', "%{$search}%")
+                            ->orWhereHas('site', function (Builder $query) use ($search) {
+                                $query->where('site_name', 'like', "%{$search}%");
+                            });
+                    })
+                    ->description(fn($record): string => $record->site->site_name),
 
                 Tables\Columns\TextColumn::make('site_province')
                     ->label("Province")
-                    ->limit(15)
                     ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
                         $state = $column->getState();
 
@@ -124,6 +134,7 @@ class NmtTicketsResource extends Resource
 
                         return $state;
                     })
+                    ->description(fn($record): string => $record->area->area)
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('status')
@@ -173,7 +184,7 @@ class NmtTicketsResource extends Resource
 
                         // Jika selisih kurang dari atau sama dengan 3 hari → success (hijau)
                         // Jika lebih dari 3 hari → danger (merah)
-                        return $modemTime->diffInDays($now) <= 3 ? 'success' : 'gray';
+                        return $modemTime->diffInHours($now) <= 6 ? 'success' : 'gray';
                     })
                     ->formatStateUsing(function ($state) {
                         if ($state === "Online") {
@@ -188,17 +199,89 @@ class NmtTicketsResource extends Resource
                     ->sortable()
                     ->searchable(),
 
+                Tables\Columns\TextColumn::make('sensorStatus')
+                    ->label('Sensor Status')
+                    ->default("All Sensor Online")
+                    // ->badge()
+                    ->formatStateUsing(function ($record) {
+                        // Ambil data dari relasi siteMonitor
+                        $siteMonitor = $record->siteMonitor;
+
+                        // Jika tidak ada siteMonitor atau semua null, kembalikan "Online"
+                        if (!$siteMonitor || (
+                            is_null($siteMonitor->modem_last_up) &&
+                            is_null($siteMonitor->mikrotik_last_up) &&
+                            is_null($siteMonitor->ap1_last_up) &&
+                            is_null($siteMonitor->ap2_last_up)
+                        )) {
+                            return 'Online';
+                        }
+
+                        // Ambil semua waktu yang tidak null
+                        $times = [];
+                        if ($siteMonitor->modem_last_up) {
+                            $times['modem'] = Carbon::parse($siteMonitor->modem_last_up);
+                        }
+                        if ($siteMonitor->mikrotik_last_up) {
+                            $times['router'] = Carbon::parse($siteMonitor->mikrotik_last_up);
+                        }
+                        if ($siteMonitor->ap1_last_up) {
+                            $times['ap1'] = Carbon::parse($siteMonitor->ap1_last_up);
+                        }
+                        if ($siteMonitor->ap2_last_up) {
+                            $times['ap2'] = Carbon::parse($siteMonitor->ap2_last_up);
+                        }
+
+                        // Jika ada waktu, cek apakah semua sama
+                        if (!empty($times)) {
+                            $uniqueTimes = array_unique(array_map(fn($time) => $time->toDateTimeString(), $times));
+                            if (count($uniqueTimes) === 1 && isset($times['modem'])) {
+                                // Semua waktu sama dan modem down, kembalikan "All Sensor Down"
+                                Carbon::setLocale('en');
+                                return 'All Sensor Down';
+                            }
+
+                            // Ambil waktu paling lama (datetime terkecil)
+                            $earliest = null;
+                            $earliestKey = null;
+                            foreach ($times as $key => $time) {
+                                if (is_null($earliest) || $time->lt($earliest)) {
+                                    $earliest = $time;
+                                    $earliestKey = $key;
+                                }
+                            }
+
+                            // Tentukan status berdasarkan prioritas
+                            if ($earliestKey === 'modem') {
+                                Carbon::setLocale('en');
+                                return 'All Sensor Down';
+                            } elseif ($earliestKey === 'router') {
+                                return 'Router Down';
+                            } elseif ($earliestKey === 'ap1' && isset($times['ap2']) && $times['ap1']->equalTo($times['ap2'])) {
+                                return 'AP1&2 Down';
+                            } elseif ($earliestKey === 'ap1') {
+                                return 'AP1 Down';
+                            } elseif ($earliestKey === 'ap2') {
+                                return 'AP2 Down';
+                            }
+                        }
+
+                        // Fallback (seharusnya tidak sampai sini)
+                        return 'Online';
+                    }),
+
+
+
                 Tables\Columns\TextColumn::make('problem_classification')
-                    ->label("Classification")
+                    ->label("Problem Classification")
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('problem_detail')
-                    ->label("Detail")
-                    ->formatStateUsing(fn($state) => Str::title($state))
-                    ->sortable()
+                    ->label("Problem Detail")
                     ->toggleable(isToggledHiddenByDefault: true)
+                    ->sortable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('date_start')
