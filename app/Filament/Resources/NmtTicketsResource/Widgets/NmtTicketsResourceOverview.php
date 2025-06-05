@@ -21,6 +21,17 @@ class NmtTicketsResourceOverview extends BaseWidget
                     ->where('modem_last_up', '=', null)
                     ->orWhere('modem_last_up', '>=', now()->subDay());
             })
+            ->whereHas('siteMonitor', function ($query) {
+                $query->where('status', '=', 'Normal');
+            })
+            ->count();
+
+        $ticketsModemUp = NmtTickets::where('status', "OPEN")
+            ->whereHas('siteMonitor', function ($query) {
+                $query
+                    ->where('modem_last_up', '=', null)
+                    ->orWhere('modem_last_up', '>=', now()->subDay());
+            })
             ->count();
 
         $todayTargetOnline = NmtTickets::whereDate('target_online', $today)
@@ -35,25 +46,25 @@ class NmtTicketsResourceOverview extends BaseWidget
             ->count();
 
         return [
-            Stat::make('Ticket Up (Modem Online)', $ticketsUp)
+            Stat::make('Ticket Up (All Sensor)', $ticketsUp)
                 ->descriptionIcon('phosphor-check-circle-duotone')
                 ->description("Ticket ready to be closed")
                 ->color('success'),
 
+            Stat::make('Ticket Modem Up', $ticketsModemUp)
+                ->descriptionIcon('phosphor-check-circle-duotone')
+                ->description("Ticket with only modem UP")
+                ->color('success'),
+
             Stat::make('Today Target Online', $todayTargetOnline)
                 ->descriptionIcon('phosphor-hourglass-high-duotone')
-                ->description("Ticket with Today Target Online")
+                ->description("Ticket with today target online")
                 ->color('gray'),
 
-            Stat::make('Open Ticket', $todayOpen)
+            Stat::make('Overall Ticket Progress', $todayOpen + $todayClosed)
                 ->descriptionIcon('phosphor-exclamation-mark-duotone')
-                ->description("Overall Ticket on Progress")
+                ->description($todayClosed . " Ticket Closed | " . $todayOpen .  " Ticket Open")
                 ->color('warning'),
-
-            Stat::make('Today Closed', $todayClosed)
-                ->descriptionIcon('phosphor-check-circle-duotone')
-                ->description("Today Ticket Closed")
-                ->color('success'),
         ];
     }
 }

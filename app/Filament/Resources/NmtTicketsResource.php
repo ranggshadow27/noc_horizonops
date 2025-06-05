@@ -7,6 +7,7 @@ use App\Filament\Resources\NmtTicketsResource\RelationManagers;
 use App\Filament\Resources\NmtTicketsResource\Widgets\NmtTicketsResourceOverview;
 use App\Models\AreaList;
 use App\Models\NmtTickets;
+use App\Models\SiteMonitor;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
@@ -298,6 +299,16 @@ class NmtTicketsResource extends Resource
                                 $query->where('modem_last_up', '<', now()->subDays(2));
                             }
                         });
+                    }),
+
+                Tables\Filters\SelectFilter::make('sensorStatus')
+                    ->label("Sensor Status")
+                    ->options(fn() => SiteMonitor::all()->pluck('status', 'status'))
+                    ->modifyQueryUsing(function (Builder $query, $state) {
+                        if (! $state['value']) {
+                            return $query;
+                        }
+                        return $query->whereHas('siteMonitor', fn($query) => $query->where('status', $state['value']));
                     }),
 
                 DateRangeFilter::make('target_online')
