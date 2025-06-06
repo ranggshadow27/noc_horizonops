@@ -101,7 +101,7 @@ class NmtTicketsResource extends Resource
                     ->description(fn($record): string => "Target Online: " . Carbon::parse($record->target_online)->format("d M Y"))
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('site_id')
+                Tables\Columns\TextColumn::make('site.site_name')
                     ->copyable()
                     ->label("Site ID")
                     ->limit(30)
@@ -121,7 +121,7 @@ class NmtTicketsResource extends Resource
                                 $query->where('site_name', 'like', "%{$search}%");
                             });
                     })
-                    ->description(fn($record): string => $record->site->site_name),
+                    ->description(fn($record): string => $record->site->site_id, 'above'),
 
                 Tables\Columns\TextColumn::make('site_province')
                     ->label("Province")

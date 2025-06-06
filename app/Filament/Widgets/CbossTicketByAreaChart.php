@@ -2,21 +2,21 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\NmtTickets;
+use App\Models\CbossTicket;
 use Filament\Forms\Components\DatePicker;
 use Filament\Support\RawJs;
 use Flowframe\Trend\Trend;
 use Illuminate\Support\Carbon;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class NmtTicketByAreaChart extends ApexChartWidget
+class CbossTicketByAreaChart extends ApexChartWidget
 {
     /**
      * Chart Id
      *
      * @var string
      */
-    protected static ?string $chartId = 'nmtTicketByAreaChart';
+    protected static ?string $chartId = 'cbossTicketByAreaChart';
 
     /**
      * Widget Title
@@ -24,10 +24,9 @@ class NmtTicketByAreaChart extends ApexChartWidget
      * @var string|null
      */
     protected static ?string $heading = 'Tickets Open by Area';
-    protected static ?string $subheading = 'Summary of NMT Ticket Open by Area';
+    protected static ?string $subheading = 'Summary of CBOSS Ticket Open by Area';
 
     protected static ?string $pollingInterval = '60s';
-
 
     /**
      * Chart options (series, labels, types, size, animations...)
@@ -35,17 +34,11 @@ class NmtTicketByAreaChart extends ApexChartWidget
      *
      * @return array
      */
-
-    // protected function getFormSchema(): array
-    // {
-    //     return [DatePicker::make('date_start')->default(now()->subMonths(2)), DatePicker::make('date_end')->default(now()->endOfDay())];
-    // }
-
     protected function getOptions(): array
     {
-        $openTT = NmtTickets::query()->where('status', 'OPEN')
-            ->selectRaw('area_list.area, COUNT(nmt_tickets.ticket_id) as total_tickets')
-            ->join('area_list', 'area_list.province', '=', 'nmt_tickets.site_province')
+        $openTT = CbossTicket::query()->whereNot('status', 'Closed')
+            ->selectRaw('area_list.area, COUNT(cboss_tickets.ticket_id) as total_tickets')
+            ->join('area_list', 'area_list.province', '=', 'cboss_tickets.province')
             ->groupBy('area_list.area')->orderBy('area_list.area', 'asc')
             ->pluck('total_tickets', 'area_list.area');
 

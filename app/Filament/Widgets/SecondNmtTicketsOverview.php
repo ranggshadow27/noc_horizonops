@@ -24,14 +24,6 @@ class SecondNmtTicketsOverview extends BaseWidget
         //     ->where('status', 'CLOSED')
         //     ->count();
 
-        $nonTeknis = NmtTickets::where('problem_type', 'NON TEKNIS')
-            ->where('status', 'OPEN')
-            ->count();
-
-        $teknis = NmtTickets::where('problem_type', 'TEKNIS')
-            ->where('status', 'OPEN')
-            ->count();
-
         $ttAgingAvg = intval(NmtTickets::where('status', 'OPEN')->average('aging'));
 
         $closedbyNSO = NmtTickets::where('problem_detail', 'KUNJUNGAN')

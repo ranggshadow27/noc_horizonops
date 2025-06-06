@@ -2,21 +2,21 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\NmtTickets;
+use App\Models\CbossTicket;
 use Filament\Support\RawJs;
 use Flowframe\Trend\Trend;
 use Flowframe\Trend\TrendValue;
 use Illuminate\Support\Carbon;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class NmtTicketOpenVsClosedChart extends ApexChartWidget
+class CbossTicketOpenVsClosedChart extends ApexChartWidget
 {
     /**
      * Chart Id
      *
      * @var string
      */
-    protected static ?string $chartId = 'nmtTicketOpenVsClosedChart';
+    protected static ?string $chartId = 'cbossTicketOpenVsClosedChart';
 
     /**
      * Widget Title
@@ -24,10 +24,9 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
      * @var string|null
      */
     protected static ?string $heading = 'Progress Summary';
-    protected static ?string $subheading = 'Overall NMT Tickets Open vs Closed';
+    protected static ?string $subheading = 'Overall CBOSS Tickets Open vs Closed';
 
     protected static ?string $pollingInterval = '60s';
-
 
     /**
      * Chart options (series, labels, types, size, animations...)
@@ -38,21 +37,21 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
     protected function getOptions(): array
     {
 
-        $openTT = Trend::model(NmtTickets::class)
+        $openTT = Trend::model(CbossTicket::class)
             ->between(
                 start: Carbon::parse(now()->subMonth(2)),
                 end: Carbon::parse(now()->addMonths(3))
             )
-            ->dateColumn('date_start')
+            ->dateColumn('ticket_start')
             ->perMonth()
             ->count();
 
-        $closedTT = Trend::query(NmtTickets::where('status', 'CLOSED'))
+        $closedTT = Trend::query(CbossTicket::where('status', 'Closed'))
             ->between(
                 start: Carbon::parse(now()->subMonth(2)),
                 end: Carbon::parse(now()->addMonths(3))
             )
-            ->dateColumn('date_start')
+            ->dateColumn('ticket_end')
             ->perMonth()
             ->count();
 

@@ -38,8 +38,13 @@ class CbossTicket extends Model
         return $this->belongsTo(SiteDetail::class, 'site_id', 'site_id');
     }
 
-    public function areaList(): BelongsTo
+    public function area(): BelongsTo
     {
         return $this->belongsTo(AreaList::class, 'province', 'province');
+    }
+
+    public function siteMonitor()
+    {
+        return $this->hasOne(SiteMonitor::class, 'site_id', 'site_id');
     }
 }

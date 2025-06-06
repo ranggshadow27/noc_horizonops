@@ -27,6 +27,8 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
     protected static ?string $heading = 'NMT Ticket Category';
     protected static ?string $subheading = 'Summary NMT Open (Relokasi, Renovasi, Bencana, Libur)';
 
+    protected static ?string $pollingInterval = '60s';
+
     /**
      * Chart options (series, labels, types, size, animations...)
      * https://apexcharts.com/docs/options

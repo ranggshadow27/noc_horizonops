@@ -2,19 +2,19 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\NmtTickets;
+use App\Models\CbossTicket;
 use Carbon\Carbon;
 use Filament\Support\RawJs;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class NmtTicketOpenDurationChart extends ApexChartWidget
+class CbossTicketOpenDurationChart extends ApexChartWidget
 {
     /**
      * Chart Id
      *
      * @var string
      */
-    protected static ?string $chartId = 'nmtTicketOpenDurationChart';
+    protected static ?string $chartId = 'cbossTicketOpenDurationChart';
 
     /**
      * Widget Title
@@ -22,10 +22,9 @@ class NmtTicketOpenDurationChart extends ApexChartWidget
      * @var string|null
      */
     protected static ?string $heading = 'Ticket Aging';
-    protected static ?string $subheading = 'NMT Tickets Currently Open (duration)';
+    protected static ?string $subheading = 'CBOSS Tickets Currently Open (duration)';
 
     protected static ?string $pollingInterval = '60s';
-
 
     /**
      * Chart options (series, labels, types, size, animations...)
@@ -37,7 +36,7 @@ class NmtTicketOpenDurationChart extends ApexChartWidget
     {
         $now = Carbon::now();
 
-        $openTT = NmtTickets::where('status', 'OPEN')->whereNotNull('date_start')->get();
+        $openTT = CbossTicket::whereNot('status', 'Closed')->whereNotNull('ticket_start')->get();
 
         $openTTCategories = [
             '<3 Days' => 0,
@@ -48,7 +47,7 @@ class NmtTicketOpenDurationChart extends ApexChartWidget
         ];
 
         foreach ($openTT as $tt) {
-            $downDuration = Carbon::parse($tt->date_start)->diffInDays($now);
+            $downDuration = Carbon::parse($tt->ticket_start)->diffInDays($now);
 
             if ($downDuration <= 3) {
                 $openTTCategories['<3 Days']++;

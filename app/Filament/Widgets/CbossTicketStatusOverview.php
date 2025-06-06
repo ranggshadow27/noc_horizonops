@@ -2,32 +2,30 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\NmtTickets;
-use Flowframe\Trend\Trend;
-use Illuminate\Support\Carbon;
-use Flowframe\Trend\TrendValue;
+use App\Models\CbossTicket;
 use Filament\Forms\Components\DatePicker;
-use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Support\RawJs;
+use Flowframe\Trend\Trend;
+use Flowframe\Trend\TrendValue;
+use Illuminate\Support\Carbon;
+use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class NmtTicketStatusOverview extends ApexChartWidget
+class CbossTicketStatusOverview extends ApexChartWidget
 {
-    use HasWidgetShield;
     /**
      * Chart Id
      *
      * @var string
      */
-    protected static ?string $chartId = 'nmtTicketStatusOverview';
+    protected static ?string $chartId = 'cbossTicketStatusOverview';
 
     /**
      * Widget Title
      *
      * @var string|null
      */
-    protected static ?string $heading = 'NMT Ticket Status';
-    protected static ?string $subheading = 'Summary of NMT Ticket Status';
+    protected static ?string $heading = 'CBOSS Ticket Status';
+    protected static ?string $subheading = 'Summary of CBOSS Ticket Status';
 
     protected static ?string $pollingInterval = '60s';
 
@@ -37,7 +35,6 @@ class NmtTicketStatusOverview extends ApexChartWidget
      *
      * @return array
      */
-
     protected function getFormSchema(): array
     {
         return [
@@ -50,22 +47,22 @@ class NmtTicketStatusOverview extends ApexChartWidget
 
     protected function getOptions(): array
     {
-        $openTT = Trend::model(NmtTickets::class)
+        $openTT = Trend::model(CbossTicket::class)
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
                 end: Carbon::parse($this->filterFormData['date_end'])->endOfDay(),
             )
-            ->dateColumn('date_start')
+            ->dateColumn('ticket_start')
             ->perDay()
             ->count();
 
 
-        $closeTT = Trend::query(NmtTickets::where('status', 'CLOSED'))
+        $closeTT = Trend::query(CbossTicket::where('status', 'Closed'))
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
                 end: Carbon::parse($this->filterFormData['date_end'])->endOfDay(),
             )
-            ->dateColumn('closed_date')
+            ->dateColumn('ticket_end')
             ->perDay()
             ->count();
 
@@ -77,28 +74,28 @@ class NmtTicketStatusOverview extends ApexChartWidget
 
         while ($currentDate->lte(Carbon::parse($this->filterFormData['date_end'])->endOfDay())) {
             // Hitung jumlah tiket yang masih Open pada tanggal ini
-            $openTickets = NmtTickets::where('date_start', '<=', $currentDate)
-                ->whereNot('problem_detail', 'LIKE', "%RENOVASI%")
-                // ->whereNot('problem_detail', 'LIKE', "%LIBUR%")
-                ->whereNot('problem_detail', 'LIKE', "%BENCANA%")
-                ->whereNot('problem_classification', 'LIKE', "%RELOKASI%")
+            $openTickets = CbossTicket::where('ticket_start', '<=', $currentDate)
+                ->whereNot('trouble_category', 'LIKE', "%RENOVASI%")
+                // ->whereNot('trouble_category', 'LIKE', "%LIBUR%")
+                ->whereNot('trouble_category', 'LIKE', "%BENCANA%")
+                ->whereNot('problem_map', 'LIKE', "%RELOKASI%")
                 ->where(function ($query) use ($currentDate) {
-                    $query->where('status', '=', 'OPEN')
-                        ->orWhere('closed_date', '>=', $currentDate);
+                    $query->whereNot('status', 'Closed')
+                        ->orWhere('ticket_end', '>=', $currentDate);
                 })
                 ->count();
 
-            $liburTickets = NmtTickets::where('date_start', '<=', $currentDate)
-                ->where('problem_detail', 'LIKE', "%LIBUR%")
+            $liburTickets = CbossTicket::where('ticket_start', '<=', $currentDate)
+                ->where('trouble_category', 'LIKE', "%LIBUR%")
                 ->where(function ($query) use ($currentDate) {
-                    $query->where('status', '=', 'OPEN')
-                        ->orWhere('closed_date', '>=', $currentDate);
+                    $query->whereNot('status', 'Closed')
+                        ->orWhere('ticket_end', '>=', $currentDate);
                 })
                 ->count();
 
-            $todayLiburClose = NmtTickets::where('problem_detail', 'LIKE', "%LIBUR%")
-                ->where('closed_date', '>=', $currentDate)
-                ->where('closed_date', '<=', $currentDate->endOfDay())
+            $todayLiburClose = CbossTicket::where('trouble_category', 'LIKE', "%LIBUR%")
+                ->where('ticket_end', '>=', $currentDate)
+                ->where('ticket_end', '<=', $currentDate->endOfDay())
                 ->count();
 
             $openCounts[] = $openTickets - ($liburTickets - $todayLiburClose);

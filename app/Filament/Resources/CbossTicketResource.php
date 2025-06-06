@@ -7,6 +7,7 @@ use App\Filament\Resources\CbossTicketResource\RelationManagers;
 use App\Imports\CbossTicketImport;
 use App\Models\AreaList;
 use App\Models\CbossTicket;
+use App\Models\SiteMonitor;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -70,6 +71,15 @@ class CbossTicketResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('ticket_id')
                     ->label("Ticket ID")
+                    ->description(function($record): string {
+                        $spmkState = $record->spmk;
+
+                        if (str_contains($spmkState, "NA1-MHG/NOM/")) {
+                            return explode("-", $spmkState)[0] . "/" . explode("/", $spmkState)[2] . "/" . explode("/", $spmkState)[3];
+                        }
+
+                        return $spmkState ?? "No SPMK";
+                    })
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('site_id')
@@ -96,6 +106,7 @@ class CbossTicketResource extends Resource
 
                 Tables\Columns\TextColumn::make('spmk')
                     ->label("SPMK Number")
+                    ->default("No SPMK")
                     ->tooltip(fn($state) => $state)
                     ->formatStateUsing(function ($state) {
                         if (str_contains($state, "NA1-MHG/NOM/")) {
@@ -143,8 +154,111 @@ class CbossTicketResource extends Resource
 
                 Tables\Columns\TextColumn::make('ticket_start')
                     ->label("Open Date")
-                    ->formatStateUsing(fn($state) => Carbon::parse($state)->format("d M Y H:i"))
+                    ->since()
+                    ->tooltip(
+                        fn($record) => "Date Start : " . Carbon::parse($record->ticket_start)->translatedFormat('d M Y')
+                    )
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('siteMonitor.modem_last_up')
+                    ->label('Modem Last Up')
+                    ->default("Online")
+                    ->badge()
+                    ->color(function ($state) {
+                        if ($state === "Online") {
+                            return 'success'; // Jika "Up", warna hijau (success)
+                        }
+
+                        $modemTime = Carbon::parse($state);
+                        $now = Carbon::now();
+
+                        // Jika selisih kurang dari atau sama dengan 3 hari → success (hijau)
+                        // Jika lebih dari 3 hari → danger (merah)
+                        return $modemTime->diffInHours($now) <= 6 ? 'success' : 'gray';
+                    })
+                    ->formatStateUsing(function ($state) {
+                        if ($state === "Online") {
+                            return "Online";
+                        }
+
+                        Carbon::setLocale('en');
+
+                        return Carbon::parse($state)
+                            ->diffForHumans();
+                    })
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('sensorDetails')
+                    ->label('Sensor Status')
+                    ->default("All Sensor Online")
+                    // ->badge()
+                    ->formatStateUsing(function ($record) {
+                        // Ambil data dari relasi siteMonitor
+                        $siteMonitor = $record->siteMonitor;
+
+                        // Jika tidak ada siteMonitor atau semua null, kembalikan "Online"
+                        if (!$siteMonitor || (
+                            is_null($siteMonitor->modem_last_up) &&
+                            is_null($siteMonitor->mikrotik_last_up) &&
+                            is_null($siteMonitor->ap1_last_up) &&
+                            is_null($siteMonitor->ap2_last_up)
+                        )) {
+                            return 'Online';
+                        }
+
+                        // Ambil semua waktu yang tidak null
+                        $times = [];
+                        if ($siteMonitor->modem_last_up) {
+                            $times['modem'] = Carbon::parse($siteMonitor->modem_last_up);
+                        }
+                        if ($siteMonitor->mikrotik_last_up) {
+                            $times['router'] = Carbon::parse($siteMonitor->mikrotik_last_up);
+                        }
+                        if ($siteMonitor->ap1_last_up) {
+                            $times['ap1'] = Carbon::parse($siteMonitor->ap1_last_up);
+                        }
+                        if ($siteMonitor->ap2_last_up) {
+                            $times['ap2'] = Carbon::parse($siteMonitor->ap2_last_up);
+                        }
+
+                        // Jika ada waktu, cek apakah semua sama
+                        if (!empty($times)) {
+                            $uniqueTimes = array_unique(array_map(fn($time) => $time->toDateTimeString(), $times));
+                            if (count($uniqueTimes) === 1 && isset($times['modem'])) {
+                                // Semua waktu sama dan modem down, kembalikan "All Sensor Down"
+                                Carbon::setLocale('en');
+                                return 'All Sensor Down';
+                            }
+
+                            // Ambil waktu paling lama (datetime terkecil)
+                            $earliest = null;
+                            $earliestKey = null;
+                            foreach ($times as $key => $time) {
+                                if (is_null($earliest) || $time->lt($earliest)) {
+                                    $earliest = $time;
+                                    $earliestKey = $key;
+                                }
+                            }
+
+                            // Tentukan status berdasarkan prioritas
+                            if ($earliestKey === 'modem') {
+                                Carbon::setLocale('en');
+                                return 'All Sensor Down';
+                            } elseif ($earliestKey === 'router') {
+                                return 'Router Down';
+                            } elseif ($earliestKey === 'ap1' && isset($times['ap2']) && $times['ap1']->equalTo($times['ap2'])) {
+                                return 'AP1&2 Down';
+                            } elseif ($earliestKey === 'ap1') {
+                                return 'AP1 Down';
+                            } elseif ($earliestKey === 'ap2') {
+                                return 'AP2 Down';
+                            }
+                        }
+
+                        // Fallback (seharusnya tidak sampai sini)
+                        return 'Online';
+                    }),
 
                 Tables\Columns\TextColumn::make('ticket_end')
                     ->label("Closed Date")
@@ -166,6 +280,7 @@ class CbossTicketResource extends Resource
                 [
                     Tables\Filters\SelectFilter::make('status')
                         ->label("Status")
+                        ->multiple()
                         ->options(fn() => CbossTicket::all()->pluck('status', 'status'))
                         ->native(false)
                         ->searchable(),
@@ -189,9 +304,45 @@ class CbossTicketResource extends Resource
 
                     Tables\Filters\SelectFilter::make('trouble_category')
                         ->label("Category")
+                        ->multiple()
                         ->options(fn() => CbossTicket::all()->pluck('trouble_category', 'trouble_category'))
                         ->native(false)
                         ->searchable(),
+
+                    Tables\Filters\SelectFilter::make('modem_last_up')
+                        ->label('Modem Last Up')
+                        ->native(false)
+                        ->options([
+                            'now' => 'Up (Online)',
+                            'recent' => '≤ 1 days ago',
+                            'old' => '> 2 days ago',
+                        ])
+                        ->modifyQueryUsing(function (Builder $query, array $state) {
+                            if (!isset($state['value']) || empty($state['value'])) {
+                                return $query; // Jika tidak ada filter yang dipilih, kembalikan query tanpa filter
+                            }
+
+                            return $query->whereHas('siteMonitor', function ($query) use ($state) {
+                                if ($state['value'] === 'now') {
+                                    $query->whereNull('modem_last_up');
+                                } elseif ($state['value'] === 'recent') {
+                                    $query->where('modem_last_up', '>=', now()->subDays(1))->orWhereNull('modem_last_up');
+                                } elseif ($state['value'] === 'old') {
+                                    $query->where('modem_last_up', '<', now()->subDays(2));
+                                }
+                            });
+                        }),
+
+                    Tables\Filters\SelectFilter::make('sensorStatus')
+                        ->label("Sensor Status")
+                        ->native(false)
+                        ->options(fn() => SiteMonitor::all()->pluck('status', 'status'))
+                        ->modifyQueryUsing(function (Builder $query, $state) {
+                            if (! $state['value']) {
+                                return $query;
+                            }
+                            return $query->whereHas('siteMonitor', fn($query) => $query->where('status', $state['value']));
+                        }),
 
                     DateRangeFilter::make('ticket_start')
                         ->label("Date Open")

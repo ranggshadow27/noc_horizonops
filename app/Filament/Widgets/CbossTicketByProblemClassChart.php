@@ -2,18 +2,18 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\NmtTickets;
+use App\Models\CbossTicket;
 use Filament\Support\RawJs;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class NmtTicketByProblemClassChart extends ApexChartWidget
+class CbossTicketByProblemClassChart extends ApexChartWidget
 {
     /**
      * Chart Id
      *
      * @var string
      */
-    protected static ?string $chartId = 'nmtTicketByProblemClassChart';
+    protected static ?string $chartId = 'cbossTicketByProblemClassChart';
 
     /**
      * Widget Title
@@ -21,7 +21,7 @@ class NmtTicketByProblemClassChart extends ApexChartWidget
      * @var string|null
      */
     protected static ?string $heading = 'Problem Classification';
-    protected static ?string $subheading = 'Total NMT Tickets Open by Problem Classification (Live)';
+    protected static ?string $subheading = 'Total CBOSS Tickets Open by Problem Classification (Live)';
 
     protected static ?string $pollingInterval = '60s';
 
@@ -33,19 +33,20 @@ class NmtTicketByProblemClassChart extends ApexChartWidget
      */
     protected function getOptions(): array
     {
-        $problems = NmtTickets::where('status', 'OPEN')
-            ->selectRaw('problem_classification, COUNT(*) as count')
-            ->groupBy('problem_classification')
-            ->orderBy('problem_classification', 'desc')
-            ->pluck('count', 'problem_classification');
+        $problems = CbossTicket::whereNot('status', 'Closed')
+            ->selectRaw('problem_map, COUNT(*) as count')
+            ->groupBy('problem_map')
+            ->orderBy('problem_map', 'desc')
+            ->pluck('count', 'problem_map');
 
         $labelMapping = [
             'MASALAH SUMBER DAYA LISTRIK' => 'Power',
             'LAYANAN AI SEMENTARA DIMATIKAN' => 'Sengaja Dimatikan',
+            'LAYANAN AI TIDAK DIGUNAKAN' => 'Tidak Digunakan',
             'MASALAH PERANGKAT IDU' => 'Perangkat IDU',
             'MASALAH PERANGKAT ODU' => 'Perangkat ODU',
             'PENGAJUAN RELOKASI' => 'Relokasi',
-            'OFFLINE' => 'Offline',
+            'LINK TIDAK TERDETEKSI / OFFLINE' => 'Offline',
             '-' => 'Belum Teridentifikasi',
         ];
 
