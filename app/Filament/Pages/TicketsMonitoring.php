@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
 use App\Models\NmtTickets;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Illuminate\Support\Carbon;
 use Filament\Widgets\Concerns\InteractsWithPageTable;
 use Filament\Forms\Components\Section;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 
 class TicketsMonitoring extends Page
 {
+    use HasPageShield;
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static string $view = 'filament.pages.tickets-monitoring';
 

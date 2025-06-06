@@ -47,9 +47,9 @@ class SecondCBOSSTicketOverview extends BaseWidget
                 ->description("Tickets need Visit")
                 ->color('warning'),
 
-            Stat::make("Ticket with TMO", $closedbyTMO)
+            Stat::make("Today TMO", $closedbyTMO)
                 ->descriptionIcon('phosphor-hand-deposit-duotone')
-                ->description("Closed by TMO Today")
+                ->description("Closed by TMO")
                 ->color('success'),
 
             Stat::make('Ticket Aging', $averageAging . " days")
