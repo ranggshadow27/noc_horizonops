@@ -8,7 +8,7 @@ use Illuminate\Contracts\View\View;
 
 class CbossTicketDashboard extends Page
 {
-    // use HasPageShield;
+    use HasPageShield;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
