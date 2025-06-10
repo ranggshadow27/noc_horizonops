@@ -4,7 +4,7 @@
         <!-- Online Stat -->
         <div class="flex-1 p-4 bg-white dark:bg-gray-900 rounded-lg shadow gap-4">
 
-            <h3 class="text-xs font-bold">Ticket Currently Solved</h3>
+            <h3 class="text-xs font-bold">Sensors currently Online</h3>
             <p class="text-2xl pt-2 font-bold">{{ $this->getData()['online'] }}</p>
             <div class="flex items-center gap-1">
                 <p class="text-xs">All sensors are operational</p>
@@ -14,7 +14,7 @@
 
         <!-- All Sensor Down Stat -->
         <div class="flex-1 p-4 bg-white dark:bg-gray-900 rounded-lg shadow">
-            <h3 class="text-xs font-bold ">All Sensor Down</h3>
+            <h3 class="text-xs font-bold ">Sensors currently down</h3>
             <p class="text-2xl font-bold pt-2">{{ $this->getData()['all_sensor_down'] }}</p>
             <div class="flex items-center gap-1">
                 <p class="text-xs">Modem down affecting all sensors</p>
