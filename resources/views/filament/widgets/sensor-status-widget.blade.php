@@ -4,11 +4,11 @@
         <!-- Online Stat -->
         <div class="flex-1 p-4 bg-white dark:bg-gray-900 rounded-lg shadow gap-4">
 
-            <h3 class="text-xs font-bold">Sensors currently Online</h3>
+            <h3 class="text-xs font-bold">Ticket non-Modem Down</h3>
             <p class="text-2xl pt-2 font-bold">{{ $this->getData()['online'] }}</p>
             <div class="flex items-center gap-1">
-                <p class="text-xs">All sensors are operational</p>
-                <x-phosphor-arrow-circle-up-duotone class="w-5 -h-5" />
+                <p class="text-xs">Sensor problem behind Modem</p>
+                <x-phosphor-arrow-circle-down-duotone class="w-5 -h-5" />
             </div>
         </div>
 

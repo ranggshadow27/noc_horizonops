@@ -6,12 +6,15 @@ use App\Models\NmtTickets;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Log;
 
 class NmtTicketSensorClassification extends BaseWidget
 {
     protected static string $view = 'filament.widgets.sensor-status-widget';
 
     // protected int | string | array $columnSpan = 6;
+
+    protected static ?string $pollingInterval = '10s';
 
     public function getData(): array
     {
@@ -58,6 +61,7 @@ class NmtTicketSensorClassification extends BaseWidget
             // Jika ada waktu, cek status
             if (!empty($times)) {
                 $uniqueTimes = array_unique(array_map(fn($time) => $time->toDateTimeString(), $times));
+
                 if (count($uniqueTimes) === 1 && isset($times['modem'])) {
                     $allSensorDownCount++;
                     continue;
@@ -73,12 +77,13 @@ class NmtTicketSensorClassification extends BaseWidget
                     }
                 }
 
+                Log::info("Ini datanya :" . print_r($earliestKey, true));
                 // Tentukan status berdasarkan prioritas
                 if ($earliestKey === 'modem') {
                     $allSensorDownCount++;
                 } elseif ($earliestKey === 'router') {
                     $routerDownCount++;
-                } elseif ($earliestKey === 'ap1' && isset($times['ap2']) && $times['ap1']->equalTo($times['ap2'])) {
+                } elseif ($earliestKey === 'ap1' && isset($times['ap2']) && ($times['ap1']->equalTo($times['ap2']) || isset($times['ap1']))) {
                     $ap1And2DownCount++;
                 } elseif ($earliestKey === 'ap1') {
                     $ap1DownCount++;
@@ -91,7 +96,7 @@ class NmtTicketSensorClassification extends BaseWidget
         }
 
         return [
-            'online' => $onlineCount,
+            'online' => $routerDownCount + $ap1DownCount + $ap2DownCount + $ap1And2DownCount,
             'all_sensor_down' => $allSensorDownCount,
             'router_down' => $routerDownCount,
             'ap1_down' => $ap1DownCount,

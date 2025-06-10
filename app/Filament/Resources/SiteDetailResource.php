@@ -172,9 +172,10 @@ class SiteDetailResource extends Resource
                     ->label('Status')->badge()->searchable()
                     ->sortable()->color(fn(string $state): string => match ($state) {
                         'Critical' => 'danger',
-                        'Normal' => 'success',
-                        'Minor' => 'primary',
                         'Major' => 'warning',
+                        'Minor' => 'apricot',
+                        'Warning' => 'celadon',
+                        'Normal' => 'success',
                     }),
 
                 Tables\Columns\TextColumn::make('gateway')
