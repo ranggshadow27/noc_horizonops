@@ -16,27 +16,40 @@ class NmtTicketSensorClassification extends BaseWidget
     public function getData(): array
     {
         // Inisialisasi counter
-        $onlineCount = 0;
-        $allSensorDownCount = 0;
+        $allSensorsOperationalCount = 0; // Untuk Up + Down (OPEN atau CLOSED hari ini)
+        $allSensorDownCount = 0; // Untuk Down (OPEN saja)
         $routerDownCount = 0;
         $ap1DownCount = 0;
         $ap2DownCount = 0;
         $ap1And2DownCount = 0;
 
-        // Ambil tiket dengan status OPEN atau CLOSED dengan closed_date hari ini
-        $tickets = NmtTickets::with('siteMonitor')->where('status', 'OPEN')->get();
+        // Ambil tiket OPEN untuk status Down
+        $openTickets = NmtTickets::with('siteMonitor')
+            ->where('status', 'OPEN')
+            ->get();
 
-        foreach ($tickets as $record) {
+        // Ambil tiket OPEN atau CLOSED hari ini untuk All Sensors Operational
+        $operationalTickets = NmtTickets::with('siteMonitor')
+            ->where(function ($query) {
+                $query->where('status', 'OPEN')
+                    ->orWhere(function ($query) {
+                        $query->where('status', 'CLOSED')
+                            ->whereDate('closed_date', Carbon::today());
+                    });
+            })
+            ->get();
+
+        // Proses tiket OPEN untuk status Down
+        foreach ($openTickets as $record) {
             $siteMonitor = $record->siteMonitor;
 
-            // Jika tidak ada siteMonitor atau semua null, anggap Online
             if (!$siteMonitor || (
                 is_null($siteMonitor->modem_last_up) &&
                 is_null($siteMonitor->mikrotik_last_up) &&
                 is_null($siteMonitor->ap1_last_up) &&
                 is_null($siteMonitor->ap2_last_up)
             )) {
-                $onlineCount++;
+                // Tiket OPEN dengan semua sensor Up akan dihitung di operationalTickets
                 continue;
             }
 
@@ -74,9 +87,7 @@ class NmtTicketSensorClassification extends BaseWidget
                 }
 
                 // Tentukan status berdasarkan prioritas
-                if ($earliestKey === 'modem') {
-                    $allSensorDownCount++;
-                } elseif ($earliestKey === 'router') {
+                if ($earliestKey === 'router') {
                     $routerDownCount++;
                 } elseif ($earliestKey === 'ap1' && isset($times['ap2']) && $times['ap1']->equalTo($times['ap2'])) {
                     $ap1And2DownCount++;
@@ -85,13 +96,49 @@ class NmtTicketSensorClassification extends BaseWidget
                 } elseif ($earliestKey === 'ap2') {
                     $ap2DownCount++;
                 }
-            } else {
-                $onlineCount++;
+            }
+        }
+
+        // Proses tiket OPEN atau CLOSED hari ini untuk All Sensors Operational
+        foreach ($operationalTickets as $record) {
+            $siteMonitor = $record->siteMonitor;
+
+            // Cek semua sensor Up
+            if (!$siteMonitor || (
+                is_null($siteMonitor->modem_last_up) &&
+                is_null($siteMonitor->mikrotik_last_up) &&
+                is_null($siteMonitor->ap1_last_up) &&
+                is_null($siteMonitor->ap2_last_up)
+            )) {
+                $allSensorsOperationalCount++;
+                continue;
+            }
+
+            // Cek semua sensor Down (waktu sama dan modem down)
+            $times = [];
+            if ($siteMonitor->modem_last_up) {
+                $times['modem'] = Carbon::parse($siteMonitor->modem_last_up);
+            }
+            if ($siteMonitor->mikrotik_last_up) {
+                $times['router'] = Carbon::parse($siteMonitor->mikrotik_last_up);
+            }
+            if ($siteMonitor->ap1_last_up) {
+                $times['ap1'] = Carbon::parse($siteMonitor->ap1_last_up);
+            }
+            if ($siteMonitor->ap2_last_up) {
+                $times['ap2'] = Carbon::parse($siteMonitor->ap2_last_up);
+            }
+
+            if (!empty($times)) {
+                $uniqueTimes = array_unique(array_map(fn($time) => $time->toDateTimeString(), $times));
+                if (count($uniqueTimes) === 1 && isset($times['modem'])) {
+                    $allSensorsOperationalCount++;
+                }
             }
         }
 
         return [
-            'online' => $onlineCount,
+            'all_sensors_operational' => $allSensorsOperationalCount,
             'all_sensor_down' => $allSensorDownCount,
             'router_down' => $routerDownCount,
             'ap1_down' => $ap1DownCount,
