@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\SiteMonitor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SiteMonitorService
 {
@@ -12,114 +13,125 @@ class SiteMonitorService
     {
         // URL API pertama
         $url1 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h10/mhg';
-        // URL API kedua (ganti sesuai API kedua)
-        $url2 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h58/mhg'; // Contoh URL
+        // URL API kedua
+        $url2 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h58/mhg';
+
+        // Inisialisasi array untuk data
+        $data1 = [];
+        $data2 = [];
 
         // Ambil data dari API pertama
         $response1 = Http::get($url1);
+        if ($response1->successful()) {
+            $data1 = $response1->json()['data'] ?? [];
+        } else {
+            Log::error('Failed to fetch data from API 1', [
+                'url' => $url1,
+                'status' => $response1->status(),
+                'error' => $response1->body()
+            ]);
+        }
+
         // Ambil data dari API kedua
         $response2 = Http::get($url2);
+        if ($response2->successful()) {
+            $data2 = $response2->json()['data'] ?? [];
+        } else {
+            Log::error('Failed to fetch data from API 2', [
+                'url' => $url2,
+                'status' => $response2->status(),
+                'error' => $response2->body()
+            ]);
+        }
 
-        if ($response1->successful() && $response2->successful()) {
-            // Ambil data JSON dari API
-            $data1 = $response1->json()['data']; // Asumsi 'data' adalah field yang ada
-            $data2 = $response2->json()['data'];
+        // Gabungkan kedua data
+        $data = array_merge($data1, $data2);
+        $totalData = count($data);
+        $successfulUpdates = 0;
 
-            // Gabungkan kedua data
-            $data = array_merge($data1, $data2);
-
-            // Proses dan simpan data ke database
-            foreach ($data as $apiItem) {
+        // Proses dan simpan data ke database
+        foreach ($data as $apiItem) {
+            try {
                 // Ambil data berdasarkan site_id
                 $dbData = SiteMonitor::where('site_id', $apiItem['terminal_id'])->first();
 
                 // Jika data ditemukan, lakukan update, jika tidak buat data baru
                 if ($dbData) {
-                    $dbData->update([
+                    $updated = $dbData->update([
                         'site_id' => $apiItem['terminal_id'] ?? 'Failed',
                         'modem' => $apiItem['modem'] ?? 'Failed',
                         'mikrotik' => $apiItem['mikrotik'] ?? 'Failed',
                         'ap1' => $apiItem['AP1'] ?? 'Failed',
                         'ap2' => $apiItem['AP2'] ?? 'Failed',
-
                         'modem_last_up' =>
                         $apiItem['modem'] === 'Down' && !$dbData->modem_last_up ?
                             Carbon::now() : (
                                 $apiItem['modem'] !== 'Up' ?
                                 $dbData->modem_last_up : null
                             ),
-
                         'mikrotik_last_up' =>
                         $apiItem['mikrotik'] === 'Down' && !$dbData->mikrotik_last_up ?
                             Carbon::now() : (
                                 $apiItem['mikrotik'] !== 'Up' ?
                                 $dbData->mikrotik_last_up : null
                             ),
-
                         'ap1_last_up' =>
                         $apiItem['AP1'] === 'Down' && !$dbData->ap1_last_up ?
                             Carbon::now() : (
                                 $apiItem['AP1'] !== 'Up' ?
                                 $dbData->ap1_last_up : null
                             ),
-
                         'ap2_last_up' =>
                         $apiItem['AP2'] === 'Down' && !$dbData->ap2_last_up ?
                             Carbon::now() : (
                                 $apiItem['AP2'] !== 'Up' ?
                                 $dbData->ap2_last_up : null
                             ),
-
                     ]);
+
+                    if ($updated) {
+                        $successfulUpdates++;
+                    } else {
+                        Log::error('Failed to update SiteMonitor', [
+                            'site_id' => $apiItem['terminal_id'] ?? 'Unknown',
+                            'error' => 'Update operation returned false'
+                        ]);
+                    }
                 } else {
                     // Jika data tidak ada, buat data baru
                     $dbData = SiteMonitor::updateOrCreate([
                         'site_id' => $apiItem['terminal_id'] ?? 'Failed',
+                    ], [
                         'sitecode' => $apiItem['sitecode'] ?? 'Failed',
                         'modem' => $apiItem['modem'] ?? 'Failed',
                         'mikrotik' => $apiItem['mikrotik'] ?? 'Failed',
                         'ap1' => $apiItem['AP1'] ?? 'Failed',
                         'ap2' => $apiItem['AP2'] ?? 'Failed',
-
-                        // 'modem_last_up' => $apiItem['modem'] === 'Down' ? Carbon::now() : null,
-                        // 'mikrotik_last_up' => $apiItem['mikrotik'] === 'Down' ? Carbon::now() : null,
-                        // 'ap1_last_up' => $apiItem['AP1'] === 'Down' ? Carbon::now() : null,
-                        // 'ap2_last_up' => $apiItem['AP2'] === 'Down' ? Carbon::now() : null,
-
                         'modem_last_up' =>
-                        $apiItem['modem'] === 'Down' && !$dbData->modem_last_up ?
-                            Carbon::now() : (
-                                $apiItem['modem'] !== 'Up' ?
-                                $dbData->modem_last_up : null
-                            ),
-
+                        $apiItem['modem'] === 'Down' ? Carbon::now() : null,
                         'mikrotik_last_up' =>
-                        $apiItem['mikrotik'] === 'Down' && !$dbData->mikrotik_last_up ?
-                            Carbon::now() : (
-                                $apiItem['mikrotik'] !== 'Up' ?
-                                $dbData->mikrotik_last_up : null
-                            ),
-
+                        $apiItem['mikrotik'] === 'Down' ? Carbon::now() : null,
                         'ap1_last_up' =>
-                        $apiItem['AP1'] === 'Down' && !$dbData->ap1_last_up ?
-                            Carbon::now() : (
-                                $apiItem['AP1'] !== 'Up' ?
-                                $dbData->ap1_last_up : null
-                            ),
-
+                        $apiItem['AP1'] === 'Down' ? Carbon::now() : null,
                         'ap2_last_up' =>
-                        $apiItem['AP2'] === 'Down' && !$dbData->ap2_last_up ?
-                            Carbon::now() : (
-                                $apiItem['AP2'] !== 'Up' ?
-                                $dbData->ap2_last_up : null
-                            ),
+                        $apiItem['AP2'] === 'Down' ? Carbon::now() : null,
                     ]);
+                    $successfulUpdates++;
                 }
 
                 // Update status berdasarkan kondisi 'last_up'
                 $this->updateStatus($dbData);
+            } catch (\Exception $e) {
+                Log::error('Error processing SiteMonitor data', [
+                    'site_id' => $apiItem['terminal_id'] ?? 'Unknown',
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         }
+
+        // Log jumlah data yang berhasil diupdate
+        Log::info('Selesai memproses ' . $successfulUpdates . ' dari ' . $totalData . ' data');
     }
 
     private function updateStatus(SiteMonitor $dbData)
@@ -130,7 +142,14 @@ class SiteMonitorService
         $status = $this->checkStatusBasedOnLastUp($dbData);
 
         // Update status ke database
-        $dbData->update(['status' => $status]);
+        $updated = $dbData->update(['status' => $status]);
+
+        if (!$updated) {
+            Log::error('Failed to update status for SiteMonitor', [
+                'site_id' => $dbData->site_id,
+                'error' => 'Status update operation returned false'
+            ]);
+        }
     }
 
     private function checkStatusBasedOnLastUp(SiteMonitor $dbData)
