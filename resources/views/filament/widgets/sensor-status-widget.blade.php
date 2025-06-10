@@ -32,6 +32,7 @@
             </div>
         </div>
 
+
         <!-- AP1 Down Stat -->
         <div class="flex-1 p-4 bg-white dark:bg-gray-900 rounded-lg shadow">
             <h3 class="text-xs font-bold ">AP1 Down</h3>

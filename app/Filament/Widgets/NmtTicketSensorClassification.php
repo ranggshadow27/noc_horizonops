@@ -24,15 +24,7 @@ class NmtTicketSensorClassification extends BaseWidget
         $ap1And2DownCount = 0;
 
         // Ambil tiket dengan status OPEN atau CLOSED dengan closed_date hari ini
-        $tickets = NmtTickets::with('siteMonitor')
-            ->where(function ($query) {
-                $query->where('status', 'OPEN')
-                    ->orWhere(function ($query) {
-                        $query->where('status', 'CLOSED')
-                            ->whereDate('closed_date', Carbon::today());
-                    });
-            })
-            ->get();
+        $tickets = NmtTickets::with('siteMonitor')->where('status', 'OPEN')->get();
 
         foreach ($tickets as $record) {
             $siteMonitor = $record->siteMonitor;
