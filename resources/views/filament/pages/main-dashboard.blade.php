@@ -21,6 +21,10 @@
     </div>
 
     <div class="flex flex-wrap justify-center items-center gap-4 w-full">
+        @livewire(\App\Filament\Widgets\NmtTicketSensorClassification::class)
+    </div>
+
+    <div class="flex flex-wrap justify-center items-center gap-4 w-full">
         <!-- Kolom 1 -->
         <div class="flex-1 sm:w-1/2">
             @livewire(\App\Filament\Widgets\NmtTicketStatusOverview::class)

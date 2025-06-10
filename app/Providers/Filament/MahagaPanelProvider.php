@@ -43,6 +43,7 @@ class MahagaPanelProvider extends PanelProvider
                 'celadon' => '#A9FBD7',
                 'apricot' => '#F9EA9A',
             ])
+
             ->spa()
             ->font('Inter')
             ->sidebarWidth('15em')
