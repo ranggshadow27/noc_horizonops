@@ -24,6 +24,7 @@ class SiteMonitorService
         $response1 = Http::get($url1);
         if ($response1->successful()) {
             $data1 = $response1->json()['data'] ?? [];
+            Log::info('Fetched ' . count($data1) . ' records from API 1');
         } else {
             Log::error('Failed to fetch data from API 1', [
                 'url' => $url1,
@@ -36,6 +37,7 @@ class SiteMonitorService
         $response2 = Http::get($url2);
         if ($response2->successful()) {
             $data2 = $response2->json()['data'] ?? [];
+            Log::info('Fetched ' . count($data2) . ' records from API 2');
         } else {
             Log::error('Failed to fetch data from API 2', [
                 'url' => $url2,
@@ -44,94 +46,85 @@ class SiteMonitorService
             ]);
         }
 
-        // Gabungkan kedua data
+        // Gabungkan kedua data dan hapus duplikasi berdasarkan terminal_id
         $data = array_merge($data1, $data2);
+        $data = array_unique($data, SORT_REGULAR);
+        $data = array_values($data); // Reset indeks array
         $totalData = count($data);
+        Log::info('Total unique records to process: ' . $totalData);
+
+        // Ambil semua site_id yang ada di SiteMonitor
+        $existingSiteIds = SiteMonitor::pluck('site_id')->toArray();
         $successfulUpdates = 0;
 
-        // Proses dan simpan data ke database
-        foreach ($data as $apiItem) {
-            try {
-                // Ambil data berdasarkan site_id
-                $dbData = SiteMonitor::where('site_id', $apiItem['terminal_id'])->first();
+        // Proses data dalam batch
+        $chunkSize = 100; // Proses 100 data per batch
+        collect($data)->chunk($chunkSize)->each(function ($chunk) use ($existingSiteIds, &$successfulUpdates, $totalData) {
+            foreach ($chunk as $apiItem) {
+                $terminalId = $apiItem['terminal_id'] ?? null;
 
-                // Jika data ditemukan, lakukan update, jika tidak buat data baru
-                if ($dbData) {
-                    $updated = $dbData->update([
-                        'site_id' => $apiItem['terminal_id'] ?? 'Failed',
-                        'modem' => $apiItem['modem'] ?? 'Failed',
-                        'mikrotik' => $apiItem['mikrotik'] ?? 'Failed',
-                        'ap1' => $apiItem['AP1'] ?? 'Failed',
-                        'ap2' => $apiItem['AP2'] ?? 'Failed',
-                        'modem_last_up' =>
-                        $apiItem['modem'] === 'Down' && !$dbData->modem_last_up ?
-                            Carbon::now() : (
-                                $apiItem['modem'] !== 'Up' ?
-                                $dbData->modem_last_up : null
-                            ),
-                        'mikrotik_last_up' =>
-                        $apiItem['mikrotik'] === 'Down' && !$dbData->mikrotik_last_up ?
-                            Carbon::now() : (
-                                $apiItem['mikrotik'] !== 'Up' ?
-                                $dbData->mikrotik_last_up : null
-                            ),
-                        'ap1_last_up' =>
-                        $apiItem['AP1'] === 'Down' && !$dbData->ap1_last_up ?
-                            Carbon::now() : (
-                                $apiItem['AP1'] !== 'Up' ?
-                                $dbData->ap1_last_up : null
-                            ),
-                        'ap2_last_up' =>
-                        $apiItem['AP2'] === 'Down' && !$dbData->ap2_last_up ?
-                            Carbon::now() : (
-                                $apiItem['AP2'] !== 'Up' ?
-                                $dbData->ap2_last_up : null
-                            ),
+                // Cek apakah terminal_id ada di SiteMonitor
+                if (!$terminalId || !in_array($terminalId, $existingSiteIds)) {
+                    Log::warning('Skipping data: terminal_id not found in SiteMonitor or invalid', [
+                        'terminal_id' => $terminalId ?? 'Unknown'
                     ]);
-
-                    if ($updated) {
-                        $successfulUpdates++;
-                    } else {
-                        Log::error('Failed to update SiteMonitor', [
-                            'site_id' => $apiItem['terminal_id'] ?? 'Unknown',
-                            'error' => 'Update operation returned false'
-                        ]);
-                    }
-                } else {
-                    // Jika data tidak ada, buat data baru
-                    $dbData = SiteMonitor::updateOrCreate([
-                        'site_id' => $apiItem['terminal_id'] ?? 'Failed',
-                    ], [
-                        'sitecode' => $apiItem['sitecode'] ?? 'Failed',
-                        'modem' => $apiItem['modem'] ?? 'Failed',
-                        'mikrotik' => $apiItem['mikrotik'] ?? 'Failed',
-                        'ap1' => $apiItem['AP1'] ?? 'Failed',
-                        'ap2' => $apiItem['AP2'] ?? 'Failed',
-                        'modem_last_up' =>
-                        $apiItem['modem'] === 'Down' ? Carbon::now() : null,
-                        'mikrotik_last_up' =>
-                        $apiItem['mikrotik'] === 'Down' ? Carbon::now() : null,
-                        'ap1_last_up' =>
-                        $apiItem['AP1'] === 'Down' ? Carbon::now() : null,
-                        'ap2_last_up' =>
-                        $apiItem['AP2'] === 'Down' ? Carbon::now() : null,
-                    ]);
-                    $successfulUpdates++;
+                    continue;
                 }
 
-                // Update status berdasarkan kondisi 'last_up'
-                $this->updateStatus($dbData);
-            } catch (\Exception $e) {
-                Log::error('Error processing SiteMonitor data', [
-                    'site_id' => $apiItem['terminal_id'] ?? 'Unknown',
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
+                try {
+                    // Ambil data berdasarkan site_id
+                    $dbData = SiteMonitor::where('site_id', $terminalId)->first();
+
+                    $updateData = [
+                        'site_id' => $terminalId,
+                        'modem' => $apiItem['modem'] ?? 'Failed',
+                        'mikrotik' => $apiItem['mikrotik'] ?? 'Failed',
+                        'ap1' => $apiItem['AP1'] ?? 'Failed',
+                        'ap2' => $apiItem['AP2'] ?? 'Failed',
+                        'modem_last_up' => $apiItem['modem'] === 'Down' ? Carbon::now() : ($apiItem['modem'] === 'Up' ? null : ($dbData->modem_last_up ?? null)),
+                        'mikrotik_last_up' => $apiItem['mikrotik'] === 'Down' ? Carbon::now() : ($apiItem['mikrotik'] === 'Up' ? null : ($dbData->mikrotik_last_up ?? null)),
+                        'ap1_last_up' => $apiItem['AP1'] === 'Down' ? Carbon::now() : ($apiItem['AP1'] === 'Up' ? null : ($dbData->ap1_last_up ?? null)),
+                        'ap2_last_up' => $apiItem['AP2'] === 'Down' ? Carbon::now() : ($apiItem['AP2'] === 'Up' ? null : ($dbData->ap2_last_up ?? null)),
+                    ];
+
+                    // Update atau buat data baru
+                    $dbData = SiteMonitor::updateOrCreate(
+                        ['site_id' => $terminalId],
+                        $updateData
+                    );
+
+                    // Update status dan sensor_status
+                    $this->updateStatus($dbData);
+                    $this->updateSensorStatus($dbData);
+
+                    $successfulUpdates++;
+                } catch (\Exception $e) {
+                    Log::error('Error processing SiteMonitor data', [
+                        'site_id' => $terminalId ?? 'Unknown',
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                }
             }
-        }
+        });
 
         // Log jumlah data yang berhasil diupdate
         Log::info('Selesai memproses ' . $successfulUpdates . ' dari ' . $totalData . ' data');
+        if ($successfulUpdates < $totalData) {
+            Log::warning('Not all data were processed successfully', [
+                'processed' => $successfulUpdates,
+                'total' => $totalData,
+                'unprocessed' => $totalData - $successfulUpdates
+            ]);
+        }
+
+        // Cek data dengan sensor_status null
+        $nullSensorStatusCount = SiteMonitor::whereNull('sensor_status')->count();
+        if ($nullSensorStatusCount > 0) {
+            Log::warning('Found records with null sensor_status', [
+                'count' => $nullSensorStatusCount
+            ]);
+        }
     }
 
     private function updateStatus(SiteMonitor $dbData)
@@ -148,6 +141,65 @@ class SiteMonitorService
             Log::error('Failed to update status for SiteMonitor', [
                 'site_id' => $dbData->site_id,
                 'error' => 'Status update operation returned false'
+            ]);
+        }
+    }
+
+    private function updateSensorStatus(SiteMonitor $dbData)
+    {
+        $sensorStatus = 'Online';
+
+        // Cek status berdasarkan last_up (null = UP, ada timestamp = Down)
+        $modemUp = is_null($dbData->modem_last_up);
+        $routerUp = is_null($dbData->mikrotik_last_up);
+        $ap1Up = is_null($dbData->ap1_last_up);
+        $ap2Up = is_null($dbData->ap2_last_up);
+
+        if (!$modemUp) {
+            // Jika Modem Down, semua dianggap Down
+            $sensorStatus = 'All Sensor Down';
+        } elseif ($modemUp && !$routerUp) {
+            // Jika Modem UP tapi Router Down, AP1 dan AP2 otomatis Down
+            $sensorStatus = 'Router Down';
+        } elseif ($modemUp && $routerUp) {
+            // Modem dan Router UP, cek AP1 dan AP2
+            if ($ap1Up && $ap2Up) {
+                // Semua UP
+                $sensorStatus = 'Online';
+            } elseif (!$ap1Up && $ap2Up) {
+                // AP1 Down, AP2 UP
+                $sensorStatus = 'AP1 Down';
+            } elseif ($ap1Up && !$ap2Up) {
+                // AP1 UP, AP2 Down
+                $sensorStatus = 'AP2 Down';
+            } elseif (!$ap1Up && !$ap2Up) {
+                // AP1 dan AP2 Down, cek timestamp
+                $ap1Time = $dbData->ap1_last_up ? $dbData->ap1_last_up->format('d m Y - H:i') : null;
+                $ap2Time = $dbData->ap2_last_up ? $dbData->ap2_last_up->format('d m Y - H:i') : null;
+
+                if ($ap1Time === $ap2Time) {
+                    $sensorStatus = 'AP1&2 Down';
+                } else {
+                    // Cek apakah AP2 Down lebih lama
+                    $routerTime = $dbData->mikrotik_last_up ? $dbData->mikrotik_last_up->format('d m Y - H:i') : null;
+                    if ($routerTime && $routerTime === $ap1Time && $routerTime !== $ap2Time) {
+                        $sensorStatus = 'AP2 Down';
+                    } elseif ($routerTime && $routerTime === $ap2Time && $routerTime !== $ap1Time) {
+                        $sensorStatus = 'AP1 Down';
+                    } else {
+                        $sensorStatus = 'AP1&2 Down';
+                    }
+                }
+            }
+        }
+
+        // Update sensor_status ke database
+        $updated = $dbData->update(['sensor_status' => $sensorStatus]);
+
+        if (!$updated) {
+            Log::error('Failed to update sensor_status for SiteMonitor', [
+                'site_id' => $dbData->site_id,
+                'error' => 'Sensor status update operation returned false'
             ]);
         }
     }

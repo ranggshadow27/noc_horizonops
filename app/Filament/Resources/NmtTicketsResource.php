@@ -199,76 +199,82 @@ class NmtTicketsResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('sensorStatus')
+                Tables\Columns\TextColumn::make('siteMonitor.sensor_status')
                     ->label('Sensor Status')
-                    ->default("All Sensor Online")
-                    // ->badge()
-                    ->formatStateUsing(function ($record) {
-                        // Ambil data dari relasi siteMonitor
-                        $siteMonitor = $record->siteMonitor;
+                    ->default("Online")
+                    ->sortable()
+                    ->searchable(),
 
-                        // Jika tidak ada siteMonitor atau semua null, kembalikan "Online"
-                        if (!$siteMonitor || (
-                            is_null($siteMonitor->modem_last_up) &&
-                            is_null($siteMonitor->mikrotik_last_up) &&
-                            is_null($siteMonitor->ap1_last_up) &&
-                            is_null($siteMonitor->ap2_last_up)
-                        )) {
-                            return 'Online';
-                        }
+                // Tables\Columns\TextColumn::make('sensorStatus')
+                //     ->label('Sensor Status')
+                //     ->default("All Sensor Online")
+                //     // ->badge()
+                //     ->formatStateUsing(function ($record) {
+                //         // Ambil data dari relasi siteMonitor
+                //         $siteMonitor = $record->siteMonitor;
 
-                        // Ambil semua waktu yang tidak null
-                        $times = [];
-                        if ($siteMonitor->modem_last_up) {
-                            $times['modem'] = Carbon::parse($siteMonitor->modem_last_up);
-                        }
-                        if ($siteMonitor->mikrotik_last_up) {
-                            $times['router'] = Carbon::parse($siteMonitor->mikrotik_last_up);
-                        }
-                        if ($siteMonitor->ap1_last_up) {
-                            $times['ap1'] = Carbon::parse($siteMonitor->ap1_last_up);
-                        }
-                        if ($siteMonitor->ap2_last_up) {
-                            $times['ap2'] = Carbon::parse($siteMonitor->ap2_last_up);
-                        }
+                //         // Jika tidak ada siteMonitor atau semua null, kembalikan "Online"
+                //         if (!$siteMonitor || (
+                //             is_null($siteMonitor->modem_last_up) &&
+                //             is_null($siteMonitor->mikrotik_last_up) &&
+                //             is_null($siteMonitor->ap1_last_up) &&
+                //             is_null($siteMonitor->ap2_last_up)
+                //         )) {
+                //             return 'Online';
+                //         }
 
-                        // Jika ada waktu, cek apakah semua sama
-                        if (!empty($times)) {
-                            $uniqueTimes = array_unique(array_map(fn($time) => $time->toDateTimeString(), $times));
-                            if (count($uniqueTimes) === 1 && isset($times['modem'])) {
-                                // Semua waktu sama dan modem down, kembalikan "All Sensor Down"
-                                Carbon::setLocale('en');
-                                return 'All Sensor Down';
-                            }
+                //         // Ambil semua waktu yang tidak null
+                //         $times = [];
+                //         if ($siteMonitor->modem_last_up) {
+                //             $times['modem'] = Carbon::parse($siteMonitor->modem_last_up);
+                //         }
+                //         if ($siteMonitor->mikrotik_last_up) {
+                //             $times['router'] = Carbon::parse($siteMonitor->mikrotik_last_up);
+                //         }
+                //         if ($siteMonitor->ap1_last_up) {
+                //             $times['ap1'] = Carbon::parse($siteMonitor->ap1_last_up);
+                //         }
+                //         if ($siteMonitor->ap2_last_up) {
+                //             $times['ap2'] = Carbon::parse($siteMonitor->ap2_last_up);
+                //         }
 
-                            // Ambil waktu paling lama (datetime terkecil)
-                            $earliest = null;
-                            $earliestKey = null;
-                            foreach ($times as $key => $time) {
-                                if (is_null($earliest) || $time->lt($earliest)) {
-                                    $earliest = $time;
-                                    $earliestKey = $key;
-                                }
-                            }
+                //         // Jika ada waktu, cek apakah semua sama
+                //         if (!empty($times)) {
+                //             $uniqueTimes = array_unique(array_map(fn($time) => $time->toDateTimeString(), $times));
+                //             if (count($uniqueTimes) === 1 && isset($times['modem'])) {
+                //                 // Semua waktu sama dan modem down, kembalikan "All Sensor Down"
+                //                 Carbon::setLocale('en');
+                //                 return 'All Sensor Down';
+                //             }
 
-                            // Tentukan status berdasarkan prioritas
-                            if ($earliestKey === 'modem') {
-                                Carbon::setLocale('en');
-                                return 'All Sensor Down';
-                            } elseif ($earliestKey === 'router') {
-                                return 'Router Down';
-                            } elseif ($earliestKey === 'ap1' && isset($times['ap2']) && $times['ap1']->equalTo($times['ap2'])) {
-                                return 'AP1&2 Down';
-                            } elseif ($earliestKey === 'ap1') {
-                                return 'AP1 Down';
-                            } elseif ($earliestKey === 'ap2') {
-                                return 'AP2 Down';
-                            }
-                        }
+                //             // Ambil waktu paling lama (datetime terkecil)
+                //             $earliest = null;
+                //             $earliestKey = null;
+                //             foreach ($times as $key => $time) {
+                //                 if (is_null($earliest) || $time->lt($earliest)) {
+                //                     $earliest = $time;
+                //                     $earliestKey = $key;
+                //                 }
+                //             }
 
-                        // Fallback (seharusnya tidak sampai sini)
-                        return 'Online';
-                    }),
+                //             // Tentukan status berdasarkan prioritas
+                //             if ($earliestKey === 'modem') {
+                //                 Carbon::setLocale('en');
+                //                 return 'All Sensor Down';
+                //             } elseif ($earliestKey === 'router') {
+                //                 return 'Router Down';
+                //             } elseif ($earliestKey === 'ap1' && isset($times['ap2']) && $times['ap1']->equalTo($times['ap2'])) {
+                //                 return 'AP1&2 Down';
+                //             } elseif ($earliestKey === 'ap1') {
+                //                 return 'AP1 Down';
+                //             } elseif ($earliestKey === 'ap2') {
+                //                 return 'AP2 Down';
+                //             }
+                //         }
+
+                //         // Fallback (seharusnya tidak sampai sini)
+                //         return 'Online';
+                //     }),
 
 
 
@@ -386,8 +392,8 @@ class NmtTicketsResource extends Resource
                         });
                     }),
 
-                Tables\Filters\SelectFilter::make('sensorStatus')
-                    ->label("Sensor Status")
+                Tables\Filters\SelectFilter::make('siteStatus')
+                    ->label("Site Status")
                     ->native(false)
                     ->options(fn() => SiteMonitor::all()->pluck('status', 'status'))
                     ->modifyQueryUsing(function (Builder $query, $state) {
@@ -395,6 +401,36 @@ class NmtTicketsResource extends Resource
                             return $query;
                         }
                         return $query->whereHas('siteMonitor', fn($query) => $query->where('status', $state['value']));
+                    }),
+
+                Tables\Filters\SelectFilter::make('sensorStatus')
+                    ->label('Sensor Status')
+                    ->native(false)
+                    ->options(function () {
+                        // Ambil semua sensor_status yang unik dari SiteMonitor, tambahkan 'Unknown Sensor Status'
+                        $statuses = SiteMonitor::whereNotNull('sensor_status')
+                            ->pluck('sensor_status', 'sensor_status')
+                            ->toArray();
+
+                        // Tambahkan 'Unknown Sensor Status' ke opsi
+                        return $statuses + ['Unknown Sensor Status' => 'Unknown Sensor Status'];
+                    })
+                    ->modifyQueryUsing(function (Builder $query, $state) {
+                        if (! $state['value']) {
+                            return $query;
+                        }
+
+                        if ($state['value'] === 'Unknown Sensor Status') {
+                            // Filter untuk record yang tidak punya relasi siteMonitor
+                            return $query->whereHas('siteMonitor', function ($query) use ($state) {
+                                $query->whereNull('sensor_status');
+                            });
+                        }
+
+                        // Filter untuk status sensor tertentu
+                        return $query->whereHas('siteMonitor', function ($query) use ($state) {
+                            $query->where('sensor_status', $state['value']);
+                        });
                     }),
 
                 DateRangeFilter::make('target_online')

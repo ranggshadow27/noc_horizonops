@@ -24,6 +24,7 @@ class SiteMonitor extends Model
         'ap1_last_up',
         'ap2_last_up',
         'status',
+        'sensor_status',
     ];
 
     protected $casts = [
