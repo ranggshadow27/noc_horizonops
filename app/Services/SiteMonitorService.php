@@ -167,48 +167,39 @@ class SiteMonitorService
 
     private function updateSensorStatus(SiteMonitor $dbData)
     {
-        $sensorStatus = 'Online';
-
-        // Cek status berdasarkan last_up (null = UP, atau Down tapi < 24 jam = UP)
+        // Cek status modem terlebih dahulu
         $modemUp = is_null($dbData->modem_last_up) || ($dbData->modem_last_up && $dbData->modem_last_up->diffInHours(Carbon::now()) < 24);
-        $routerUp = is_null($dbData->mikrotik_last_up) || ($dbData->mikrotik_last_up && $dbData->mikrotik_last_up->diffInHours(Carbon::now()) < 24);
-        $ap1Up = is_null($dbData->ap1_last_up) || ($dbData->ap1_last_up && $dbData->ap1_last_up->diffInHours(Carbon::now()) < 24);
-        $ap2Up = is_null($dbData->ap2_last_up) || ($dbData->ap2_last_up && $dbData->ap2_last_up->diffInHours(Carbon::now()) < 24);
+        $modemDownLong = $dbData->modem_last_up && $dbData->modem_last_up->diffInDays(Carbon::now()) >= 3;
 
-        if (!$modemUp) {
-            // Jika Modem Down (last_up >= 24 jam), semua dianggap Down
+        // Jika modem down lebih dari 3 hari, set sensor_status ke 'All Sensor Down'
+        if ($modemDownLong) {
             $sensorStatus = 'All Sensor Down';
-        } elseif ($modemUp && !$routerUp) {
-            // Jika Modem UP tapi Router Down, AP1 dan AP2 otomatis Down
-            $sensorStatus = 'Router Down';
-        } elseif ($modemUp && $routerUp) {
-            // Modem dan Router UP, cek AP1 dan AP2
-            if ($ap1Up && $ap2Up) {
-                // Semua UP
-                $sensorStatus = 'Online';
-            } elseif (!$ap1Up && $ap2Up) {
-                // AP1 Down, AP2 UP
-                $sensorStatus = 'AP1 Down';
-            } elseif ($ap1Up && !$ap2Up) {
-                // AP1 UP, AP2 Down
-                $sensorStatus = 'AP2 Down';
-            } elseif (!$ap1Up && !$ap2Up) {
-                // AP1 dan AP2 Down, cek timestamp
-                $ap1Time = $dbData->ap1_last_up ? $dbData->ap1_last_up->format('d m Y - H:i') : null;
-                $ap2Time = $dbData->ap2_last_up ? $dbData->ap2_last_up->format('d m Y - H:i') : null;
+        } else {
+            // Jika modem online atau down kurang dari 24 jam, cek sensor lainnya
+            $routerUp = is_null($dbData->mikrotik_last_up) || ($dbData->mikrotik_last_up && $dbData->mikrotik_last_up->diffInHours(Carbon::now()) < 24);
+            $ap1Up = is_null($dbData->ap1_last_up) || ($dbData->ap1_last_up && $dbData->ap1_last_up->diffInHours(Carbon::now()) < 24);
+            $ap2Up = is_null($dbData->ap2_last_up) || ($dbData->ap2_last_up && $dbData->ap2_last_up->diffInHours(Carbon::now()) < 24);
 
-                if ($ap1Time === $ap2Time) {
+            if (!$modemUp) {
+                // Jika modem down (kurang dari 3 hari), semua dianggap down
+                $sensorStatus = 'All Sensor Down';
+            } elseif ($modemUp && !$routerUp) {
+                // Jika modem up tapi router down, AP1 dan AP2 otomatis down
+                $sensorStatus = 'Router Down';
+            } elseif ($modemUp && $routerUp) {
+                // Modem dan router up, cek AP1 dan AP2
+                if ($ap1Up && $ap2Up) {
+                    // Semua up
+                    $sensorStatus = 'Online';
+                } elseif (!$ap1Up && $ap2Up) {
+                    // AP1 down, AP2 up
+                    $sensorStatus = 'AP1 Down';
+                } elseif ($ap1Up && !$ap2Up) {
+                    // AP1 up, AP2 down
+                    $sensorStatus = 'AP2 Down';
+                } elseif (!$ap1Up && !$ap2Up) {
+                    // AP1 dan AP2 down
                     $sensorStatus = 'AP1&2 Down';
-                } else {
-                    // Cek apakah AP2 Down lebih lama
-                    $routerTime = $dbData->mikrotik_last_up ? $dbData->mikrotik_last_up->format('d m Y - H:i') : null;
-                    if ($routerTime && $routerTime === $ap1Time && $routerTime !== $ap2Time) {
-                        $sensorStatus = 'AP2 Down';
-                    } elseif ($routerTime && $routerTime === $ap2Time && $routerTime !== $ap1Time) {
-                        $sensorStatus = 'AP1 Down';
-                    } else {
-                        $sensorStatus = 'AP1&2 Down';
-                    }
                 }
             }
         }
