@@ -169,14 +169,14 @@ class SiteMonitorService
     {
         $sensorStatus = 'Online';
 
-        // Cek status berdasarkan last_up (null = UP, ada timestamp = Down)
-        $modemUp = is_null($dbData->modem_last_up);
-        $routerUp = is_null($dbData->mikrotik_last_up);
-        $ap1Up = is_null($dbData->ap1_last_up);
-        $ap2Up = is_null($dbData->ap2_last_up);
+        // Cek status berdasarkan last_up (null = UP, atau Down tapi < 24 jam = UP)
+        $modemUp = is_null($dbData->modem_last_up) || ($dbData->modem_last_up && $dbData->modem_last_up->diffInHours(Carbon::now()) < 24);
+        $routerUp = is_null($dbData->mikrotik_last_up) || ($dbData->mikrotik_last_up && $dbData->mikrotik_last_up->diffInHours(Carbon::now()) < 24);
+        $ap1Up = is_null($dbData->ap1_last_up) || ($dbData->ap1_last_up && $dbData->ap1_last_up->diffInHours(Carbon::now()) < 24);
+        $ap2Up = is_null($dbData->ap2_last_up) || ($dbData->ap2_last_up && $dbData->ap2_last_up->diffInHours(Carbon::now()) < 24);
 
         if (!$modemUp) {
-            // Jika Modem Down, semua dianggap Down
+            // Jika Modem Down (last_up >= 24 jam), semua dianggap Down
             $sensorStatus = 'All Sensor Down';
         } elseif ($modemUp && !$routerUp) {
             // Jika Modem UP tapi Router Down, AP1 dan AP2 otomatis Down
