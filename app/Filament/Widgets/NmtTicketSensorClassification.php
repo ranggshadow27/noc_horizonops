@@ -17,7 +17,7 @@ class NmtTicketSensorClassification extends BaseWidget
 
     protected static ?string $pollingInterval = '10s';
 
-    public function getStats(): array
+    public function getData(): array
     {
         $ap1Down = NmtTickets::query()
             ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
