@@ -55,6 +55,18 @@ class NmtTicketSensorClassification extends BaseWidget
             ->where('nmt_tickets.status', 'OPEN')
             ->count();
 
+        // $ttAgingAvgAllSensorDown = intval(NmtTickets::query()
+        //     ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+        //     ->where('nmt_tickets.status', 'OPEN')
+        //     ->where('site_monitor.sensor_status', 'All Sensor Down')
+        //     ->average('nmt_tickets.aging') ?? 0);
+
+        $ttAgingAvgNonAllSensorDown = intval(NmtTickets::query()
+            ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+            ->where('nmt_tickets.status', 'OPEN')
+            ->whereNot('site_monitor.sensor_status', 'All Sensor Down')
+            ->average('nmt_tickets.aging') ?? 0);
+
         return [
             'online' => $routerDown + $ap1Down + $ap2Down + $ap1and2Down,
             'all_sensor_down' => $allSensor,
@@ -62,6 +74,7 @@ class NmtTicketSensorClassification extends BaseWidget
             'ap1_down' => $ap1Down,
             'ap2_down' => $ap2Down,
             'ap1_and_2_down' => $ap1and2Down,
+            'aging' => $ttAgingAvgNonAllSensorDown,
         ];
     }
 }

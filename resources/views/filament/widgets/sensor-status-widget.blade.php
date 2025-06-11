@@ -34,20 +34,10 @@
 
         <!-- AP1 Down Stat -->
         <div class="flex-1 p-4 bg-white dark:bg-gray-900 rounded-lg shadow">
-            <h3 class="text-xs font-bold ">AP1 Down</h3>
-            <p class="text-2xl font-bold pt-2">{{ $this->getStats()['ap1_down'] }}</p>
+            <h3 class="text-xs font-bold ">Access Point Down</h3>
+            <p class="text-xl font-bold pt-2">{{ $this->getStats()['ap1_down'] }} <span class="text-xs">AP1</span> / {{ $this->getStats()['ap2_down'] }} <span class="text-xs">AP2</span></p>
              <div class="flex items-center gap-1">
-                <p class="text-xs">Access Point 1 offline</p>
-                <x-phosphor-arrow-circle-down-duotone class="w-5 h-5" />
-            </div>
-        </div>
-
-        <!-- AP2 Down Stat -->
-        <div class="flex-1 p-4 bg-white dark:bg-gray-900 rounded-lg shadow">
-            <h3 class="text-xs font-bold ">AP2 Down</h3>
-            <p class="text-2xl font-bold pt-2">{{ $this->getStats()['ap2_down'] }}</p>
-             <div class="flex items-center gap-1">
-                <p class="text-xs">Access Point 2 offline</p>
+                <p class="text-xs">Access Point 1 / 2 offline</p>
                 <x-phosphor-arrow-circle-down-duotone class="w-5 h-5" />
             </div>
         </div>
@@ -59,6 +49,16 @@
              <div class="flex items-center gap-1">
                 <p class="text-xs">Both Access Points offline</p>
                 <x-phosphor-arrow-circle-down-duotone class="w-5 h-5" />
+            </div>
+        </div>
+
+        <!-- Aging Stat -->
+        <div class="flex-1 p-4 bg-white dark:bg-gray-900 rounded-lg shadow">
+            <h3 class="text-xs font-bold ">Ticket Aging</h3>
+            <p class="text-2xl font-bold pt-2">{{ $this->getStats()['aging'] }} day(s)</p>
+             <div class="flex items-center gap-1">
+                <p class="text-xs">Aging with non-Modem Problem</p>
+                <x-phosphor-clock-countdown-duotone class="w-5 h-5" />
             </div>
         </div>
     </div>

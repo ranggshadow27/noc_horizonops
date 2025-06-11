@@ -24,7 +24,11 @@ class SecondNmtTicketsOverview extends BaseWidget
         //     ->where('status', 'CLOSED')
         //     ->count();
 
-        $ttAgingAvg = intval(NmtTickets::where('status', 'OPEN')->average('aging'));
+        $ttAgingAvg = intval(NmtTickets::query()
+            ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+            ->where('nmt_tickets.status', 'OPEN')
+            ->where('site_monitor.sensor_status', 'All Sensor Down')
+            ->average('nmt_tickets.aging') ?? 0);
 
         $closedbyNSO = NmtTickets::where('problem_detail', 'KUNJUNGAN')
             ->whereDate('closed_date', $today)
@@ -54,7 +58,7 @@ class SecondNmtTicketsOverview extends BaseWidget
                 ->description("Ticket Resolved")
                 ->color('success'),
 
-            Stat::make('Ticket Aging', $ttAgingAvg . " days")
+            Stat::make('Ticket Aging', $ttAgingAvg . " day(s)")
                 ->descriptionIcon('phosphor-clock-countdown-duotone')
                 ->description("Average days open")
                 ->color($ttAgingAvg > 14 ? 'danger' : ($ttAgingAvg > 7 ? 'warning' : 'success')),
