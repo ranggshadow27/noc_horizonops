@@ -84,8 +84,6 @@ class ListNmtTickets extends ListRecords
                 ->icon('heroicon-m-arrow-down-tray')
                 ->label("Export Data")
                 ->tooltip("Export Data"),
-
-
         ];
     }
 }

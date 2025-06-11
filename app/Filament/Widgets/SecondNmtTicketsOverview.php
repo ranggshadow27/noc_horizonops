@@ -36,12 +36,12 @@ class SecondNmtTicketsOverview extends BaseWidget
             ->where('status', 'CLOSED')
             ->count();
 
-            $today = Carbon::today();
+        $today = Carbon::today();
 
-            $majorOpen = SweepingTicket::whereDate('created_at', $today)
-                ->where('classification', 'MAJOR')
-                ->whereNot('status', 'CLOSED')
-                ->count();
+        $majorOpen = SweepingTicket::whereDate('created_at', $today)
+            ->where('classification', 'MAJOR')
+            ->whereNot('status', 'CLOSED')
+            ->count();
 
         return [
             Stat::make('Today NOC Progress', $closedbyNOC)
@@ -63,7 +63,6 @@ class SecondNmtTicketsOverview extends BaseWidget
                 ->descriptionIcon('phosphor-push-pin-duotone')
                 ->description("Predicted Tickets")
                 ->color('warning'),
-
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\NmtTickets;
+use App\Models\SiteMonitor;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -16,92 +17,51 @@ class NmtTicketSensorClassification extends BaseWidget
 
     protected static ?string $pollingInterval = '10s';
 
-    public function getData(): array
+    public function getStats(): array
     {
-        // Inisialisasi counter
-        $onlineCount = 0;
-        $allSensorDownCount = 0;
-        $routerDownCount = 0;
-        $ap1DownCount = 0;
-        $ap2DownCount = 0;
-        $ap1And2DownCount = 0;
+        $ap1Down = NmtTickets::query()
+            ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+            ->where('site_monitor.sensor_status', 'AP1 Down')
+            ->where('nmt_tickets.status', 'OPEN')
+            ->count();
 
-        // Ambil tiket dengan status OPEN atau CLOSED dengan closed_date hari ini
-        $tickets = NmtTickets::with('siteMonitor')->where('status', 'OPEN')->get();
+        $ap2Down = NmtTickets::query()
+            ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+            ->where('site_monitor.sensor_status', 'AP2 Down')
+            ->where('nmt_tickets.status', 'OPEN')
+            ->count();
 
-        foreach ($tickets as $record) {
-            $siteMonitor = $record->siteMonitor;
+        $ap1and2Down = NmtTickets::query()
+            ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+            ->where('site_monitor.sensor_status', 'AP1&2 Down')
+            ->where('nmt_tickets.status', 'OPEN')
+            ->count();
 
-            // Jika tidak ada siteMonitor atau semua null, anggap Online
-            if (!$siteMonitor || (
-                is_null($siteMonitor->modem_last_up) &&
-                is_null($siteMonitor->mikrotik_last_up) &&
-                is_null($siteMonitor->ap1_last_up) &&
-                is_null($siteMonitor->ap2_last_up)
-            )) {
-                $onlineCount++;
-                continue;
-            }
+        $routerDown = NmtTickets::query()
+            ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+            ->where('site_monitor.sensor_status', 'Router Down')
+            ->where('nmt_tickets.status', 'OPEN')
+            ->count();
 
-            // Ambil semua waktu yang tidak null
-            $times = [];
-            if ($siteMonitor->modem_last_up) {
-                $times['modem'] = Carbon::parse($siteMonitor->modem_last_up);
-            }
-            if ($siteMonitor->mikrotik_last_up) {
-                $times['router'] = Carbon::parse($siteMonitor->mikrotik_last_up);
-            }
-            if ($siteMonitor->ap1_last_up) {
-                $times['ap1'] = Carbon::parse($siteMonitor->ap1_last_up);
-            }
-            if ($siteMonitor->ap2_last_up) {
-                $times['ap2'] = Carbon::parse($siteMonitor->ap2_last_up);
-            }
+        $allSensor = NmtTickets::query()
+            ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+            ->where('site_monitor.sensor_status', 'All Sensor Down')
+            ->where('nmt_tickets.status', 'OPEN')
+            ->count();
 
-            // Jika ada waktu, cek status
-            if (!empty($times)) {
-                $uniqueTimes = array_unique(array_map(fn($time) => $time->toDateTimeString(), $times));
-
-                if (count($uniqueTimes) === 1 && isset($times['modem'])) {
-                    $allSensorDownCount++;
-                    continue;
-                }
-
-                // Ambil waktu paling lama (datetime terkecil)
-                $earliest = null;
-                $earliestKey = null;
-                foreach ($times as $key => $time) {
-                    if (is_null($earliest) || $time->lt($earliest)) {
-                        $earliest = $time;
-                        $earliestKey = $key;
-                    }
-                }
-
-                Log::info("Ini datanya :" . print_r($earliestKey, true));
-                // Tentukan status berdasarkan prioritas
-                if ($earliestKey === 'modem') {
-                    $allSensorDownCount++;
-                } elseif ($earliestKey === 'router') {
-                    $routerDownCount++;
-                } elseif ($earliestKey === 'ap1' && isset($times['ap2']) && ($times['ap1']->equalTo($times['ap2']) || isset($times['ap1']))) {
-                    $ap1And2DownCount++;
-                } elseif ($earliestKey === 'ap1') {
-                    $ap1DownCount++;
-                } elseif ($earliestKey === 'ap2') {
-                    $ap2DownCount++;
-                }
-            } else {
-                $onlineCount++;
-            }
-        }
+        $online = NmtTickets::query()
+            ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+            ->where('site_monitor.sensor_status', 'Online')
+            ->where('nmt_tickets.status', 'OPEN')
+            ->count();
 
         return [
-            'online' => $routerDownCount + $ap1DownCount + $ap2DownCount + $ap1And2DownCount,
-            'all_sensor_down' => $allSensorDownCount,
-            'router_down' => $routerDownCount,
-            'ap1_down' => $ap1DownCount,
-            'ap2_down' => $ap2DownCount,
-            'ap1_and_2_down' => $ap1And2DownCount,
+            'online' => $routerDown + $ap1Down + $ap2Down + $ap1and2Down,
+            'all_sensor_down' => $allSensor,
+            'router_down' => $routerDown,
+            'ap1_down' => $ap1Down,
+            'ap2_down' => $ap2Down,
+            'ap1_and_2_down' => $ap1and2Down,
         ];
     }
 }
