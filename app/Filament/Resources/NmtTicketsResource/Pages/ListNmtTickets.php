@@ -6,6 +6,7 @@ use App\Filament\Resources\NmtTicketsResource;
 use App\Filament\Resources\NmtTicketsResource\Widgets\NmtTicketsResourceOverview;
 use App\Filament\Resources\NmtTicketsResource\Widgets\NmtTTResourceOverview;
 use App\Models\NmtTickets;
+use App\Models\SiteMonitor;
 use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Actions\Action;
@@ -15,6 +16,7 @@ use pxlrbt\FilamentExcel\Columns\Column;
 use Illuminate\Support\Str;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use Filament\Actions\ActionGroup;
+use Filament\Resources\Components\Tab;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Artisan;
 use Webbingbrasil\FilamentCopyActions\Pages\Actions\CopyAction;
@@ -27,6 +29,97 @@ class ListNmtTickets extends ListRecords
     {
         return [
             NmtTicketsResourceOverview::class
+        ];
+    }
+
+    public function getTabs(): array
+    {
+        return [
+            'Show All' => Tab::make(),
+
+            'Online' => Tab::make()
+                ->modifyQueryUsing(fn(NmtTickets $data) => $data
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->where('site_monitor.sensor_status', 'Online')
+                    ->where('nmt_tickets.status', 'OPEN'))
+                ->badge(NmtTickets::query()
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->where('site_monitor.sensor_status', 'Online')
+                    ->where('nmt_tickets.status', 'OPEN')
+                    ->count())
+                ->badgeColor('success'),
+
+            'All Sensor Down' => Tab::make()
+                ->modifyQueryUsing(fn(NmtTickets $data) => $data
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->where('site_monitor.sensor_status', 'All Sensor Down')
+                    ->where('nmt_tickets.status', 'OPEN'))
+                ->badge(NmtTickets::query()
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->where('site_monitor.sensor_status', 'All Sensor Down')
+                    ->where('nmt_tickets.status', 'OPEN')
+                    ->count())
+                ->badgeColor('danger'),
+
+            'Non Modem Down' => Tab::make()
+                ->modifyQueryUsing(fn(NmtTickets $data) => $data
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->whereNot('site_monitor.sensor_status', 'All Sensor Down')
+                    ->where('nmt_tickets.status', 'OPEN'))
+                ->badge(NmtTickets::query()
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->whereNot('site_monitor.sensor_status', 'All Sensor Down')
+                    ->where('nmt_tickets.status', 'OPEN')
+                    ->count())
+                ->badgeColor('warning'),
+
+            'Router Down' => Tab::make()
+                ->modifyQueryUsing(fn(NmtTickets $data) => $data
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->where('site_monitor.sensor_status', 'Router Down')
+                    ->where('nmt_tickets.status', 'OPEN'))
+                ->badge(NmtTickets::query()
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->where('site_monitor.sensor_status', 'Router Down')
+                    ->where('nmt_tickets.status', 'OPEN')
+                    ->count())
+                ->badgeColor('warning'),
+
+            'AP1&2 Down' => Tab::make()
+                ->modifyQueryUsing(fn(NmtTickets $data) => $data
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->where('site_monitor.sensor_status', 'AP1&2 Down')
+                    ->where('nmt_tickets.status', 'OPEN'))
+                ->badge(NmtTickets::query()
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->where('site_monitor.sensor_status', 'AP1&2 Down')
+                    ->where('nmt_tickets.status', 'OPEN')
+                    ->count())
+                ->badgeColor('warning'),
+
+            'AP1 Down' => Tab::make()
+                ->modifyQueryUsing(fn(NmtTickets $data) => $data
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->where('site_monitor.sensor_status', 'AP1 Down')
+                    ->where('nmt_tickets.status', 'OPEN'))
+                ->badge(NmtTickets::query()
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->where('site_monitor.sensor_status', 'AP1 Down')
+                    ->where('nmt_tickets.status', 'OPEN')
+                    ->count())
+                ->badgeColor('apricot'),
+
+            'AP2 Down' => Tab::make()
+                ->modifyQueryUsing(fn(NmtTickets $data) => $data
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->where('site_monitor.sensor_status', 'AP2 Down')
+                    ->where('nmt_tickets.status', 'OPEN'))
+                ->badge(NmtTickets::query()
+                    ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
+                    ->where('site_monitor.sensor_status', 'AP2 Down')
+                    ->where('nmt_tickets.status', 'OPEN')
+                    ->count())
+                ->badgeColor('apricot'),
         ];
     }
 

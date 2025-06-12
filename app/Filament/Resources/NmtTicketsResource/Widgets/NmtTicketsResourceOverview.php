@@ -18,7 +18,8 @@ class NmtTicketsResourceOverview extends BaseWidget
         $ticketsUp = NmtTickets::where('status', "OPEN")
             ->whereHas('siteMonitor', function ($query) {
                 $query
-                    ->where('modem_last_up', '=', null)
+                    ->where('sensor_status', '=', 'Online')
+                    ->orWhere('modem_last_up', '=', null)
                     ->orWhere('modem_last_up', '>=', now()->subDay());
             })
             ->whereHas('siteMonitor', function ($query) {
