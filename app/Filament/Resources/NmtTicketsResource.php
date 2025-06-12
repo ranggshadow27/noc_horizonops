@@ -436,7 +436,7 @@ class NmtTicketsResource extends Resource
                 DateRangeFilter::make('target_online')
                     ->label('Target Online Date'),
 
-                DateRangeFilter::make('start_date')
+                DateRangeFilter::make('date_start')
                     ->label('Start Date'),
 
                 DateRangeFilter::make('closed_date')
