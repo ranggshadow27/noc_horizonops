@@ -68,8 +68,8 @@ class FetchNmtTickets extends Command
 
                 // Fetch only ticket_ids with status OPEN from database
                 $dbTicketIds = NmtTickets::where(function ($query) {
-                    $query->where('status', 'OPEN')
-                        ->orWhere('closed_date', '>=', Carbon::today('Asia/Jakarta')->startOfDay());
+                    $query->where('status', 'OPEN');
+                    // ->orWhere('closed_date', '>=', Carbon::today('Asia/Jakarta')->startOfDay());
                 })->pluck('ticket_id')->toArray();
 
                 // Identify OPEN tickets in DB but not in API
