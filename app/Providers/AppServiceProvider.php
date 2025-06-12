@@ -15,6 +15,8 @@ use App\Observers\TmoTaskObserver;
 use Illuminate\Support\ServiceProvider;
 use Filament\Facades\Filament;
 use Filament\Navigation\NavigationGroup;
+use Filament\Support\Colors\Color;
+use Filament\Support\Facades\FilamentColor;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,6 +38,15 @@ class AppServiceProvider extends ServiceProvider
         TmoImage::observe(TMOImageObserver::class);
         TmoTask::observe(TmoTaskObserver::class);
         NmtTickets::observe(NmtTicketObserver::class);
+
+        FilamentColor::register([
+            'danger' => Color::Red,
+            'gray' => Color::Zinc,
+            'info' => Color::Blue,
+            'primary' => Color::Amber,
+            'success' => Color::Green,
+            'warning' => Color::Amber,
+        ]);
 
         Filament::serving(function () {
             Filament::registerNavigationGroups([
