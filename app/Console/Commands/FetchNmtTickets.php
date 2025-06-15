@@ -2,13 +2,14 @@
 
 namespace App\Console\Commands;
 
-use Carbon\Carbon;
+// use Carbon\Carbon;
 use Illuminate\Console\Command;
 use App\Models\CheckUpdate;
 use App\Models\NmtTickets;
 use App\Models\SiteDetail;
 use Illuminate\Support\Facades\Http;
 use App\Models\TmoData;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class FetchNmtTickets extends Command
@@ -68,8 +69,8 @@ class FetchNmtTickets extends Command
 
                 // Fetch only ticket_ids with status OPEN from database
                 $dbTicketIds = NmtTickets::where(function ($query) {
-                    $query->where('status', 'OPEN');
-                    // ->orWhere('closed_date', '>=', Carbon::today('Asia/Jakarta')->startOfDay());
+                    $query->where('status', 'OPEN')
+                        ->orWhere('closed_date', '>=', Carbon::today('Asia/Jakarta')->startOfDay());
                 })->pluck('ticket_id')->toArray();
 
                 // Identify OPEN tickets in DB but not in API
@@ -97,7 +98,7 @@ class FetchNmtTickets extends Command
                         ]);
 
                         // Log::info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED pada {$yesterdayDate}.");
-                        $this->info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED pada {$yesterdayDate}.");
+                        // $this->info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED pada {$yesterdayDate}.");
                     }
                 }
 
