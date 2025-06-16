@@ -15,10 +15,13 @@ class SiteMonitorService
         $url1 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h10/mhg';
         // URL API kedua
         $url2 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h58/mhg';
+        // URL API ketiga
+        $url3 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h47/mhg';
 
         // Inisialisasi array untuk data
         $data1 = [];
         $data2 = [];
+        $data3 = [];
 
         // Ambil data dari API pertama
         $response1 = Http::get($url1);
@@ -46,8 +49,21 @@ class SiteMonitorService
             ]);
         }
 
-        // Gabungkan kedua data dan hapus duplikasi berdasarkan terminal_id
-        $data = array_merge($data1, $data2);
+        // Ambil data dari API ketiga
+        $response3 = Http::get($url3);
+        if ($response3->successful()) {
+            $data3 = $response3->json()['data'] ?? [];
+            Log::info('Fetched ' . count($data3) . ' records from API 3');
+        } else {
+            Log::error('Failed to fetch data from API 3', [
+                'url' => $url3,
+                'status' => $response3->status(),
+                'error' => $response3->body()
+            ]);
+        }
+
+        // Gabungkan ketiga data dan hapus duplikasi berdasarkan terminal_id
+        $data = array_merge($data1, $data2, $data3);
         $data = array_unique($data, SORT_REGULAR);
         $data = array_values($data); // Reset indeks array
         $totalData = count($data);
