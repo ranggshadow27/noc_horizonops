@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SiteDetailResource\Pages\ListSiteDetails;
+use App\Models\AreaList;
 use App\Models\SiteDetail;
 use App\Models\Device;
 use App\Models\DeviceNetwork;
@@ -13,6 +14,7 @@ use Filament\Tables;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Tables\Enums\FiltersLayout;
 
 class SiteDetailResource extends Resource
 {
@@ -137,8 +139,6 @@ class SiteDetailResource extends Resource
                     ->columns(2)->columnSpanFull()
                     ->hiddenLabel()->itemLabel("Network Details")
                     ->collapsible()->collapsed(),
-
-
             ]);
     }
 
@@ -147,26 +147,41 @@ class SiteDetailResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('site_id')
-                    ->label('Site ID')
                     ->sortable()
-                    ->searchable(),
+                    ->label('Site ID')
+                    ->copyable()
+                    ->searchable(['site_id', 'site_name'])
+                    ->description(fn(SiteDetail $record): string => $record->site_name),
+
                 Tables\Columns\TextColumn::make('site_name')
                     ->label('Site Name')
-                    ->limit(40)
-                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
-                        $state = $column->getState();
+                    ->hidden(),
 
-                        if (strlen($state) <= $column->getCharacterLimit()) {
-                            return null;
-                        }
-
-                        return $state;
-                    })
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('province')
-                    ->label('Province')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->copyable()
+                    ->description(fn(SiteDetail $record): string => $record->area->area ?? '-')
+                    ->label('Province'),
+
+                Tables\Columns\TextColumn::make('administrative_area')
+                    ->sortable()
+                    ->searchable()
+                    ->copyable()
+                    ->description(fn(SiteDetail $record): string => 'Lat : ' . ($record->latitude ?? '-') . ' | Long : ' . ($record->longitude ?? '-'))
+                    ->label('Administrative Area'),
+
+                Tables\Columns\TextColumn::make('address')
+                    ->label('Address')
+                    ->hidden(),
+
+                Tables\Columns\TextColumn::make('latitude')
+                    ->label('Latitude')
+                    ->hidden(),
+
+                Tables\Columns\TextColumn::make('longitude')
+                    ->label('Longitude')
+                    ->hidden(),
 
                 Tables\Columns\TextColumn::make('siteMonitor.status')
                     ->label('Status')->badge()->searchable()
@@ -178,10 +193,44 @@ class SiteDetailResource extends Resource
                         'Normal' => 'success',
                     }),
 
-                Tables\Columns\TextColumn::make('gateway')
-                    ->label('Gateway')
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('siteMonitor.sensor_status')
+                    ->label('Sensor Status')
+                    ->default("Online")
+                    ->sortable()
+                    ->searchable(),
 
+                // Tables\Columns\TextColumn::make('deviceNetworks.modem_ip')
+                //     ->label('IP Modem')
+                //     // ->badge()
+                //     ->copyable()
+                //     ->searchable(),
+
+                Tables\Columns\TextColumn::make('gateway')
+                    ->sortable()
+                    ->searchable()
+                    ->copyable()
+                    ->description(fn(SiteDetail $record): string => $record->spotbeam . ' | ' . $record->ip_hub ?? '-')
+                    ->label('Gateway'),
+
+                Tables\Columns\TextColumn::make('ip_hub')
+                    ->label('ip_hub')
+                    ->hidden(),
+
+                Tables\Columns\TextColumn::make('spotbeam')
+                    ->label('spotbeam')
+                    ->hidden(),
+
+                Tables\Columns\TextColumn::make('power_source')
+                    ->label('power_source')
+                    ->hidden(),
+
+                Tables\Columns\TextColumn::make('pic_number')
+                    ->label('pic_number')
+                    ->hidden(),
+
+                Tables\Columns\TextColumn::make('pic_name')
+                    ->label('pic_name')
+                    ->hidden(),
                 // // Data dari Devices
                 // Tables\Columns\TextColumn::make('devices.modem_type')
                 //     ->label('Modem SN')
@@ -189,8 +238,34 @@ class SiteDetailResource extends Resource
                 //     ->searchable()
             ])
             ->filters([
-                //
-            ])
+                Tables\Filters\SelectFilter::make('province')
+                    ->label("Province")
+                    ->native(false)
+                    ->multiple()
+                    ->options(fn() => SiteDetail::query()->pluck('province', 'province')),
+
+                Tables\Filters\SelectFilter::make('area')
+                    ->label("Area")
+                    ->options(fn() => AreaList::all()->pluck('area', 'area'))
+                    ->native(false)
+                    ->modifyQueryUsing(function (Builder $query, $state) {
+                        if (! $state['value']) {
+                            return $query;
+                        }
+                        return $query->whereHas('area', fn($query) => $query->where('area', $state['value']));
+                    }),
+
+                Tables\Filters\SelectFilter::make('gateway')
+                    ->label("Gateway")
+                    ->native(false)
+                    ->options(fn() => SiteDetail::query()->pluck('gateway', 'gateway')),
+
+                Tables\Filters\SelectFilter::make('spotbeam')
+                    ->label("Spotbeam")
+                    ->native(false)
+                    ->options(fn() => SiteDetail::query()->pluck('spotbeam', 'spotbeam')),
+            ], layout: FiltersLayout::Modal)
+            ->filtersFormColumns(2)
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ])
@@ -200,7 +275,11 @@ class SiteDetailResource extends Resource
                     ->label("Details")
                     ->modalHeading("Site Detail"),
                 Tables\Actions\DeleteAction::make(),
-            ]);
+            ])
+            ->poll('20s')
+            ->deferLoading()
+            ->paginated([10, 25, 50, 100, 500])
+            ->defaultPaginationPageOption(10);
     }
 
     public static function getPages(): array

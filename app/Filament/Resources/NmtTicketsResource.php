@@ -101,9 +101,17 @@ class NmtTicketsResource extends Resource
                     ->description(fn($record): string => "Target Online: " . Carbon::parse($record->target_online)->format("d M Y"))
                     ->searchable(),
 
+                Tables\Columns\TextColumn::make('cboss_tt')
+                    ->label('CBOSS TT')
+                    ->hidden(),
+
+                Tables\Columns\TextColumn::make('site_id')
+                    ->label('Site ID')
+                    ->hidden(),
+
                 Tables\Columns\TextColumn::make('site.site_name')
                     ->copyable()
-                    ->label("Site ID")
+                    ->label("Site Name")
                     ->limit(30)
                     ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
                         $state = $column->getState();
@@ -162,6 +170,12 @@ class NmtTicketsResource extends Resource
                     })
                     ->searchable(),
 
+                Tables\Columns\TextColumn::make('date_start')
+                    ->label("Date Start TT")
+                    ->formatStateUsing(fn($state) => Carbon::parse($state)->format("d M Y"))
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('aging')
                     ->label("Aging")
                     ->formatStateUsing(fn($state) => $state > 1 ? $state . " days" : $state . " day")
@@ -169,6 +183,16 @@ class NmtTicketsResource extends Resource
                         fn($record) => "Date Start : " . Carbon::parse($record->date_start)->translatedFormat('d M Y')
                     )
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('target_online')
+                    ->label('Target Online')
+                    ->formatStateUsing(fn($state) => Carbon::parse($state)->format("d M Y"))
+                    ->hidden(),
+
+                Tables\Columns\TextColumn::make('closed_date')
+                    ->label('Closed Date')
+                    ->formatStateUsing(fn($state) => Carbon::parse($state)->format("d M Y"))
+                    ->hidden(),
 
                 Tables\Columns\TextColumn::make('siteMonitor.modem_last_up')
                     ->label('Modem Last Up')
@@ -205,79 +229,6 @@ class NmtTicketsResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                // Tables\Columns\TextColumn::make('sensorStatus')
-                //     ->label('Sensor Status')
-                //     ->default("All Sensor Online")
-                //     // ->badge()
-                //     ->formatStateUsing(function ($record) {
-                //         // Ambil data dari relasi siteMonitor
-                //         $siteMonitor = $record->siteMonitor;
-
-                //         // Jika tidak ada siteMonitor atau semua null, kembalikan "Online"
-                //         if (!$siteMonitor || (
-                //             is_null($siteMonitor->modem_last_up) &&
-                //             is_null($siteMonitor->mikrotik_last_up) &&
-                //             is_null($siteMonitor->ap1_last_up) &&
-                //             is_null($siteMonitor->ap2_last_up)
-                //         )) {
-                //             return 'Online';
-                //         }
-
-                //         // Ambil semua waktu yang tidak null
-                //         $times = [];
-                //         if ($siteMonitor->modem_last_up) {
-                //             $times['modem'] = Carbon::parse($siteMonitor->modem_last_up);
-                //         }
-                //         if ($siteMonitor->mikrotik_last_up) {
-                //             $times['router'] = Carbon::parse($siteMonitor->mikrotik_last_up);
-                //         }
-                //         if ($siteMonitor->ap1_last_up) {
-                //             $times['ap1'] = Carbon::parse($siteMonitor->ap1_last_up);
-                //         }
-                //         if ($siteMonitor->ap2_last_up) {
-                //             $times['ap2'] = Carbon::parse($siteMonitor->ap2_last_up);
-                //         }
-
-                //         // Jika ada waktu, cek apakah semua sama
-                //         if (!empty($times)) {
-                //             $uniqueTimes = array_unique(array_map(fn($time) => $time->toDateTimeString(), $times));
-                //             if (count($uniqueTimes) === 1 && isset($times['modem'])) {
-                //                 // Semua waktu sama dan modem down, kembalikan "All Sensor Down"
-                //                 Carbon::setLocale('en');
-                //                 return 'All Sensor Down';
-                //             }
-
-                //             // Ambil waktu paling lama (datetime terkecil)
-                //             $earliest = null;
-                //             $earliestKey = null;
-                //             foreach ($times as $key => $time) {
-                //                 if (is_null($earliest) || $time->lt($earliest)) {
-                //                     $earliest = $time;
-                //                     $earliestKey = $key;
-                //                 }
-                //             }
-
-                //             // Tentukan status berdasarkan prioritas
-                //             if ($earliestKey === 'modem') {
-                //                 Carbon::setLocale('en');
-                //                 return 'All Sensor Down';
-                //             } elseif ($earliestKey === 'router') {
-                //                 return 'Router Down';
-                //             } elseif ($earliestKey === 'ap1' && isset($times['ap2']) && $times['ap1']->equalTo($times['ap2'])) {
-                //                 return 'AP1&2 Down';
-                //             } elseif ($earliestKey === 'ap1') {
-                //                 return 'AP1 Down';
-                //             } elseif ($earliestKey === 'ap2') {
-                //                 return 'AP2 Down';
-                //             }
-                //         }
-
-                //         // Fallback (seharusnya tidak sampai sini)
-                //         return 'Online';
-                //     }),
-
-
-
                 Tables\Columns\TextColumn::make('problem_classification')
                     ->label("Problem Classification")
                     ->toggleable(isToggledHiddenByDefault: true)
@@ -289,12 +240,6 @@ class NmtTicketsResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable()
                     ->searchable(),
-
-                Tables\Columns\TextColumn::make('date_start')
-                    ->label("Date Start TT")
-                    ->formatStateUsing(fn($state) => Carbon::parse($state)->format("d M Y"))
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('problem_type')
                     ->label("Type")

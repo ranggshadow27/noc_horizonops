@@ -16,6 +16,7 @@ class NmtTickets extends Model
 
     protected $fillable = [
         'ticket_id',
+        'cboss_tt',
         'site_id',
         'site_province',
         'status',

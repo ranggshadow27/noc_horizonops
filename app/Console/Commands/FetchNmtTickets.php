@@ -54,9 +54,8 @@ class FetchNmtTickets extends Command
 
     private function fetchAndInsertNmtTickets()
     {
-
         try {
-            $apiUrl = 'https://script.google.com/macros/s/AKfycbzbhQSS07lD8FSN68pKDtwFjfIaxKgfjQarPWLgvFV6Bu7aOEldxPOVTUgNHunfQ1IclA/exec';
+            $apiUrl = 'https://script.google.com/macros/s/AKfycbykPw72mtXfQbemS-WFUa-3TFzFPmWnrIgqDshBghoKuXU99ktFslpnvmn_GtMla8aVjA/exec';
             $response = Http::timeout(360)->get($apiUrl);
 
             if ($response->successful()) {
@@ -76,12 +75,6 @@ class FetchNmtTickets extends Command
                 // Identify OPEN tickets in DB but not in API
                 $ticketsToClose = array_diff($dbTicketIds, $apiTicketIds);
 
-                // Log::info("Ini datanya apiTicketIds: " . print_r($apiTicketIds, true));
-
-                // Log::info("Ini datanya dbTicketIds: " . print_r($dbTicketIds, true));
-
-                // Log::info("Ini datanya ticketsToClose: " . print_r($ticketsToClose, true));
-
                 // Update OPEN tickets not in API to CLOSED
                 foreach ($ticketsToClose as $ticketId) {
                     $ticket = NmtTickets::where('ticket_id', $ticketId)->first();
@@ -96,13 +89,10 @@ class FetchNmtTickets extends Command
                             'status' => 'CLOSED',
                             'closed_date' => $yesterdayDate,
                         ]);
-
-                        // Log::info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED pada {$yesterdayDate}.");
-                        // $this->info("Ticket dengan ticket_id {$ticketId} tidak ditemukan di API, status diubah menjadi CLOSED pada {$yesterdayDate}.");
                     }
                 }
 
-                // Process API data as per existing logic
+                // Process API data
                 foreach ($data as $item) {
                     $site = SiteDetail::where('site_id', $item['SITE ID'])->first();
 
@@ -136,6 +126,11 @@ class FetchNmtTickets extends Command
                         'update_progress' => $item['UPDATE PROGRESS'],
                     ];
 
+                    // Tambahkan cboss_tt jika ada di API
+                    if (isset($item['CBOSS TT']) && !empty($item['CBOSS TT'])) {
+                        $ticketData['cboss_tt'] = $item['CBOSS TT'];
+                    }
+
                     if ($existingTicket) {
                         // Update ticket yang sudah ada
                         $updateData = array_merge($ticketData, [
@@ -155,10 +150,12 @@ class FetchNmtTickets extends Command
                             $updateData['closed_date'] = null;
                         }
 
-                        $existingTicket->update($updateData);
+                        // Update hanya jika cboss_tt dari API ada, jika tidak, pertahankan nilai existing
+                        if (!isset($item['CBOSS TT']) || empty($item['CBOSS TT'])) {
+                            $updateData['cboss_tt'] = $existingTicket->cboss_tt;
+                        }
 
-                        // Log::info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah diperbarui.");
-                        // $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah diperbarui.");
+                        $existingTicket->update($updateData);
                     } else {
                         // Insert ticket baru
                         if ($status === "CLOSED" && isset($item['ACTUAL ONLINE'])) {
@@ -169,9 +166,6 @@ class FetchNmtTickets extends Command
                         }
 
                         NmtTickets::create($ticketData);
-
-                        // Log::info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah ditambahkan.");
-                        // $this->info("Ticket dengan ticket_id {$ticketId} {$item['DATE START TT']} > {$ticketDate} telah ditambahkan.");
                     }
                 }
 

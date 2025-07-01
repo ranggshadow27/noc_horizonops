@@ -55,7 +55,7 @@ class SiteDetail extends Model
 
     public function siteMonitor()
     {
-        return $this->hasMany(SiteMonitor::class, 'site_id', 'site_id');
+        return $this->hasOne(SiteMonitor::class, 'site_id', 'site_id');
     }
 
     public function nmtTickets()
