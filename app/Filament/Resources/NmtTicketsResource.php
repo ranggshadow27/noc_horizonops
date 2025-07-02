@@ -271,6 +271,7 @@ class NmtTicketsResource extends Resource
                 Tables\Filters\SelectFilter::make('problem_classification')
                     ->label("Problem Classification")
                     ->native(false)
+                    ->multiple()
                     ->options(fn() => NmtTickets::query()->pluck('problem_classification', 'problem_classification')),
 
                 Tables\Filters\SelectFilter::make('aging')
@@ -406,9 +407,10 @@ class NmtTicketsResource extends Resource
 
                         // Get the current table query with filters and sorting
                         $query = $livewire->getFilteredSortedTableQuery()->with(['site.cbossTicket' => function ($query) {
-                            $query->whereNot('status', 'Closed')->latest('updated_at')->take(1);
-                        }, 'area']);
-
+                            $query->where('status', 'OPEN')->latest('updated_at')->take(1);
+                        }, 'area'])
+                            ->where('status', '!=', 'Closed')
+                            ->where('problem_detail', '!=', 'Libur Sekolah');
                         $records = $query->get();
 
                         // Calculate ticket counts per area
@@ -453,7 +455,7 @@ class NmtTicketsResource extends Resource
                                 $report .= "Target Online: {$targetOnlineFormat}, Aging `{$record->aging} Hari`\n";
 
                                 // Fetch the latest OPEN cboss_ticket
-                                $latestCbossTicket = $record->site ? $record->site->cbossTicket()->where('status', 'OPEN')->latest('updated_at')->first() : null;
+                                $latestCbossTicket = $record->site ? $record->site->cbossTicket()->whereNot('status', 'Closed')->latest('updated_at')->first() : null;
 
                                 // Handle PO (already an array)
                                 $poData = $record->area && is_array($record->area->po) ? $record->area->po : [];
