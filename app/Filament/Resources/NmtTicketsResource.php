@@ -406,7 +406,7 @@ class NmtTicketsResource extends Resource
 
                         // Get the current table query with filters and sorting
                         $query = $livewire->getFilteredSortedTableQuery()->with(['site.cbossTicket' => function ($query) {
-                            $query->where('status', 'OPEN')->orWhere('status', "Update")->latest('updated_at')->take(1);
+                            $query->whereNot('status', 'Closed')->latest('updated_at')->take(1);
                         }, 'area']);
 
                         $records = $query->get();
