@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
@@ -278,10 +279,11 @@ class NmtTicketsResource extends Resource
                         'warning' => '≤ 3 days',
                         'minor' => '> 4-7 days',
                         'major' => '> 8-14 days',
-                        'critical' => '> 15-30 days',
+                        'critical' => '> 14-30 days',
                         'sp1' => '> 30 days',
                     ])
                     ->native(false)
+                    ->multiple()
                     ->modifyQueryUsing(function (Builder $query, array $state) {
                         if (!isset($state['value']) || empty($state['value'])) {
                             return $query; // Jika tidak ada filter yang dipilih, kembalikan query tanpa filter
@@ -295,7 +297,7 @@ class NmtTicketsResource extends Resource
                             } elseif ($state['value'] === 'major') {
                                 $query->where('aging', '>=', 8)->where('aging', '<=', 14);
                             } elseif ($state['value'] === 'critical') {
-                                $query->where('aging', '>=', 15)->where('aging', '<=', 30);
+                                $query->where('aging', '>=', 14)->where('aging', '<=', 30);
                             } elseif ($state['value'] === 'sp1') {
                                 $query->where('aging', '>', 30);
                             }
@@ -396,6 +398,113 @@ class NmtTicketsResource extends Resource
                     ->modalHeading("Ticket Detail"),
             ])
             ->headerActions([
+                CopyAction::make('generate_report')
+                    ->label('Generate Report from Table')
+                    ->color('gray')
+                    ->copyable(function ($livewire) {
+                        // Set Carbon locale to Indonesian
+                        Carbon::setLocale('id');
+
+                        // Get the current table query with filters and sorting
+                        $query = $livewire->getFilteredSortedTableQuery()->with(['site.cbossTicket' => function ($query) {
+                            $query->where('status', 'OPEN')->latest('updated_at')->take(1);
+                        }, 'area']);
+
+                        $records = $query->get();
+
+                        // Calculate ticket counts per area
+                        $areaCounts = $records->groupBy('area.area')->map->count()->toArray();
+                        $totalTickets = $records->count();
+
+                        // Sort area counts by area name (ascending)
+                        ksort($areaCounts);
+
+                        // Build the report string
+                        $now = Carbon::now();
+                        $report = "Dear All,\n\n";
+                        $report .= "Berikut Summary *TT OPEN* dengan durasi diatas 14hari (Overdue TT), " . $now->translatedFormat('d F Y') . ":\n\n";
+
+                        // Add area summary
+                        foreach ($areaCounts as $areaName => $count) {
+                            $areaName = $areaName ?? 'Unknown Area';
+                            $report .= "- {$areaName}: *{$count} Tiket*\n";
+                        }
+                        $report .= "- Overdue Total: *{$totalTickets}* Tiket\n\n";
+
+                        // Group records by area and list sites
+                        $groupedRecords = $records->groupBy('area.area')->sortKeys();
+
+                        foreach ($groupedRecords as $areaName => $areaRecords) {
+                            if ($areaRecords->isEmpty()) {
+                                continue; // Skip areas with no tickets
+                            }
+                            $areaName = $areaName ?? 'Unknown Area';
+                            $report .= "────────── TT Overdue *{$areaName}* ──────────\n";
+
+                            foreach ($areaRecords as $record) {
+                                $report .= "> {$record->site_id} - {$record->site->site_name} - {$record->site->province}\n";
+
+                                // Format target_online with Indonesian month
+                                $targetOnlineFormat = $record->target_online
+                                    ? Carbon::parse($record->target_online)->translatedFormat('d F Y')
+                                    : 'No target online set';
+                                if ($record->target_online && Carbon::parse($record->target_online)->isPast()) {
+                                    $targetOnlineFormat = "*{$targetOnlineFormat}*";
+                                }
+                                $report .= "Target Online: {$targetOnlineFormat}, Aging `{$record->aging} Hari`\n";
+
+                                // Fetch the latest OPEN cboss_ticket
+                                $latestCbossTicket = $record->site ? $record->site->cbossTicket()->where('status', 'OPEN')->latest('updated_at')->first() : null;
+
+                                // Handle PO (already an array)
+                                $poData = $record->area && is_array($record->area->po) ? $record->area->po : [];
+                                $poString = !empty($poData) ? implode(', ', $poData) : 'No PO data';
+
+                                // Conditional logic for Nusa Tenggara Timur
+                                if ($record->site && strtolower($record->site->province) === 'nusa tenggara timur') {
+                                    $administrativeArea = strtolower($record->site->administrative_area ?? '');
+                                    $targetAreaAnjar = ['sumba'];
+                                    $targetAreaFirman = ['kupang', 'timor tengah', 'timur tengah', 'malaka', 'belu', 'rote', 'ndao', 'raijua', 'sabu', 'alor'];
+                                    $targetAreaNovan = ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata', 'sika'];
+
+                                    // Check if administrative_area contains any targetAreaFirman
+                                    $isTargetAreaFirman = array_reduce($targetAreaFirman, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
+                                    if ($isTargetAreaFirman) {
+                                        $filteredPo = array_filter($poData, fn($po) => $po === 'Firman');
+                                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Firman-related PO found';
+                                    }
+
+                                    // Check if administrative_area contains any targetAreaAnjar
+                                    $isTargetAreaAnjar = array_reduce($targetAreaAnjar, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
+                                    if ($isTargetAreaAnjar) {
+                                        $filteredPo = array_filter($poData, fn($po) => $po === 'Anjar');
+                                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Anjar-related PO found';
+                                    }
+
+                                    // Check if administrative_area contains any targetAreaNovan
+                                    $isTargetAreaNovan = array_reduce($targetAreaNovan, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
+                                    if ($isTargetAreaNovan) {
+                                        $filteredPo = array_filter($poData, fn($po) => $po === 'Novan');
+                                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Novan-related PO found';
+                                    }
+                                }
+
+                                $cbossTT = $record->cboss_tt ?? 'NO TICKET FOUND';
+                                $detailProblem = $record->problem_detail ?? 'NO TICKET FOUND';
+
+                                // Add detail_action to the report
+                                $report .= "Problem : {$cbossTT} | *{$detailProblem}*\n";
+                                $report .= "*Update CBOSS*:\n" . ($latestCbossTicket ? $latestCbossTicket->detail_action : 'No open ticket found') . ", CC : @{$poString}\n\n";
+                            }
+                        }
+
+                        $report .= "Terimakasih";
+
+                        return $report;
+                    })
+                    ->requiresConfirmation(false)
+                    ->icon('phosphor-files'),
+
                 CopyAction::make('generate_report')
                     // ->link()
                     ->color('gray')
@@ -570,15 +679,16 @@ class NmtTicketsResource extends Resource
     {
         $details = "========================================================\n\n$title :\n\n";
 
+        Carbon::setLocale('id');
         foreach ($tickets as $ticket) {
             $siteName = $ticket->site ? $ticket->site->site_name : 'Unknown';
             $details .= "> {$ticket->site_id} - $siteName $emoji" . "\n";
             if ($isClosed) {
-                $actualOnline = Carbon::parse($ticket->actual_online)->format('d M Y');
+                $actualOnline = Carbon::parse($ticket->actual_online)->format('d F Y');
                 $details .= "Actual Online\t: $actualOnline\n";
             } else if (!$isNoTargetOnline) {
                 $details .= "Durasi Open\t: {$ticket->aging} Hari\n";
-                $targetOnline = Carbon::parse($ticket->target_online)->format('d M Y');
+                $targetOnline = Carbon::parse($ticket->target_online)->format('d F Y');
                 $details .= "Target Online\t: $targetOnline\n";
                 $details .= "Progress\t\t: {$ticket->update_progress}\n";
             } else {
