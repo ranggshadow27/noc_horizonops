@@ -283,7 +283,6 @@ class NmtTicketsResource extends Resource
                         'sp1' => '> 30 days',
                     ])
                     ->native(false)
-                    ->multiple()
                     ->modifyQueryUsing(function (Builder $query, array $state) {
                         if (!isset($state['value']) || empty($state['value'])) {
                             return $query; // Jika tidak ada filter yang dipilih, kembalikan query tanpa filter
