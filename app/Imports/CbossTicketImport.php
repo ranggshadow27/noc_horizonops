@@ -59,15 +59,15 @@ class CbossTicketImport implements ToModel, WithStartRow, WithChunkReading
         // Mapping kolom, abaikan ticket number dari Excel
         $mappedRow = [
             'subscriber number' => $row[5] ?? null,
-            'province' => $this->properCase($row[25] ?? null),
+            'province' => $this->properCase($row[26] ?? null),
             'spk number' => $row[3] ?? null,
             'problem map' => $row[9] ?? null,
-            'trouble category' => $row[20] ?? null,
+            'trouble category' => $row[21] ?? null,
             'detail action' => $row[10] ?? null,
-            'ticket status' => $row[21] ?? null,
-            'ticket start' => $row[12] ?? null,
-            'ticket end' => $row[15] ?? null,
-            'ticket last update' => $row[19] ?? null,
+            'ticket status' => $row[22] ?? null,
+            'ticket start' => $row[13] ?? null,
+            'ticket end' => $row[16] ?? null,
+            'ticket last update' => $row[20] ?? null,
         ];
 
         // Check if subscriber number exists in SiteDetail
