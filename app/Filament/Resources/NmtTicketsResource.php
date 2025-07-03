@@ -284,23 +284,34 @@ class NmtTicketsResource extends Resource
                         'sp1' => '> 30 days',
                     ])
                     ->native(false)
+                    ->multiple()
                     ->modifyQueryUsing(function (Builder $query, array $state) {
-                        if (!isset($state['value']) || empty($state['value'])) {
+                        if (!isset($state['values']) || empty($state['values'])) {
                             return $query; // Jika tidak ada filter yang dipilih, kembalikan query tanpa filter
                         }
 
-                        return $query->whereHas('siteMonitor', function ($query) use ($state) {
-                            if ($state['value'] === 'warning') {
-                                $query->where('aging', '<=', 3);
-                            } elseif ($state['value'] === 'minor') {
-                                $query->where('aging', '>=', 4)->where('aging', '<=', 7);
-                            } elseif ($state['value'] === 'major') {
-                                $query->where('aging', '>=', 8)->where('aging', '<=', 14);
-                            } elseif ($state['value'] === 'critical') {
-                                $query->where('aging', '>=', 14)->where('aging', '<=', 30);
-                            } elseif ($state['value'] === 'sp1') {
-                                $query->where('aging', '>', 30);
-                            }
+                        return $query->whereHas('siteMonitor', function (Builder $query) use ($state) {
+                            $query->where(function (Builder $subQuery) use ($state) {
+                                foreach ($state['values'] as $value) {
+                                    if ($value === 'warning') {
+                                        $subQuery->orWhere('aging', '<=', 3);
+                                    } elseif ($value === 'minor') {
+                                        $subQuery->orWhere(function (Builder $q) {
+                                            $q->where('aging', '>=', 4)->where('aging', '<=', 7);
+                                        });
+                                    } elseif ($value === 'major') {
+                                        $subQuery->orWhere(function (Builder $q) {
+                                            $q->where('aging', '>=', 8)->where('aging', '<=', 14);
+                                        });
+                                    } elseif ($value === 'critical') {
+                                        $subQuery->orWhere(function (Builder $q) {
+                                            $q->where('aging', '>=', 14)->where('aging', '<=', 30);
+                                        });
+                                    } elseif ($value === 'sp1') {
+                                        $subQuery->orWhere('aging', '>', 30);
+                                    }
+                                }
+                            });
                         });
                     }),
 
