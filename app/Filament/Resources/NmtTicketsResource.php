@@ -409,13 +409,18 @@ class NmtTicketsResource extends Resource
                         $query = $livewire->getFilteredSortedTableQuery()->with(['site.cbossTicket' => function ($query) {
                             $query->whereNot('status', 'Closed')->latest('updated_at')->take(1);
                         }, 'area'])
-                            ->where('status', '!=', 'Closed')
-                            ->where('problem_detail', '!=', 'Libur Sekolah');
+                            // ->where('status', '!=', 'Closed')
+                        ;
+
                         $records = $query->get();
 
-                        // Calculate ticket counts per area
-                        $areaCounts = $records->groupBy('area.area')->map->count()->toArray();
-                        $totalTickets = $records->count();
+                        // Split records into non-school holiday and school holiday
+                        $nonSchoolHolidayRecords = $records->filter(fn($record) => strtolower($record->problem_detail ?? '') !== 'libur sekolah');
+                        $schoolHolidayRecords = $records->filter(fn($record) => strtolower($record->problem_detail ?? '') === 'libur sekolah');
+
+                        // Calculate ticket counts per area (non-school holiday only)
+                        $areaCounts = $nonSchoolHolidayRecords->groupBy('area.area')->map->count()->toArray();
+                        $totalTickets = $nonSchoolHolidayRecords->count();
 
                         // Sort area counts by area name (ascending)
                         ksort($areaCounts);
@@ -430,10 +435,10 @@ class NmtTicketsResource extends Resource
                             $areaName = $areaName ?? 'Unknown Area';
                             $report .= "- {$areaName}: *{$count} Tiket*\n";
                         }
-                        $report .= "- Overdue Total: *{$totalTickets}* Tiket\n\n";
+                        $report .= "- Overdue Total: *{$totalTickets} Tiket*\n\n";
 
-                        // Group records by area and list sites
-                        $groupedRecords = $records->groupBy('area.area')->sortKeys();
+                        // Group non-school holiday records by area and sort by area name
+                        $groupedRecords = $nonSchoolHolidayRecords->groupBy('area.area')->sortKeys();
 
                         foreach ($groupedRecords as $areaName => $areaRecords) {
                             if ($areaRecords->isEmpty()) {
@@ -450,9 +455,9 @@ class NmtTicketsResource extends Resource
                                     ? Carbon::parse($record->target_online)->translatedFormat('d F Y')
                                     : 'No target online set';
                                 if ($record->target_online && Carbon::parse($record->target_online)->isPast()) {
-                                    $targetOnlineFormat = "*{$targetOnlineFormat}*";
+                                    $targetOnlineFormat = "*{$targetOnlineFormat}* `!!`";
                                 }
-                                $report .= "Target Online: {$targetOnlineFormat}, Aging `{$record->aging} Hari`\n";
+                                $report .= "Target Online: {$targetOnlineFormat} | Aging `{$record->aging} Hari`\n";
 
                                 // Fetch the latest OPEN cboss_ticket
                                 $latestCbossTicket = $record->site ? $record->site->cbossTicket()->whereNot('status', 'Closed')->latest('updated_at')->first() : null;
@@ -497,6 +502,20 @@ class NmtTicketsResource extends Resource
                                 $report .= "Problem : {$cbossTT} | *{$detailProblem}*\n";
                                 $report .= "*Update CBOSS*:\n" . ($latestCbossTicket ? $latestCbossTicket->detail_action : 'No open ticket found') . ", CC : @{$poString}\n\n";
                             }
+                        }
+
+                        // Add Libur Sekolah section (if not empty)
+                        if ($schoolHolidayRecords->isNotEmpty()) {
+                            $schoolHolidayCount = $schoolHolidayRecords->count();
+                            $report .= "────────── Libur Sekolah (*{$schoolHolidayCount} Tickets*) ──────────\n";
+                            $schoolHolidayGrouped = $schoolHolidayRecords->groupBy('area.area')->sortKeys();
+                            foreach ($schoolHolidayGrouped as $areaName => $areaRecords) {
+                                foreach ($areaRecords as $record) {
+                                    $report .= "> {$record->site_id} - {$record->site->site_name} - {$record->site->province}\n";
+                                }
+                            }
+
+                            $report .= "\n";
                         }
 
                         $report .= "Terimakasih";
