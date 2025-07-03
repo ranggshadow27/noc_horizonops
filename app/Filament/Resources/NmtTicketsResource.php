@@ -445,7 +445,7 @@ class NmtTicketsResource extends Resource
                                 continue; // Skip areas with no tickets
                             }
                             $areaName = $areaName ?? 'Unknown Area';
-                            $report .= "────────── TT Overdue *{$areaName}* ──────────\n";
+                            $report .= "────────── ❌ TT Overdue *{$areaName}* ──────────\n";
 
                             foreach ($areaRecords as $record) {
                                 $report .= "> {$record->site_id} - {$record->site->site_name} - {$record->site->province}\n";
@@ -455,7 +455,7 @@ class NmtTicketsResource extends Resource
                                     ? Carbon::parse($record->target_online)->translatedFormat('d F Y')
                                     : 'No target online set';
                                 if ($record->target_online && Carbon::parse($record->target_online)->isPast()) {
-                                    $targetOnlineFormat = "*{$targetOnlineFormat}* `!!`";
+                                    $targetOnlineFormat = "*{$targetOnlineFormat}* `‼️`";
                                 }
                                 $report .= "Target Online: {$targetOnlineFormat} | Aging `{$record->aging} Hari`\n";
 
@@ -507,7 +507,7 @@ class NmtTicketsResource extends Resource
                         // Add Libur Sekolah section (if not empty)
                         if ($schoolHolidayRecords->isNotEmpty()) {
                             $schoolHolidayCount = $schoolHolidayRecords->count();
-                            $report .= "────────── Libur Sekolah (*{$schoolHolidayCount} Tickets*) ──────────\n";
+                            $report .= "────────── ❕ Libur Sekolah (*{$schoolHolidayCount} Tickets*) ──────────\n";
                             $schoolHolidayGrouped = $schoolHolidayRecords->groupBy('area.area')->sortKeys();
                             foreach ($schoolHolidayGrouped as $areaName => $areaRecords) {
                                 foreach ($areaRecords as $record) {
