@@ -140,6 +140,8 @@ class BulkConfigImport implements ToCollection, WithStartRow
                     '${IP_MIKROTIK}' => $ipRouter,
                     '${IP_AP1}' => $ipAp1,
                     '${IP_AP2}' => $ipAp2,
+                    '${SNMP_STRING}' => "MHGISPNet",
+                    '${Password}' => "adminmhg123",
                     '${NAMA_LOKASI}' => $namaLokasi,
                     '${TIMEZONE}' => $timezone,
                 ];

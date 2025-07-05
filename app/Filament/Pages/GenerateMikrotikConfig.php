@@ -18,6 +18,7 @@ use Illuminate\Contracts\View\View;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Illuminate\Support\Str;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -29,7 +30,7 @@ class GenerateMikrotikConfig extends Page
     protected static ?string $navigationLabel = 'Generate Router Config';
     protected static ?string $navigationIcon = 'phosphor-nut-duotone';
     protected static string $view = 'filament.pages.generate-mikrotik-config';
-    protected static ?string $title = 'Generate Configuration';
+    protected static ?string $title = 'Configuration Generator';
     protected ?string $subheading = 'Auto Generate Router Configuration (Mikrotik/Grandstream)';
 
     public $siteId = '';
@@ -38,13 +39,14 @@ class GenerateMikrotikConfig extends Page
 
     public function getMaxContentWidth(): MaxWidth
     {
-        return MaxWidth::Prose;
+        return MaxWidth::ThreeExtraLarge;
     }
 
     public function getFormSchema(): array
     {
         return [
             Section::make('Configuration Generator')
+                ->description('Router configuration made simple and reliable')
                 ->schema([
                     Select::make('siteId')
                         ->label('Site ID')
@@ -78,8 +80,8 @@ class GenerateMikrotikConfig extends Page
                         ->placeholder("Select a site ID or site name")
                         ->columnSpanFull(),
 
-                        Radio::make('configType')
-                        ->label('Select Router Configuration Type :')
+                    Radio::make('configType')
+                        ->label('Select Config Type :')
                         ->options([
                             'mikrotik' => 'Mikrotik Router Config',
                             'grandstream' => 'Grandstream Router Config',
@@ -99,7 +101,7 @@ class GenerateMikrotikConfig extends Page
                             return empty($get('siteId'));
                         })
                         ->live()
-                        ->inlineLabel(false)
+                        // ->inlineLabel(false)
                         ->columnSpanFull(),
 
                     TextInput::make('timezone')
@@ -120,11 +122,13 @@ class GenerateMikrotikConfig extends Page
                 ])
                 ->headerActions([
                     Action::make('bulkConfig')
-                        ->label('Bulk Config')
-                        ->icon('phosphor-file-xls-duotone')
+                        ->label('Bulk Configuration')
+                        ->color('gray')
+                        ->icon('phosphor-gear-duotone')
                         ->form([
                             Select::make('bulkConfigType')
                                 ->label('Configuration Type')
+                                ->native(false)
                                 ->options([
                                     'mikrotik' => 'Mikrotik RSC',
                                     'grandstream' => 'Grandstream Bin',
@@ -155,7 +159,7 @@ class GenerateMikrotikConfig extends Page
                                     Log::info('Excel file stored at: ' . $fullPath);
 
                                     // Generate nama file ZIP
-                                    $zipFileName = 'bulk_configs_' . time() . '.zip';
+                                    $zipFileName = 'router_configs_export_' . Carbon::now()->format('dmy-Hi') . '.zip';
                                     $zipFilePath = storage_path('app/temp/' . $zipFileName);
 
                                     // Jalankan import, kirim zipFilePath ke importer
@@ -195,8 +199,9 @@ class GenerateMikrotikConfig extends Page
                                 throw $e;
                             }
                         })
-                        ->modalHeading('Generate Bulk Configuration')
-                        ->modalSubmitActionLabel('Generate')
+                        ->modalHeading('Generate Configuration (Bulk)')
+                        ->modalDescription('Generate bulk configuration for multiple sites')
+                        ->modalSubmitActionLabel('Generate Config')
                         ->modalWidth('lg'),
                 ]),
         ];
