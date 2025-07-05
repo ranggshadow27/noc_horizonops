@@ -63,6 +63,13 @@ Route::get('/export-zip/{id}', function ($id) {
     ]);
 })->name('export.zip');
 
+Route::get('/download-bulk-config/{filename}', function ($filename) {
+    $path = storage_path('app/temp/' . $filename);
+    if (!file_exists($path)) {
+        abort(404, 'File not found');
+    }
+    return response()->download($path, $filename, ['Content-Type' => 'application/zip'])->deleteFileAfterSend(true);
+})->name('download-bulk-config');
 
 Route::get('/', function () {
     return redirect('/mahaga');
