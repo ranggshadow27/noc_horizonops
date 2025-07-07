@@ -145,7 +145,7 @@ class GenerateMikrotikConfig extends Page
                                 ])
                                 ->storeFiles(false) // Jangan simpan permanen
                                 ->required()
-                                ->hint('File eksel harus memiliki header "Nama Lokasi", "Timezone", "IP Modem" di kolom No.1')
+                                ->hint('Excel file must be include ["Nama Lokasi", "Timezone", "IP Modem"] in the first row')
                                 ->columnSpanFull(),
                         ])
                         ->action(function (array $data) {
@@ -201,9 +201,9 @@ class GenerateMikrotikConfig extends Page
                             }
                         })
                         ->modalHeading('Generate Configuration (Bulk)')
-                        ->modalDescription('Generate bulk configuration for multiple sites')
+                        ->modalDescription('Bulk generate router configuration for multiple sites')
                         ->modalSubmitActionLabel('Generate Config')
-                        ->modalWidth('lg'),
+                        ->modalWidth(MaxWidth::ThreeExtraLarge),
                 ]),
         ];
     }
