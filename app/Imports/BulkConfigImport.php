@@ -42,7 +42,10 @@ class BulkConfigImport implements ToCollection, WithStartRow
         $skippedRows = [];
 
         // Validasi header
-        $headers = $rows->first()->map('strtolower')->toArray();
+        $headers = $rows->first()->map(function ($header) {
+            return Str::replace(' ', '_', strtolower(trim($header)));
+        })->toArray();
+
         $requiredColumns = ['ip_modem', 'ip_router', 'ip_ap1', 'ip_ap2', 'nama_lokasi', 'timezone'];
         if ($this->configType === 'grandstream') {
             $requiredColumns[] = 'ip_backup';
@@ -113,10 +116,12 @@ class BulkConfigImport implements ToCollection, WithStartRow
             }
 
             // Validasi IP hasil generate
-            if (!filter_var($ipRouter, FILTER_VALIDATE_IP) ||
+            if (
+                !filter_var($ipRouter, FILTER_VALIDATE_IP) ||
                 !filter_var($ipAp1, FILTER_VALIDATE_IP) ||
                 !filter_var($ipAp2, FILTER_VALIDATE_IP) ||
-                ($this->configType === 'grandstream' && !filter_var($ipBackup, FILTER_VALIDATE_IP))) {
+                ($this->configType === 'grandstream' && !filter_var($ipBackup, FILTER_VALIDATE_IP))
+            ) {
                 Log::warning("Skipping row " . ($rowIndex + 2) . ": Invalid generated IP addresses");
                 $skippedRows[] = $rowIndex + 2;
                 continue;

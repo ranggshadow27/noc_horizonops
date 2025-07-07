@@ -145,6 +145,7 @@ class GenerateMikrotikConfig extends Page
                                 ])
                                 ->storeFiles(false) // Jangan simpan permanen
                                 ->required()
+                                ->hint('File eksel harus memiliki header "Nama Lokasi", "Timezone", "IP Modem" di kolom No.1')
                                 ->columnSpanFull(),
                         ])
                         ->action(function (array $data) {
