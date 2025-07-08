@@ -55,60 +55,29 @@ class NmtTicketByProblemClassChart extends ApexChartWidget
 
         return [
             'chart' => [
-                'type' => 'bar',
-                'height' => 350,
+                'type' => 'pie',
+                'height' => 365,
                 'fontFamily' => 'inherit',
             ],
 
-            'series' => [
-                [
-                    'name' => 'Total Open: ',
-                    'data' => $problems->values()->toArray(),
-                ],
-            ],
+            'series' => $problems->values()->toArray(),
 
-            'xaxis' => [
-                'categories' => $formattedLabels->toArray(),
-                'labels' => [
-                    'style' => [
-                        'fontFamily' => 'inherit',
-                    ],
-                ],
-            ],
-
-            // 'yaxis' => [
-            //     'labels' => [
-            //         'style' => [
-            //             'fontFamily' => 'inherit',
-            //         ],
-            //     ],
-            // ],
-
-            'colors' => ['#FEB019'],
-
-            // 'stroke' => [
-            //     'width' => 0,
-            //     'colors' => ['#F50B0BFF']
-            // ],
-
-            'grid' => [
-                'strokeDashArray' => 10,
-                'position' => 'back',
-                'yaxis' => [
-                    'lines' => [
-                        'show' => true
-                    ]
-                ],
-            ],
-
-            'fill' => [
-                'opacity' => 1
-            ],
-
+            'labels' => $formattedLabels->toArray(),
 
             'legend' => [
-                'position' => 'bottom',
-            ]
+                'labels' => [
+                    // 'colors' => '#242424FF',
+                    'fontWeight' => 600,
+                ],
+            ],
+
+            'dataLabels' => [
+                'enabled' => true,
+                'style' => [
+                    'fontFamily' => 'inherit',
+                    // 'colors' => ['#212121'],
+                ],
+            ],
         ];
     }
 
@@ -116,54 +85,64 @@ class NmtTicketByProblemClassChart extends ApexChartWidget
     {
         return RawJs::make(<<<'JS'
         {
-            // theme: {
-            //     mode:'light',
-            //     palette: 'palette3',
-            // },
-
             fill: {
                 type: "gradient",
-                gradient: {
-                    shade: 'light',
-                    opacityFrom: .9,
-                    opacityTo: 1,
-                    type: "vertical",
-                    shadeIntensity: .2,
-                    stops: [0, 60, 100],
-                },
             },
 
-            dataLabels: {
-                enabled: true,
-                offsetX: 16,
-                style: {
-                    colors: ['#212121']
-                },
-            },
+            responsive: [{
+                breakpoint: 480,
+                options: {
+                    chart: {
+                        width: 200
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }],
 
             plotOptions: {
-                bar: {
-                    horizontal: true,
-                    borderRadius: 6,
-                    borderRadiusApplication: 'end', // 'around', 'end'
-                    dataLabels: {
-                        // offsetY: 30,
-                        hideOverflowingLabels: true,
-                        position: 'top',
-                        orientation: 'horizontal',
-                        total: {
-                            enabled: true,
-                            formatter: function(val, opts) {
-                                return val;
-                            },
-                        style: {
-                            fontSize: '12px',
-                            // fontWeight: 900
-                            }
-                        }
+                    pie: {
+                        dataLabels: {
+                            offset: 10,
+                            minAngleToShowLabel: 10,
+                        },
+                        customScale: .9,
+                        startAngle: 0,
+                        endAngle: 360,
+                        donut: {
+                            size: '15%',
+
+                        },
+                    },
+                },
+
+                legend: {
+                    fontFamily: 'inherit',
+                    position: 'bottom',
+                    formatter: function(val, opts) {
+                        return val + " (" + opts.w.globals.series[opts.seriesIndex] + " TT)"
                     }
                 },
-            },
+
+                // stroke: {
+                //     show: true,
+                //     // curve: 'straight',
+                //     // lineCap: 'butt',
+                //     // colors: '#fff',
+                //     width: 2,
+                //     dashArray: 0,
+                // },
+
+                colors: ['#F25F5C', '#3C91E6', '#FEC620', '#FA824C', '#7FD8BE'],
+
+                dataLabels: {
+                    position: 'bottom',
+                    // formatter(val, opts) {
+                    //     const name = opts.w.globals.labels[opts.seriesIndex]
+                    //     return [name, val.toFixed(1) + '%']
+                    // },
+                },
         }
         JS);
     }
