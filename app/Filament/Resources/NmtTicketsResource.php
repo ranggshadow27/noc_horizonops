@@ -268,7 +268,7 @@ class NmtTicketsResource extends Resource
                 Tables\Filters\SelectFilter::make('status')
                     ->label("Status")
                     ->native(false)
-                    ->multiple()
+                    // ->multiple()
                     ->options(fn() => NmtTickets::query()->pluck('status', 'status')),
 
                 Tables\Filters\SelectFilter::make('problem_classification')
