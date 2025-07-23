@@ -15,8 +15,10 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\ActionSize;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\TextColumn\TextColumnSize;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
@@ -266,6 +268,7 @@ class NmtTicketsResource extends Resource
                 Tables\Filters\SelectFilter::make('status')
                     ->label("Status")
                     ->native(false)
+                    ->multiple()
                     ->options(fn() => NmtTickets::query()->pluck('status', 'status')),
 
                 Tables\Filters\SelectFilter::make('problem_classification')
@@ -409,142 +412,38 @@ class NmtTicketsResource extends Resource
                     ->modalHeading("Ticket Detail"),
             ])
             ->headerActions([
-                CopyAction::make('generate_report')
-                    ->label('Generate Report from Table')
+                ActionGroup::make([
+                    CopyAction::make('generate_priority_report')
+                        ->label('Priority Report')
+                        ->color('gray')
+                        ->copyable(function ($livewire) {
+                            return static::generatePriorityReport($livewire);
+                        })
+                        ->requiresConfirmation(false)
+                        ->icon('phosphor-chat-teardrop-text-duotone'),
+
+                    CopyAction::make('generate_report')
+                        ->label('Report with Detail')
+                        ->color('gray')
+                        ->copyable(function ($livewire) {
+                            return static::generateReportFromTable($livewire);
+                        })
+                        ->requiresConfirmation(false)
+                        ->icon('phosphor-files'),
+
+                    CopyAction::make('generate_report')
+                        ->color('gray')
+                        ->label('PMU Report')
+                        ->successNotificationTitle('Report copied to clipboard')
+                        ->copyable(function () {
+                            return static::generateReportString();
+                        })
+                        ->icon('phosphor-file-txt-duotone'),
+                ])->label('Generate Text Report')
+                    ->icon('phosphor-circles-four-duotone')
+                    ->size(ActionSize::Medium)
                     ->color('gray')
-                    ->copyable(function ($livewire) {
-                        // Set Carbon locale to Indonesian
-                        Carbon::setLocale('id');
-
-                        // Get the current table query with filters and sorting
-                        $query = $livewire->getFilteredSortedTableQuery()->with(['site.cbossTicket' => function ($query) {
-                            $query->whereNot('status', 'Closed')->latest('updated_at')->take(1);
-                        }, 'area'])
-                            // ->where('status', '!=', 'Closed')
-                        ;
-
-                        $records = $query->get();
-
-                        // Split records into non-school holiday and school holiday
-                        $nonSchoolHolidayRecords = $records->filter(fn($record) => strtolower($record->problem_detail ?? '') !== 'libur sekolah');
-                        $schoolHolidayRecords = $records->filter(fn($record) => strtolower($record->problem_detail ?? '') === 'libur sekolah');
-
-                        // Calculate ticket counts per area (non-school holiday only)
-                        $areaCounts = $nonSchoolHolidayRecords->groupBy('area.area')->map->count()->toArray();
-                        $totalTickets = $nonSchoolHolidayRecords->count();
-
-                        // Sort area counts by area name (ascending)
-                        ksort($areaCounts);
-
-                        // Build the report string
-                        $now = Carbon::now();
-                        $report = "Dear All,\n\n";
-                        $report .= "Berikut Summary *TT OPEN* dengan durasi diatas 14hari (Overdue TT), " . $now->translatedFormat('d F Y') . ":\n\n";
-
-                        // Add area summary
-                        foreach ($areaCounts as $areaName => $count) {
-                            $areaName = $areaName ?? 'Unknown Area';
-                            $report .= "- {$areaName}: *{$count} Tiket*\n";
-                        }
-                        $report .= "- Overdue Total: *{$totalTickets} Tiket*\n\n";
-
-                        // Group non-school holiday records by area and sort by area name
-                        $groupedRecords = $nonSchoolHolidayRecords->groupBy('area.area')->sortKeys();
-
-                        foreach ($groupedRecords as $areaName => $areaRecords) {
-                            if ($areaRecords->isEmpty()) {
-                                continue; // Skip areas with no tickets
-                            }
-                            $areaName = $areaName ?? 'Unknown Area';
-                            $report .= "────────── ❌ TT Overdue *{$areaName}* ──────────\n";
-
-                            foreach ($areaRecords as $record) {
-                                $report .= "> {$record->site_id} - {$record->site->site_name} - {$record->site->province}\n";
-
-                                // Format target_online with Indonesian month
-                                $targetOnlineFormat = $record->target_online
-                                    ? Carbon::parse($record->target_online)->translatedFormat('d F Y')
-                                    : 'No target online set';
-                                if ($record->target_online && Carbon::parse($record->target_online)->isPast()) {
-                                    $targetOnlineFormat = "*{$targetOnlineFormat}* `‼️`";
-                                }
-                                $report .= "Target Online: {$targetOnlineFormat} | Aging `{$record->aging} Hari`\n";
-
-                                // Fetch the latest OPEN cboss_ticket
-                                $latestCbossTicket = $record->site ? $record->site->cbossTicket()->whereNot('status', 'Closed')->latest('updated_at')->first() : null;
-
-                                // Handle PO (already an array)
-                                $poData = $record->area && is_array($record->area->po) ? $record->area->po : [];
-                                $poString = !empty($poData) ? implode(', ', $poData) : 'No PO data';
-
-                                // Conditional logic for Nusa Tenggara Timur
-                                if ($record->site && strtolower($record->site->province) === 'nusa tenggara timur') {
-                                    $administrativeArea = strtolower($record->site->administrative_area ?? '');
-                                    $targetAreaAnjar = ['sumba'];
-                                    $targetAreaFirman = ['kupang', 'timor tengah', 'timur tengah', 'malaka', 'belu', 'rote', 'ndao', 'raijua', 'sabu', 'alor'];
-                                    $targetAreaNovan = ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata', 'sika'];
-
-                                    // Check if administrative_area contains any targetAreaFirman
-                                    $isTargetAreaFirman = array_reduce($targetAreaFirman, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
-                                    if ($isTargetAreaFirman) {
-                                        $filteredPo = array_filter($poData, fn($po) => $po === 'Firman');
-                                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Firman-related PO found';
-                                    }
-
-                                    // Check if administrative_area contains any targetAreaAnjar
-                                    $isTargetAreaAnjar = array_reduce($targetAreaAnjar, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
-                                    if ($isTargetAreaAnjar) {
-                                        $filteredPo = array_filter($poData, fn($po) => $po === 'Anjar');
-                                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Anjar-related PO found';
-                                    }
-
-                                    // Check if administrative_area contains any targetAreaNovan
-                                    $isTargetAreaNovan = array_reduce($targetAreaNovan, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
-                                    if ($isTargetAreaNovan) {
-                                        $filteredPo = array_filter($poData, fn($po) => $po === 'Novan');
-                                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Novan-related PO found';
-                                    }
-                                }
-
-                                $cbossTT = $record->cboss_tt ?? 'NO TICKET FOUND';
-                                $detailProblem = $record->problem_detail ?? 'NO TICKET FOUND';
-
-                                // Add detail_action to the report
-                                $report .= "Problem : {$cbossTT} | *{$detailProblem}*\n";
-                                $report .= "*Update CBOSS*:\n" . ($latestCbossTicket ? $latestCbossTicket->detail_action : 'No open ticket found') . ", CC : @{$poString}\n\n";
-                            }
-                        }
-
-                        // Add Libur Sekolah section (if not empty)
-                        if ($schoolHolidayRecords->isNotEmpty()) {
-                            $schoolHolidayCount = $schoolHolidayRecords->count();
-                            $report .= "────────── ❕ Libur Sekolah (*{$schoolHolidayCount} Tickets*) ──────────\n";
-                            $schoolHolidayGrouped = $schoolHolidayRecords->groupBy('area.area')->sortKeys();
-                            foreach ($schoolHolidayGrouped as $areaName => $areaRecords) {
-                                foreach ($areaRecords as $record) {
-                                    $report .= "> {$record->site_id} - {$record->site->site_name} - {$record->site->province}\n";
-                                }
-                            }
-
-                            $report .= "\n";
-                        }
-
-                        $report .= "Terimakasih";
-
-                        return $report;
-                    })
-                    ->requiresConfirmation(false)
-                    ->icon('phosphor-files'),
-
-                CopyAction::make('generate_report')
-                    // ->link()
-                    ->color('gray')
-                    ->label('Generate PMU Report')
-                    ->successNotificationTitle('Report copied to clipboard')
-                    ->copyable(function () {
-                        return static::generateReportString();
-                    })
-                    ->icon('phosphor-file-txt-duotone'),
+                    ->button(),
 
                 Action::make('Import Data')
                     ->button()
@@ -584,6 +483,168 @@ class NmtTicketsResource extends Resource
             'create' => Pages\CreateNmtTickets::route('/create'),
             // 'edit' => Pages\EditNmtTickets::route('/{record}/edit'),
         ];
+    }
+
+    protected static function generatePriorityReport($livewire): string
+    {
+        Carbon::setLocale('id');
+        $now = Carbon::now();
+        $date = $now->translatedFormat('d F Y');
+
+        $query = $livewire->getFilteredSortedTableQuery()
+            ->with(['site'])
+            ->where(function ($query) use ($now) {
+                $query->where('status', 'OPEN')
+                    ->orWhere(function ($query) use ($now) {
+                        $query->where('status', 'CLOSED')
+                            ->whereDate('closed_date', $now->startOfDay());
+                    });
+            })
+            ->orderBy('aging', 'desc');
+
+        $records = $query->get();
+
+        $report = "Berikut TT Prioritas, tanggal {$date}:\n\n";
+        $groupedRecords = $records->groupBy('aging')->sortKeysDesc();
+
+        $counter = 1;
+        foreach ($groupedRecords as $aging => $tickets) {
+            $report .= "Aging {$aging} Hari\n";
+            $report .= "=========\n";
+            foreach ($tickets as $ticket) {
+                $siteName = $ticket->site ? $ticket->site->site_name : 'Unknown';
+                $statusEmoji = $ticket->status === 'OPEN' ? '❌' : '✅';
+                $report .= "{$counter}. {$ticket->site_id} - {$siteName} {$statusEmoji}\n";
+                $counter++;
+            }
+            $report .= "\n";
+        }
+
+        $report .= "Terimakasih";
+        return $report;
+    }
+
+    protected static function generateReportFromTable($livewire): string
+    {
+        // Set Carbon locale to Indonesian
+        Carbon::setLocale('id');
+
+        // Get the current table query with filters and sorting
+        $query = $livewire->getFilteredSortedTableQuery()->with(['site.cbossTicket' => function ($query) {
+            $query->whereNot('status', 'Closed')->latest('updated_at')->take(1);
+        }, 'area'])
+            // ->where('status', '!=', 'Closed')
+        ;
+
+        $records = $query->get();
+
+        // Split records into non-school holiday and school holiday
+        $nonSchoolHolidayRecords = $records->filter(fn($record) => strtolower($record->problem_detail ?? '') !== 'libur sekolah');
+        $schoolHolidayRecords = $records->filter(fn($record) => strtolower($record->problem_detail ?? '') === 'libur sekolah');
+
+        // Calculate ticket counts per area (non-school holiday only)
+        $areaCounts = $nonSchoolHolidayRecords->groupBy('area.area')->map->count()->toArray();
+        $totalTickets = $nonSchoolHolidayRecords->count();
+
+        // Sort area counts by area name (ascending)
+        ksort($areaCounts);
+
+        // Build the report string
+        $now = Carbon::now();
+        $report = "Dear All,\n\n";
+        $report .= "Berikut Summary *TT OPEN* dengan durasi diatas 14hari (Overdue TT), " . $now->translatedFormat('d F Y') . ":\n\n";
+
+        // Add area summary
+        foreach ($areaCounts as $areaName => $count) {
+            $areaName = $areaName ?? 'Unknown Area';
+            $report .= "- {$areaName}: *{$count} Tiket*\n";
+        }
+        $report .= "- Overdue Total: *{$totalTickets} Tiket*\n\n";
+
+        // Group non-school holiday records by area and sort by area name
+        $groupedRecords = $nonSchoolHolidayRecords->groupBy('area.area')->sortKeys();
+
+        foreach ($groupedRecords as $areaName => $areaRecords) {
+            if ($areaRecords->isEmpty()) {
+                continue; // Skip areas with no tickets
+            }
+            $areaName = $areaName ?? 'Unknown Area';
+            $report .= "────────── ❌ TT Overdue *{$areaName}* ──────────\n";
+
+            foreach ($areaRecords as $record) {
+                $report .= "> {$record->site_id} - {$record->site->site_name} - {$record->site->province}\n";
+
+                // Format target_online with Indonesian month
+                $targetOnlineFormat = $record->target_online
+                    ? Carbon::parse($record->target_online)->translatedFormat('d F Y')
+                    : 'No target online set';
+                if ($record->target_online && Carbon::parse($record->target_online)->isPast()) {
+                    $targetOnlineFormat = "*{$targetOnlineFormat}* `‼️`";
+                }
+                $report .= "Target Online: {$targetOnlineFormat} | Aging `{$record->aging} Hari`\n";
+
+                // Fetch the latest OPEN cboss_ticket
+                $latestCbossTicket = $record->site ? $record->site->cbossTicket()->whereNot('status', 'Closed')->latest('updated_at')->first() : null;
+
+                // Handle PO (already an array)
+                $poData = $record->area && is_array($record->area->po) ? $record->area->po : [];
+                $poString = !empty($poData) ? implode(', ', $poData) : 'No PO data';
+
+                // Conditional logic for Nusa Tenggara Timur
+                if ($record->site && strtolower($record->site->province) === 'nusa tenggara timur') {
+                    $administrativeArea = strtolower($record->site->administrative_area ?? '');
+                    $targetAreaAnjar = ['sumba'];
+                    $targetAreaFirman = ['kupang', 'timor tengah', 'timur tengah', 'malaka', 'belu', 'rote', 'ndao', 'raijua', 'sabu', 'alor'];
+                    $targetAreaNovan = ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata', 'sika'];
+
+                    // Check if administrative_area contains any targetAreaFirman
+                    $isTargetAreaFirman = array_reduce($targetAreaFirman, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
+                    if ($isTargetAreaFirman) {
+                        $filteredPo = array_filter($poData, fn($po) => $po === 'Firman');
+                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Firman-related PO found';
+                    }
+
+                    // Check if administrative_area contains any targetAreaAnjar
+                    $isTargetAreaAnjar = array_reduce($targetAreaAnjar, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
+                    if ($isTargetAreaAnjar) {
+                        $filteredPo = array_filter($poData, fn($po) => $po === 'Anjar');
+                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Anjar-related PO found';
+                    }
+
+                    // Check if administrative_area contains any targetAreaNovan
+                    $isTargetAreaNovan = array_reduce($targetAreaNovan, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
+                    if ($isTargetAreaNovan) {
+                        $filteredPo = array_filter($poData, fn($po) => $po === 'Novan');
+                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Novan-related PO found';
+                    }
+                }
+
+                $cbossTT = $record->cboss_tt ?? 'NO TICKET FOUND';
+                $detailProblem = $record->problem_detail ?? 'NO TICKET FOUND';
+
+                // Add detail_action to the report
+                $report .= "Problem : {$cbossTT} | *{$detailProblem}*\n";
+                $report .= "*Update CBOSS*:\n" . ($latestCbossTicket ? $latestCbossTicket->detail_action : 'No open ticket found') . ", CC : @{$poString}\n\n";
+            }
+        }
+
+        // Add Libur Sekolah section (if not empty)
+        if ($schoolHolidayRecords->isNotEmpty()) {
+            $schoolHolidayCount = $schoolHolidayRecords->count();
+            $report .= "────────── ❕ Libur Sekolah (*{$schoolHolidayCount} Tickets*) ──────────\n";
+            $schoolHolidayGrouped = $schoolHolidayRecords->groupBy('area.area')->sortKeys();
+            foreach ($schoolHolidayGrouped as $areaName => $areaRecords) {
+                foreach ($areaRecords as $record) {
+                    $report .= "> {$record->site_id} - {$record->site->site_name} - {$record->site->province}\n";
+                }
+            }
+
+            $report .= "\n";
+        }
+
+        $report .= "Terimakasih";
+
+        return $report;
     }
 
     protected static function generateReportString(): string
