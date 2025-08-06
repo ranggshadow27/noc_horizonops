@@ -24,7 +24,7 @@ class TmoOpenVsClosed extends ApexChartWidget
      *
      * @var string|null
      */
-    protected static ?string $heading = 'Progress Summary';
+    protected static ?string $heading = 'TMO Progress Summary';
     protected static ?string $subheading = 'Overall TMO Maintenance Corrective & Preventive';
 
     protected static ?string $pollingInterval = '60s';
