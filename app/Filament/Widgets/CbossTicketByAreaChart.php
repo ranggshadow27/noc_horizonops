@@ -44,7 +44,7 @@ class CbossTicketByAreaChart extends ApexChartWidget
 
         return [
             'chart' => [
-                'type' => 'polarArea',
+                'type' => 'donut',
                 'height' => 390,
                 'fontFamily' => 'inherit',
             ],
@@ -87,30 +87,73 @@ class CbossTicketByAreaChart extends ApexChartWidget
         return RawJs::make(
             <<<'JS'
             {
-                chart: {
-                    events: {
-                        dataPointSelection: (event, chartContext,config) => {
+                // chart: {
+                //     events: {
+                //         dataPointSelection: (event, chartContext,config) => {
 
-                            let category = config.w.config;
-                            console.log(category); // Debugging
+                //             let category = config.w.config;
+                //             console.log(category); // Debugging
 
-                            // window.location.href = '/site-monitors';
-                            console.log("Tess");
-                        }
-                    }
-                },
+                //             // window.location.href = '/site-monitors';
+                //             console.log("Tess");
+                //         }
+                //     }
+                // },
 
                 fill: {
                     opacity: 0.8,
+                    type: 'gradient',
                 },
 
                 legend: {
                     fontFamily: 'inherit',
                     position: 'bottom',
                     formatter: function(val, opts) {
-                        return val + " (" + opts.w.globals.series[opts.seriesIndex] + " Tickets)"
+                        return val + " (" + opts.w.globals.series[opts.seriesIndex] + " TT)"
                     }
                 },
+
+                plotOptions: {
+                    pie: {
+                        dataLabels: {
+                            offset: 10,
+                            minAngleToShowLabel: 10,
+                        },
+                        customScale: .9,
+                        startAngle: 0,
+                        endAngle: 360,
+                        donut: {
+                            size: '55%',
+                            labels: {
+                                show: true,
+                                value: {
+                                    show: true,
+                                    fontFamily: 'inherit',
+                                    fontSize: 24,
+                                    fontWeight: 600,
+                                    formatter: function (val) {
+                                        return val + " TT"
+                                    }
+                                },
+                                total: {
+                                    show: true,
+                                    // showAlways: true,
+                                    label: 'Tickets Total',
+                                    offsetY: 120,
+                                    fontSize: 16,
+                                    fontFamily: 'inherit',
+                                    formatter: function (w) {
+                                        return w.globals.seriesTotals.reduce((a, b) => {
+                                            return a + b
+                                        }, 0)
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+
+                colors: ['#00A676', '#FEC620', '#2699D7'],
 
                 responsive: [{
                     breakpoint: 480,
@@ -124,18 +167,9 @@ class CbossTicketByAreaChart extends ApexChartWidget
                 }],
 
                 dataLabels: {
-                    // formatter: function (value) { return value; },
-                },
-
-                plotOptions: {
-                        polarArea: {
-                            rings: {
-                                strokeWidth: 1,
-                            },
-                            spokes: {
-                                strokeWidth: 5,
-                            },
-                        }
+                    // formatter: function(val, opts) {
+                    //     return opts.w.globals.series[opts.seriesIndex] + "Site"
+                    // }
                 },
             }
             JS,
