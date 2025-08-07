@@ -32,6 +32,14 @@ class TmoLineChart extends ApexChartWidget
         $start = Carbon::parse($this->filterFormData['date_start'])->startOfDay();
         $end = Carbon::parse($this->filterFormData['date_end'])->endOfDay();
 
+        $tmoData = Trend::model(CbossTmo::class)
+            ->between(start: $start, end: $end)
+            ->dateColumn('tmo_date')
+            ->perDay()
+            ->count()
+            ->pluck('aggregate')
+            ->toArray();
+
         // Data Preventive Maintenance (action mengandung "PM")
         $pmData = Trend::query(
             CbossTmo::whereRaw('JSON_CONTAINS(LOWER(action), \'"pm"\')')
@@ -82,10 +90,17 @@ class TmoLineChart extends ApexChartWidget
                 [
                     'name' => 'Preventive Maintenance',
                     'data' => $pmData,
+                    'type' => 'line',
                 ],
                 [
                     'name' => 'Corrective Maintenance',
                     'data' => $cmData,
+                    'type' => 'line',
+                ],
+                [
+                    'name' => 'TMO Maintenance (Total)',
+                    'data' => $tmoData,
+                    'type' => 'area',
                 ],
             ],
             'xaxis' => [
@@ -104,15 +119,26 @@ class TmoLineChart extends ApexChartWidget
                     ],
                 ],
             ],
-            'colors' => ['#10b981', '#ef4444'], // Hijau untuk PM, Merah untuk CM
+            'colors' => ['#10b981', '#ef4444', '#BBC7A4'], // Hijau untuk PM, Merah untuk CM
             'stroke' => [
                 'curve' => 'smooth',
-                'width' => 4,
+                'width' => [4, 4, 3],
             ],
             'tooltip' => [
                 'x' => [
                     'format' => 'dd MMM',
                 ],
+            ],
+            'fill' => [
+                'opacity' => [1, 1, 0.15],
+                'gradient' => [
+                    'inverseColors' => false,
+                    'shade' => 'light',
+                    'type' => "vertical",
+                    'opacityFrom' => 0.85,
+                    'opacityTo' => 0.55,
+                    'stops' => [0, 100, 100, 100]
+                ]
             ],
             'grid' => [
                 'strokeDashArray' => 10,
@@ -133,6 +159,20 @@ class TmoLineChart extends ApexChartWidget
             ],
             'legend' => [
                 'fontSize' => '14px',
+            ],
+
+            'dataLabels' => [
+                'enabled' => [false, false, true],
+                'offsetY' => -5,
+                'style' => [
+                    'fontSize' => '14px',
+                    'fontWeight' => 'bold',
+                ],
+                'background' => [
+                    'enabled' => false,
+                    'borderRadius' => 3,
+                    'opacity' => 0.7
+                ]
             ],
         ];
     }

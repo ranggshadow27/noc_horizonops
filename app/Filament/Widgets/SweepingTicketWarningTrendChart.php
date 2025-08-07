@@ -108,7 +108,7 @@ class SweepingTicketWarningTrendChart extends ApexChartWidget
         return [
             'chart' => [
                 'type' => 'line',
-                'height' => 350,
+                'height' => 380,
                 'fontFamily' => 'inherit',
                 'toolbar' => [
                     'autoSelected' => "pan",

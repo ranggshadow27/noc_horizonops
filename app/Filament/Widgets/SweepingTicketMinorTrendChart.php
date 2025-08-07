@@ -94,7 +94,7 @@ class SweepingTicketMinorTrendChart extends ApexChartWidget
             ->perDay()
             ->count();
 
-            $minorOpen = Trend::query(SweepingTicket::where('classification', 'MINOR')
+        $minorOpen = Trend::query(SweepingTicket::where('classification', 'MINOR')
             ->where('status', 'OPEN'))
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
@@ -107,7 +107,7 @@ class SweepingTicketMinorTrendChart extends ApexChartWidget
         return [
             'chart' => [
                 'type' => 'line',
-                'height' => 350,
+                'height' => 380,
                 'fontFamily' => 'inherit',
                 'toolbar' => [
                     'autoSelected' => "pan",
