@@ -21,7 +21,7 @@ class CbossTicketOpenDurationChart extends ApexChartWidget
      *
      * @var string|null
      */
-    protected static ?string $heading = 'Ticket Aging';
+    protected static ?string $heading = 'CBOSS Ticket Aging';
     protected static ?string $subheading = 'CBOSS Tickets Currently Open (duration)';
 
     protected static ?string $pollingInterval = '60s';
