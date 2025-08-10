@@ -41,6 +41,7 @@ class CbossTicketDeviceProblem extends ApexChartWidget
         $troubleCategories = [
             'Transceiver' => 0,
             'POE' => 0,
+            'Antenna' => 0,
             'Router' => 0,
             'Modem' => 0,
             'Access Point' => 0,
@@ -54,7 +55,9 @@ class CbossTicketDeviceProblem extends ApexChartWidget
                 $troubleCategories['Transceiver']++;
             } elseif (str_contains(strtolower($category), 'poe')) {
                 $troubleCategories['POE']++;
-            } elseif (str_contains(strtolower($category), 'router') && !str_contains(strtolower($category), 'adaptor')) {
+            } elseif (str_contains(strtolower($category), 'dish')) {
+                $troubleCategories['ANTENNA']++;
+            }elseif (str_contains(strtolower($category), 'router') && !str_contains(strtolower($category), 'adaptor')) {
                 $troubleCategories['Router']++;
             } elseif (str_contains(strtolower($category), 'modem') && !str_contains(strtolower($category), 'adaptor')) {
                 $troubleCategories['Modem']++;
@@ -160,7 +163,7 @@ class CbossTicketDeviceProblem extends ApexChartWidget
                         },
                     },
                 },
-                colors: ['#00A676', '#FEC620', '#F18805', '#D7263D', '#7B0D1E', '#3B82F6'],
+                colors: ['#00A676', '#A3B9C9', '#F18805', '#D7263D', '#7B0D1E', '#3B82F6', '#A49E8D'],
                 dataLabels: {
                     formatter: function(val, opts) {
                         return opts.w.globals.series[opts.seriesIndex] + " Ticket(s)"
