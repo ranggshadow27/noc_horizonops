@@ -27,7 +27,11 @@ class CbossTicketByProvinceTableWidget extends BaseWidget
             ->columns([
                 TextColumn::make('trouble_category')
                     // ->formatStateUsing(fn($state) => Str::title($state))
-                    ->label('Category Name'),
+                    ->label('Category Name')
+                    ->formatStateUsing(function ($state) {
+                        return '• <span style="margin-left: 24px;"> ' . Str::title($state) . '</span>';
+                    })
+                    ->html(),
 
                 TextColumn::make('total_tickets')
                     ->label('Total Open')
