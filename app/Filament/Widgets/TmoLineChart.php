@@ -6,6 +6,7 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 use App\Models\CbossTmo;
 use Filament\Forms\Components\DatePicker;
 use Flowframe\Trend\Trend;
+use Flowframe\Trend\TrendValue;
 use Illuminate\Support\Carbon;
 
 class TmoLineChart extends ApexChartWidget
@@ -21,7 +22,7 @@ class TmoLineChart extends ApexChartWidget
     {
         return [
             DatePicker::make('date_start')
-                ->default(now()->subDays(14)->startOfDay()),
+                ->default(now()->subDays(20)->startOfDay()),
             DatePicker::make('date_end')
                 ->default(now()->endOfDay()),
         ];
@@ -62,11 +63,19 @@ class TmoLineChart extends ApexChartWidget
             ->pluck('aggregate')
             ->toArray();
 
+            $tmoDate = Trend::query(
+                CbossTmo::whereRaw('NOT JSON_CONTAINS(LOWER(action), \'"pm"\')')
+            )
+                ->between(start: $start, end: $end)
+                ->perDay()
+                ->dateColumn('tmo_date')
+                ->count();
+
         // Label untuk sumbu X (tanggal 7 hari terakhir)
-        $labels = [];
-        for ($i = 14; $i >= 0; $i--) {
-            $labels[] = Carbon::today('Asia/Jakarta')->subDays($i)->format('d M');
-        }
+        // $labels = [];
+        // for ($i = 14; $i >= 0; $i--) {
+        //     $labels[] = Carbon::today('Asia/Jakarta')->subDays($i)->format('d M');
+        // }
 
         return [
             'chart' => [
@@ -104,7 +113,7 @@ class TmoLineChart extends ApexChartWidget
                 ],
             ],
             'xaxis' => [
-                'categories' => $labels,
+                'categories' => $tmoDate->map(fn(TrendValue $value) => Carbon::parse($value->date)->format('d M')),
                 'labels' => [
                     'style' => [
                         'fontFamily' => 'inherit',
