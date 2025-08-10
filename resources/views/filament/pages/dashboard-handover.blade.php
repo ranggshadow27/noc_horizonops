@@ -133,7 +133,7 @@
                 </div>
 
                 <div class="flex-1 sm:w-1/2">
-                    @livewire(\App\Filament\Widgets\CbossTicketOpenDurationChart::class)
+                    @livewire(\App\Filament\Widgets\CbossTicketDeviceProblem::class)
                 </div>
 
                 <div class="flex-1 sm:w-1/2">
