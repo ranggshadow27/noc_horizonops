@@ -22,7 +22,7 @@ class TmoLineChart extends ApexChartWidget
     {
         return [
             DatePicker::make('date_start')
-                ->default(now()->subDays(20)->startOfDay()),
+                ->default(now()->subDays(18)->startOfDay()),
             DatePicker::make('date_end')
                 ->default(now()->endOfDay()),
         ];
