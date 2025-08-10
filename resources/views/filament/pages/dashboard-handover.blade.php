@@ -66,7 +66,7 @@
             </div>
         </div>
         <!-- Bagian Kanan (Div 3) -->
-        <div class="flex flex-col sm:w-1/2 gap-4">
+        <div class="flex flex-col sm:w-1/2 gap-6">
             {{-- <h2>Sweeping Site</h2> --}}
             <div>
                 @livewire(\App\Filament\Widgets\MainDashboardStatFirst::class)
