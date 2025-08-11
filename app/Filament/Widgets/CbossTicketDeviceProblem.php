@@ -56,8 +56,8 @@ class CbossTicketDeviceProblem extends ApexChartWidget
             } elseif (str_contains(strtolower($category), 'poe')) {
                 $troubleCategories['POE']++;
             } elseif (str_contains(strtolower($category), 'dish')) {
-                $troubleCategories['ANTENNA']++;
-            }elseif (str_contains(strtolower($category), 'router') && !str_contains(strtolower($category), 'adaptor')) {
+                $troubleCategories['Antenna']++;
+            } elseif (str_contains(strtolower($category), 'router') && !str_contains(strtolower($category), 'adaptor')) {
                 $troubleCategories['Router']++;
             } elseif (str_contains(strtolower($category), 'modem') && !str_contains(strtolower($category), 'adaptor')) {
                 $troubleCategories['Modem']++;
