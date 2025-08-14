@@ -41,7 +41,7 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
         $openTT = Trend::model(NmtTickets::class)
             ->between(
                 start: Carbon::parse(now()->subMonth(2)),
-                end: Carbon::parse(now()->addMonths(3))
+                end: Carbon::parse(now()->addMonths(1))
             )
             ->dateColumn('date_start')
             ->perMonth()
@@ -50,7 +50,7 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
         $closedTT = Trend::query(NmtTickets::where('status', 'CLOSED'))
             ->between(
                 start: Carbon::parse(now()->subMonth(2)),
-                end: Carbon::parse(now()->addMonths(3))
+                end: Carbon::parse(now()->addMonths(1))
             )
             ->dateColumn('date_start')
             ->perMonth()
@@ -61,7 +61,7 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
             'chart' => [
                 'type' => 'bar',
                 'height' => 350,
-                'stacked' => true,
+                // 'stacked' => true,
                 'fontFamily' => 'inherit',
                 'toolbar' => [
                     'show' => true,
@@ -85,7 +85,7 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
                     'data' => $closedTT->map(fn(TrendValue $value) => $value->aggregate),
                 ],
                 [
-                    'name' => 'TT Remaining',
+                    'name' => 'TT on Progress',
                     'data' => $openTT->zip($closedTT)->map(function ($values) {
                         if ($values[0]->aggregate - $values[1]->aggregate < 0) {
                             return 0;
