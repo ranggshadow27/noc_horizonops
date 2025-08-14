@@ -148,7 +148,15 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
             },
 
             dataLabels: {
-                offsetX: 0,
+                enabled: true,
+                formatter: function (val) {
+                    return val;
+                },
+                offsetY: -20,
+                style: {
+                    fontSize: '12px',
+                    colors: ["#304758"]
+                }
             },
 
             plotOptions: {
