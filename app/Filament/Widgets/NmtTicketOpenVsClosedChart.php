@@ -40,7 +40,7 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
 
         $openTT = Trend::model(NmtTickets::class)
             ->between(
-                start: Carbon::parse(now()->subMonth(3)),
+                start: Carbon::parse(now()->subMonth(2)),
                 end: Carbon::parse(now())
             )
             ->dateColumn('date_start')
@@ -49,7 +49,7 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
 
         $closedTT = Trend::query(NmtTickets::where('status', 'CLOSED'))
             ->between(
-                start: Carbon::parse(now()->subMonth(3)),
+                start: Carbon::parse(now()->subMonth(2)),
                 end: Carbon::parse(now())
             )
             ->dateColumn('date_start')
@@ -158,7 +158,9 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
                     borderRadiusWhenStacked: 'all', // 'all', 'last'
                     borderRadiusApplication: 'end', // 'around', 'end'
                     dataLabels: {
-                        // offsetY: 30,
+                        offsetY: 30,
+                        hideOverflowingLabels: true,
+                        position: 'top',
                         total: {
                             enabled: true,
                         style: {
