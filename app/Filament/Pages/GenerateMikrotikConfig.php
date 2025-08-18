@@ -302,16 +302,19 @@ class GenerateMikrotikConfig extends Page
                 Storage::put('temp/' . $txtFileName, $configContent);
 
                 $txtFilePath = storage_path('app/temp/' . $txtFileName);
-                $binFilePath = storage_path('app/temp/' . $outputFileName);
+                $binFilePath = base_path('bin/' . $outputFileName);
                 $binFolderPath = base_path('bin');
 
-                $command = sprintf('cd "%s" && ./gscfgtool -t GWN7003 -e "%s"', $binFilePath, $txtFilePath);
+                $command = sprintf('cd "%s" && ./gscfgtool -t GWN7003 -e "%s"', $binFolderPath, $txtFilePath);
                 $output = shell_exec($command . ' 2>&1');
 
                 if (!file_exists($binFilePath)) {
                     Notification::make()->title('Error')->body('Gagal mengenkripsi file ke .bin: ' . $output)->danger()->send();
                     throw new \Exception('Gagal mengenkripsi file ke .bin: ' . $output);
                 }
+
+                $moveBinCommand = sprintf('cd "%s" && mv "%s" ../storage/app/temp', $binFolderPath, $binFilePath);
+                shell_exec($moveBinCommand . ' 2>&1');
 
                 Storage::delete('temp/' . $txtFileName);
                 $contentType = 'application/octet-stream';
