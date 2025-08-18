@@ -424,6 +424,7 @@ class NmtTicketsResource extends Resource
                             ");
                             Notification::make()
                                 ->title('Priority Report Copied')
+                                ->body('Report Copied to Clipboard Successfully')
                                 ->success()
                                 ->send();
                         })
@@ -440,6 +441,7 @@ class NmtTicketsResource extends Resource
                             ");
                             Notification::make()
                                 ->title('Report Detail Copied')
+                                ->body('Report Copied to Clipboard Successfully')
                                 ->success()
                                 ->send();
                         })
@@ -456,6 +458,7 @@ class NmtTicketsResource extends Resource
                             ");
                             Notification::make()
                                 ->title('PMU Report Copied')
+                                ->body('Report Copied to Clipboard Successfully')
                                 ->success()
                                 ->send();
                         })
