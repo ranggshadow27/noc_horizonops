@@ -741,10 +741,10 @@ class NmtTicketsResource extends Resource
             $report .= static::generateCategoryDetails('❌ TT OPEN', $open, false, false, '❌');
         }
         if ($totalRenovasi > 0) {
-            $report .= static::generateCategoryDetails('🚫 RELOKASI', $relokasi, false, true, '🚫');
+            $report .= static::generateCategoryDetails('🚫 RELOKASI', $renovasi, false, true, '🚫');
         }
         if ($totalRelokasi > 0) {
-            $report .= static::generateCategoryDetails('⚠️ RENOVASI', $renovasi, false, true, '⚠️');
+            $report .= static::generateCategoryDetails('⚠️ RENOVASI', $relokasi, false, true, '⚠️');
         }
         if ($totalLiburSekolah > 0) {
             $report .= static::generateCategoryDetails('❕ LIBUR SEKOLAH', $liburSekolah, false, false, '❕');
