@@ -303,7 +303,7 @@ class GenerateMikrotikConfig extends Page
 
                 $txtFilePath = storage_path('app/temp/' . $txtFileName);
                 $binFilePath = base_path('bin/' . $outputFileName);
-                $binFolderPath = base_path('bin');
+                $binFolderPath = base_path('bin/');
 
                 $command = sprintf('cd "%s" && ./gscfgtool -t GWN7003 -e "%s"', $binFolderPath, $txtFilePath);
                 $output = shell_exec($command . ' 2>&1');
