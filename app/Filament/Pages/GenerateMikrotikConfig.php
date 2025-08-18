@@ -267,7 +267,6 @@ class GenerateMikrotikConfig extends Page
                 $successMessage = 'Mikrotik RSC configuration generated successfully.';
             } else {
                 $ipParts = explode('.', $deviceNetwork->ap2_ip);
-
                 if (count($ipParts) !== 4) {
                     Notification::make()->title('Error')->body('Format AP2 IP tidak valid.')->danger()->send();
                     throw new \Exception('Format AP2 IP tidak valid.');
@@ -314,7 +313,7 @@ class GenerateMikrotikConfig extends Page
                     throw new \Exception('Gagal mengenkripsi file ke .bin: ' . $output);
                 }
 
-                // Storage::delete('temp/' . $txtFileName);
+                Storage::delete('temp/' . $txtFileName);
                 $contentType = 'application/octet-stream';
                 $successMessage = 'Grandstream bin configuration generated successfully.';
             }
@@ -324,8 +323,8 @@ class GenerateMikrotikConfig extends Page
             Notification::make()->title('Success')->body($successMessage)->success()->send();
 
             return response()->download(
-                storage_path('app/temp/' . $txtFileName),
-                $txtFileName,
+                storage_path('app/temp/' . $outputFileName),
+                $outputFileName,
                 ['Content-Type' => $contentType]
             )->deleteFileAfterSend(true);
         } catch (\Exception $e) {
