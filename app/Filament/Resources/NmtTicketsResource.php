@@ -413,32 +413,53 @@ class NmtTicketsResource extends Resource
             ])
             ->headerActions([
                 ActionGroup::make([
-                    CopyAction::make('generate_priority_report')
+                    Action::make('generate_priority_report')
                         ->label('Priority Report')
                         ->color('gray')
-                        ->copyable(function ($livewire) {
-                            return static::generatePriorityReport($livewire);
+                        ->icon('phosphor-chat-teardrop-text-duotone')
+                        ->action(function ($livewire) {
+                            $report = static::generatePriorityReport($livewire);
+                            $livewire->js("
+                                navigator.clipboard.writeText(" . json_encode($report) . ");
+                            ");
+                            Notification::make()
+                                ->title('Priority Report Copied')
+                                ->success()
+                                ->send();
                         })
-                        ->requiresConfirmation(false)
-                        ->icon('phosphor-chat-teardrop-text-duotone'),
+                        ->requiresConfirmation(false),
 
-                    CopyAction::make('generate_report')
+                    Action::make('generate_report')
                         ->label('Report with Detail')
                         ->color('gray')
-                        ->copyable(function ($livewire) {
-                            return static::generateReportFromTable($livewire);
+                        ->icon('phosphor-files')
+                        ->action(function ($livewire) {
+                            $report = static::generateReportFromTable($livewire);
+                            $livewire->js("
+                                navigator.clipboard.writeText(" . json_encode($report) . ");
+                            ");
+                            Notification::make()
+                                ->title('Report Detail Copied')
+                                ->success()
+                                ->send();
                         })
-                        ->requiresConfirmation(false)
-                        ->icon('phosphor-files'),
+                        ->requiresConfirmation(false),
 
-                    CopyAction::make('generate_report')
-                        ->color('gray')
+                    Action::make('generate_pmu_report')
                         ->label('PMU Report')
-                        ->successNotificationTitle('Report copied to clipboard')
-                        ->copyable(function () {
-                            return static::generateReportString();
+                        ->color('gray')
+                        ->icon('phosphor-file-txt-duotone')
+                        ->action(function ($livewire) {
+                            $report = static::generateReportString($livewire);
+                            $livewire->js("
+                                navigator.clipboard.writeText(" . json_encode($report) . ");
+                            ");
+                            Notification::make()
+                                ->title('PMU Report Copied')
+                                ->success()
+                                ->send();
                         })
-                        ->icon('phosphor-file-txt-duotone'),
+                        ->requiresConfirmation(false),
                 ])->label('Generate Text Report')
                     ->icon('phosphor-circles-four-duotone')
                     ->size(ActionSize::Medium)
@@ -741,10 +762,10 @@ class NmtTicketsResource extends Resource
             $report .= static::generateCategoryDetails('❌ TT OPEN', $open, false, false, '❌');
         }
         if ($totalRenovasi > 0) {
-            $report .= static::generateCategoryDetails('🚫 RELOKASI', $renovasi, false, true, '🚫');
+            $report .= static::generateCategoryDetails('⚠️ RENOVASI', $renovasi, false, true, '⚠️');
         }
         if ($totalRelokasi > 0) {
-            $report .= static::generateCategoryDetails('⚠️ RENOVASI', $relokasi, false, true, '⚠️');
+            $report .= static::generateCategoryDetails('🚫 RELOKASI', $relokasi, false, true, '🚫');
         }
         if ($totalLiburSekolah > 0) {
             $report .= static::generateCategoryDetails('❕ LIBUR SEKOLAH', $liburSekolah, false, false, '❕');
