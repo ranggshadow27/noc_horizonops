@@ -316,7 +316,7 @@ class GenerateMikrotikConfig extends Page
                 $moveBinCommand = sprintf('cd "%s" && mv "%s" ../storage/app/temp', $binFolderPath, $outputFileName);
                 $moveBinCommandoutput = shell_exec($moveBinCommand . ' 2>&1');
 
-                dd($moveBinCommandoutput);
+                dd($moveBinCommand);
 
                 Storage::delete('temp/' . $txtFileName);
                 $contentType = 'application/octet-stream';
