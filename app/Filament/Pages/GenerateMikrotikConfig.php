@@ -315,6 +315,9 @@ class GenerateMikrotikConfig extends Page
                     throw new \Exception('Gagal mengenkripsi file ke .bin: ' . $output);
                 }
 
+                $moveBinCommand = sprintf('cd "%s" && mv "%s" ../storage/app/temp', $binFolderPath, $outputFileName);
+                $moveBinCommandoutput = shell_exec($moveBinCommand . ' 2>&1');
+
                 // dd($moveBinCommand);
 
                 // Storage::delete('temp/' . $txtFileName);
