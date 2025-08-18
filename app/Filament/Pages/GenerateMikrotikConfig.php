@@ -302,10 +302,10 @@ class GenerateMikrotikConfig extends Page
                 Storage::put('temp/' . $txtFileName, $configContent);
 
                 $txtFilePath = storage_path('app/temp/' . $txtFileName);
-                $binFilePath = base_path('bin/' . $outputFileName);
-                $binFolderPath = base_path('bin/');
+                $binFilePath = storage_path('app/temp/' . $outputFileName);
+                $binFolderPath = base_path('bin');
 
-                $command = sprintf('cd "%s" && ./gscfgtool -t GWN7003 -e "%s"', $binFolderPath, $txtFilePath);
+                $command = sprintf('cd "%s" && ./gscfgtool -t GWN7003 -e "%s"', $binFilePath, $txtFilePath);
                 $output = shell_exec($command . ' 2>&1');
 
                 if (!file_exists($binFilePath)) {
@@ -323,7 +323,7 @@ class GenerateMikrotikConfig extends Page
             Notification::make()->title('Success')->body($successMessage)->success()->send();
 
             return response()->download(
-                storage_path($binFilePath),
+                storage_path('app/temp/' . $outputFileName),
                 $outputFileName,
                 ['Content-Type' => $contentType]
             )->deleteFileAfterSend(true);
