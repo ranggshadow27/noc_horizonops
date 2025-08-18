@@ -264,6 +264,8 @@ class GenerateMikrotikConfig extends Page
 
                 $outputFileName = $cleanFileName . '.rsc';
                 $contentType = 'text/plain';
+                Storage::put('temp/' . $outputFileName, $configContent);
+
                 $successMessage = 'Mikrotik RSC configuration generated successfully.';
             } else {
                 $ipParts = explode('.', $deviceNetwork->ap2_ip);
@@ -319,8 +321,6 @@ class GenerateMikrotikConfig extends Page
                 $contentType = 'application/octet-stream';
                 $successMessage = 'Grandstream bin configuration generated successfully.';
             }
-
-            Storage::put('temp/' . $outputFileName, $configContent);
 
             Notification::make()->title('Success')->body($successMessage)->success()->send();
 
