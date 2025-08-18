@@ -323,7 +323,7 @@ class GenerateMikrotikConfig extends Page
             Notification::make()->title('Success')->body($successMessage)->success()->send();
 
             return response()->download(
-                storage_path($binFolderPath . $outputFileName),
+                storage_path($outputFileName),
                 $outputFileName,
                 ['Content-Type' => $contentType]
             )->deleteFileAfterSend(true);
