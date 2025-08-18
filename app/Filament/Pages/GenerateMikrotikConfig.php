@@ -318,7 +318,7 @@ class GenerateMikrotikConfig extends Page
 
                 dd($moveBinCommand);
 
-                Storage::delete('temp/' . $txtFileName);
+                // Storage::delete('temp/' . $txtFileName);
                 $contentType = 'application/octet-stream';
                 $successMessage = 'Grandstream bin configuration generated successfully.';
             }
