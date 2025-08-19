@@ -274,8 +274,12 @@ class SiteMonitorResource extends Resource
                                 "*Alamat* :\n{$record->site?->address}\n{$record->site?->province}\n\n" .
                                 "*Koordinat* :\nLat {$record->site?->latitude} | Long {$record->site?->longitude}\n\n" .
                                 "*Data PIC* :\n" .
-                                "PIC Lokasi\t: {$record->site?->pic_name} / {$record->site?->pic_number}\n" .
-                                "PIC Last TMO\t: {$latestTmo?->pic_name} / {$latestTmo?->pic_number}";
+                                "PIC Lokasi\t: {$record->site?->pic_name} / {$record->site?->pic_number}\n";
+
+                            if ($latestTmo != null) {
+                                $report .= "PIC Last TMO\t: {$latestTmo?->pic_name} / {$latestTmo?->pic_number}";
+                            };
+
                             $livewire->js("navigator.clipboard.writeText(" . json_encode($report) . ");");
 
                             Notification::make()
