@@ -269,7 +269,7 @@ class SiteMonitorResource extends Resource
                         ->label("Copy Site Info")
                         ->icon('phosphor-copy-duotone')
                         ->action(function (SiteMonitor $record, $livewire) {
-                            $latestTmo = $record->site?->cbossTmo?->first();
+                            $latestTmo = $record->site?->cbossTmo?->last();
                             $report = "{$record->site?->site_name} *[{$record->site?->site_id}]*\n\n" .
                                 "*Alamat* :\n{$record->site?->address}\n{$record->site?->province}\n\n" .
                                 "*Koordinat* :\nLat {$record->site?->latitude} | Long {$record->site?->longitude}\n\n" .
