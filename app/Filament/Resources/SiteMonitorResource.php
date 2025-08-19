@@ -11,6 +11,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
@@ -30,8 +31,6 @@ class SiteMonitorResource extends Resource
     protected static ?string $navigationGroup = 'Site Management';
 
     protected static ?string $navigationLabel = 'Monitoring Site';
-
-
 
     public static function form(Forms\Form $form): Forms\Form
     {
@@ -213,9 +212,7 @@ class SiteMonitorResource extends Resource
             ->actions([
                 Tables\Actions\Action::make('Details')
                     ->icon('heroicon-c-arrow-up-left')
-                    // This is the important part!
                     ->infolist([
-                        // Inside, we can treat this as any info list and add all the fields we want!
                         Section::make('Site Information')
                             ->schema([
                                 TextEntry::make('site_id'),
@@ -246,7 +243,6 @@ class SiteMonitorResource extends Resource
                                         'Down' => 'danger',
                                         'Up' => 'success',
                                     }),
-
                                 TextEntry::make('modem_last_up')->badge()->label("Modem Last Up")
                                     ->dateTimeTooltip()->since()->default(Carbon::now()),
                                 TextEntry::make('mikrotik_last_up')->badge()->label("Router Last Up")
@@ -257,10 +253,55 @@ class SiteMonitorResource extends Resource
                                     ->dateTimeTooltip()->since()->default(Carbon::now()),
                             ])
                             ->columns(4),
-
                     ])
                     ->modalSubmitAction(false)
                     ->modalHeading('Site Details'),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('Zabbix')
+                        ->icon('phosphor-monitor-duotone')
+                        ->url(fn(SiteMonitor $record): string => "https://manager.zabbix-bakti.io/host/site-tree?site_uniq_id={$record->site_id}&site_type=LAYANAN")
+                        ->openUrlInNewTab(),
+                    Tables\Actions\Action::make('Grafana')
+                        ->icon('phosphor-chart-line-duotone')
+                        ->url(fn(SiteMonitor $record): string => $record->site->ip_hub == 'H58' ? "https://mon-rtgs.mahaga-pratama.co.id/d/-wTRuDqSz/rtgs-h58-remote-terminal-monitoring?orgId=1&refresh=30s&var-Terminal_id={$record->site_id}" : "https://mon-rtgs.mahaga-pratama.co.id/d/dGmoBucIk/rtgs-h10-remote-terminal-monitoring?orgId=1&var-Terminal_id={$record->site_id}")
+                        ->openUrlInNewTab(),
+                    Tables\Actions\Action::make('Copy Site Info')
+                        ->label("Copy Site Info")
+                        ->icon('phosphor-copy-duotone')
+                        ->action(function (SiteMonitor $record, $livewire) {
+                            $latestTmo = $record->site?->cbossTmo?->first();
+                            $report = "{$record->site?->site_name} *[{$record->site?->site_id}]*\n\n" .
+                                "*Alamat* :\n{$record->site?->address}\n{$record->site?->province}\n\n" .
+                                "*Koordinat* :\nLat {$record->site?->latitude} | Long {$record->site?->longitude}\n\n" .
+                                "*Data PIC* :\n" .
+                                "PIC Lokasi\t: {$record->site?->pic_name} / {$record->site?->pic_number}\n" .
+                                "PIC Last TMO\t: {$latestTmo?->pic_name} / {$latestTmo?->pic_number}";
+                            $livewire->js("navigator.clipboard.writeText(" . json_encode($report) . ");");
+
+                            Notification::make()
+                                ->title('Info Copied')
+                                ->body('Site Information Copied to Clipboard Successfully')
+                                ->success()
+                                ->send();
+                        }),
+                    Tables\Actions\Action::make('Request Optim')
+                        ->label("Request Optim")
+                        ->icon('phosphor-arrow-circle-up-duotone')
+                        ->action(function (SiteMonitor $record, $livewire) {
+
+                            $report = "Mohon dibantu optim untuk lokasi {$record->site?->site_id} rekan, Terimakasih sebelumnya";
+                            $livewire->js("navigator.clipboard.writeText(" . json_encode($report) . ");");
+
+                            Notification::make()
+                                ->title('Chat Copied')
+                                ->body('Request Optim Copied to Clipboard Successfully')
+                                ->success()
+                                ->send();
+                        }),
+                ])
+                    ->label('Monitoring Links')
+                    ->icon('phosphor-link-duotone')
+                    ->color('primary'),
             ])
             ->recordUrl(null);
     }
