@@ -4,13 +4,18 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SiteMonitorResource\Pages;
 use App\Filament\Resources\SiteMonitorResource\RelationManagers;
+use App\Livewire\SiteMonitorTable;
 use App\Models\SiteDetail;
 use App\Models\SiteMonitor;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Livewire;
 use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\Tabs\Tab;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
+use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
@@ -184,7 +189,7 @@ class SiteMonitorResource extends Resource
                     ->searchable(),
                 Filter::make('modem_last_up')
                     ->form([
-                        Forms\Components\DatePicker::make('created_from')->label("Modem Last UP"),
+                        Forms\Components\DatePicker::make('created_from')->label("Modem Last Up"),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
@@ -210,6 +215,10 @@ class SiteMonitorResource extends Resource
                 //     ->color('primary'),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->label("Log Site")
+                    ->icon('phosphor-clock-counter-clockwise-duotone'),
+
                 Tables\Actions\Action::make('Details')
                     ->icon('heroicon-c-arrow-up-left')
                     ->infolist([
@@ -233,7 +242,7 @@ class SiteMonitorResource extends Resource
                                         'Down' => 'danger',
                                         'Up' => 'success',
                                     }),
-                                TextEntry::make('ap1')->badge()->label("Access Point 1")
+                                TextEntry::make('ap1')->badge()->label("Access slant 1")
                                     ->color(fn(string $state): string => match ($state) {
                                         'Down' => 'danger',
                                         'Up' => 'success',
@@ -256,6 +265,7 @@ class SiteMonitorResource extends Resource
                     ])
                     ->modalSubmitAction(false)
                     ->modalHeading('Site Details'),
+
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\Action::make('Zabbix')
                         ->icon('phosphor-monitor-duotone')
@@ -292,7 +302,6 @@ class SiteMonitorResource extends Resource
                         ->label("Request Optim")
                         ->icon('phosphor-arrow-circle-up-duotone')
                         ->action(function (SiteMonitor $record, $livewire) {
-
                             $report = "Mohon dibantu optim untuk lokasi {$record->site?->site_id} rekan, Terimakasih sebelumnya";
                             $livewire->js("navigator.clipboard.writeText(" . json_encode($report) . ");");
 
@@ -306,8 +315,40 @@ class SiteMonitorResource extends Resource
                     ->label('Monitoring Links')
                     ->icon('phosphor-link-duotone')
                     ->color('primary'),
+
+
             ])
             ->recordUrl(null);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('')
+                    // ->collapsed(true)
+                    ->schema([
+                        TextEntry::make('site_id')
+                            ->label('Site ID'),
+                        TextEntry::make('site.site_name')
+                            ->label('Site Name'),
+                        TextEntry::make('site.administrative_area')
+                            ->formatStateUsing(fn($record) => $record->site->administrative_area . ", " . $record->site->province)
+                            ->label('Address'),
+                        TextEntry::make('site.latitude')
+                            ->formatStateUsing(fn($record) => "Lat: " . $record->site->latitude . ", " . "Long: " . $record->site->longitude)
+                            ->label('Coordinate'),
+                        TextEntry::make('site.gateway')
+                            ->formatStateUsing(fn($record) => $record->site->gateway . " (" . $record->site->spotbeam . ") " . " / " . $record->site->ip_hub)
+                            ->label('Gateway'),
+                    ])
+                    ->columns(5),
+                Section::make('Site Logs')
+                    // ->collapsed(true)
+                    ->schema([
+                        Livewire::make(SiteMonitorTable::class, ['site_id' => $infolist->record])
+                    ]),
+            ]);
     }
 
     public static function getPages(): array
@@ -316,6 +357,7 @@ class SiteMonitorResource extends Resource
             'index' => Pages\ListSiteMonitors::route('/'),
             'create' => Pages\CreateSiteMonitor::route('/create'),
             'edit' => Pages\EditSiteMonitor::route('/{record}/edit'),
+            'view' => Pages\ViewSiteMonitor::route('/{record}'),
         ];
     }
 }

@@ -17,6 +17,7 @@ use Filament\Facades\Filament;
 use Filament\Navigation\NavigationGroup;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentColor;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
         TmoImage::observe(TMOImageObserver::class);
         TmoTask::observe(TmoTaskObserver::class);
         NmtTickets::observe(NmtTicketObserver::class);
+
+        Livewire::component('site-monitor-table', \App\Livewire\SiteMonitorTable::class);
 
         FilamentColor::register([
             'danger' => Color::Red,

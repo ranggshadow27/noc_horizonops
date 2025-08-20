@@ -9,10 +9,11 @@ class SiteDetail extends Model
 {
     use HasFactory;
 
-    // Nama tabel yang digunakan oleh model ini
     protected $table = 'site_details';
+    protected $primaryKey = 'site_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
-    // Menentukan kolom yang bisa diisi
     protected $fillable = [
         'site_id',
         'site_name',
@@ -32,54 +33,75 @@ class SiteDetail extends Model
         'installer_name',
     ];
 
-    // Menentukan kolom yang digunakan sebagai primary key
-    protected $primaryKey = 'site_id';
-
-    // Jika kamu ingin mencegah auto-increment ID (karena menggunakan site_id sebagai primary key)
-    public $incrementing = false;
-
-    // Menentukan tipe data primary key (karena site_id string, bukan integer)
-    protected $keyType = 'string';
-
-    // Relasi ke Device
-    public function devices()
+    /**
+     * Relasi ke SiteLog (hasMany)
+     */
+    public function siteLogs()
     {
-        return $this->hasOne(Device::class, 'site_id', 'site_id');
+        return $this->hasMany(SiteLog::class, 'site_id', 'site_id');
     }
 
-    // Relasi ke DeviceNetwork
-    public function deviceNetworks()
-    {
-        return $this->hasOne(DeviceNetwork::class, 'site_id', 'site_id');
-    }
-
+    /**
+     * Relasi ke SiteMonitor (hasOne)
+     */
     public function siteMonitor()
     {
         return $this->hasOne(SiteMonitor::class, 'site_id', 'site_id');
     }
 
+    /**
+     * Relasi ke NmtTickets (hasMany)
+     */
     public function nmtTickets()
     {
         return $this->hasMany(NmtTickets::class, 'site_id', 'site_id');
     }
 
+    /**
+     * Relasi ke Device (hasOne)
+     */
+    public function devices()
+    {
+        return $this->hasOne(Device::class, 'site_id', 'site_id');
+    }
+
+    /**
+     * Relasi ke DeviceNetwork (hasOne)
+     */
+    public function deviceNetworks()
+    {
+        return $this->hasOne(DeviceNetwork::class, 'site_id', 'site_id');
+    }
+
+    /**
+     * Relasi ke AreaList (belongsTo)
+     */
     public function area()
     {
         return $this->belongsTo(AreaList::class, 'province', 'province');
     }
 
+    /**
+     * Relasi ke SweepingTicket (hasMany)
+     */
     public function sweepingTickets()
     {
         return $this->hasMany(SweepingTicket::class, 'site_id', 'site_id');
     }
 
+    /**
+     * Relasi ke CbossTmo (hasMany)
+     */
     public function cbossTmo()
     {
         return $this->hasMany(CbossTmo::class, 'site_id', 'site_id');
     }
 
+    /**
+     * Relasi ke CbossTicket (hasMany)
+     */
     public function cbossTicket()
     {
-        return $this->hasMany(CbossTicket::class, 'site_id');
+        return $this->hasMany(CbossTicket::class, 'site_id', 'site_id');
     }
 }
