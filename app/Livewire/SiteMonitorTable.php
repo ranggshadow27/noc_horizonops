@@ -64,7 +64,7 @@ class SiteMonitorTable extends Component implements HasForms, HasTable
 
                 Tables\Columns\TextColumn::make('nmt_ticket')
                     ->label('NMT Ticket')
-                    ->tooltip(fn($record): string => $record->nmtTicket->aging ? "Aging : " . ($record->nmtTicket->aging) . ' day(s)' : "")
+                    ->tooltip(fn($record): string => $record->nmt_ticket !== "-" ? "Aging : " . ($record->nmtTicket->aging) . ' day(s)' : "")
                     ->badge()
                     ->color(fn($state) => $state === "-" ? "gray" : "danger")
                     ->sortable(),
