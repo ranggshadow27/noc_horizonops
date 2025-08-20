@@ -344,6 +344,8 @@ class SiteMonitorResource extends Resource
                     ])
                     ->columns(5),
                 Section::make('Site Logs')
+                    ->label("Site Logs")
+                    ->description("History of Trouble Tickets & Uptime per Site - Network Operation Center. ")
                     // ->collapsed(true)
                     ->schema([
                         Livewire::make(SiteMonitorTable::class, ['site_id' => $infolist->record])

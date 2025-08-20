@@ -51,4 +51,9 @@ class SiteLog extends Model
     {
         return $this->belongsTo(NmtTickets::class, 'nmt_ticket', 'ticket_id');
     }
+
+    public function siteMonitor()
+    {
+        return $this->hasOne(SiteMonitor::class, 'site_id', 'site_id');
+    }
 }

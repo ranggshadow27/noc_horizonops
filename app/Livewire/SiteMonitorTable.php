@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\SiteLog;
+use App\Models\SiteMonitor;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Tables;
@@ -10,11 +11,13 @@ use Filament\Tables\Table;
 use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 
 class SiteMonitorTable extends Component implements HasForms, HasTable
 {
@@ -78,8 +81,43 @@ class SiteMonitorTable extends Component implements HasForms, HasTable
                     ->formatStateUsing(fn(SiteLog $record): string => $record->modem_last_up === null ? "Normal" : Carbon::parse($record->modem_last_up)->since())
                     // ->dateTime()
                     ->sortable(),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('sensorStatus')
+                    ->label('Sensor Status')
+                    ->native(false)
+                    ->options(function () {
+                        // Ambil semua sensor_status yang unik dari SiteMonitor, tambahkan 'Unknown Sensor Status'
+                        $statuses = SiteMonitor::whereNotNull('sensor_status')
+                            ->pluck('sensor_status', 'sensor_status')
+                            ->toArray();
 
-            ]);
+                        // Tambahkan 'Unknown Sensor Status' ke opsi
+                        return $statuses + ['Unknown Sensor Status' => 'Unknown Sensor Status'];
+                    })
+                    ->modifyQueryUsing(function (Builder $query, $state) {
+                        if (! $state['value']) {
+                            return $query;
+                        }
+
+                        if ($state['value'] === 'Unknown Sensor Status') {
+                            // Filter untuk record yang tidak punya relasi siteMonitor
+                            return $query->whereHas('siteMonitor', function ($query) use ($state) {
+                                $query->whereNull('sensor_status');
+                            });
+                        }
+
+                        // Filter untuk status sensor tertentu
+                        return $query->whereHas('siteMonitor', function ($query) use ($state) {
+                            $query->where('sensor_status', $state['value']);
+                        });
+                    }),
+
+                DateRangeFilter::make('created_at')
+                    ->label('Date'),
+            ])
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(10);
     }
 
     public function render()
