@@ -36,7 +36,7 @@ class SiteMonitorTable extends Component implements HasForms, HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query($this->getTableQuery())
+            ->query($this->getTableQuery()->orderByDesc('created_at'))
             ->columns([
                 Tables\Columns\TextColumn::make('site_log_id')
                     ->label('Log ID')
