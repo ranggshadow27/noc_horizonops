@@ -527,50 +527,55 @@ class NmtTicketsResource extends Resource
             ->orderBy('aging', 'desc');
 
         $records = $query->get();
+        $groupedRecords = $records->groupBy('aging')->sortKeysDesc();
 
         $report = "Berikut TT Prioritas, tanggal {$date}:\n\n";
         $counter = 1;
-        foreach ($records as $ticket) {
-            $siteName = $ticket->site ? $ticket->site->site_name : 'Unknown';
-            $statusEmoji = $ticket->status === 'OPEN' ? '❌' : '✅';
+        foreach ($groupedRecords as $aging => $tickets) {
+            $report .= "Aging {$aging} Hari\n";
+            $report .= "=========\n";
+            foreach ($tickets as $ticket) {
+                $siteName = $ticket->site ? $ticket->site->site_name : 'Unknown';
+                $statusEmoji = $ticket->status === 'OPEN' ? '❌' : '✅';
 
-            // Handle PO data
-            $poData = $ticket->area && is_array($ticket->area->po) ? $ticket->area->po : [];
-            $poString = !empty($poData) ? implode(', ', $poData) : 'No PO data';
+                // Handle PO data
+                $poData = $ticket->area && is_array($ticket->area->po) ? $ticket->area->po : [];
+                $poString = !empty($poData) ? implode(', ', $poData) : 'No PO data';
 
-            // Conditional logic for Nusa Tenggara Timur
-            if ($ticket->site && strtolower($ticket->site->province) === 'nusa tenggara timur') {
-                $administrativeArea = strtolower($ticket->site->administrative_area ?? '');
-                $targetAreaAnjar = ['sumba'];
-                $targetAreaFirman = ['kupang', 'timor tengah', 'timur tengah', 'malaka', 'belu', 'rote', 'ndao', 'raijua', 'sabu', 'alor'];
-                $targetAreaNovan = ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata', 'sika'];
+                // Conditional logic for Nusa Tenggara Timur
+                if ($ticket->site && strtolower($ticket->site->province) === 'nusa tenggara timur') {
+                    $administrativeArea = strtolower($ticket->site->administrative_area ?? '');
+                    $targetAreaAnjar = ['sumba'];
+                    $targetAreaFirman = ['kupang', 'timor tengah', 'timur tengah', 'malaka', 'belu', 'rote', 'ndao', 'raijua', 'sabu', 'alor'];
+                    $targetAreaNovan = ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata', 'sika'];
 
-                // Check if administrative_area contains any targetAreaFirman
-                $isTargetAreaFirman = array_reduce($targetAreaFirman, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
-                if ($isTargetAreaFirman) {
-                    $filteredPo = array_filter($poData, fn($po) => $po === 'Firman');
-                    $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Firman-related PO found';
+                    // Check if administrative_area contains any targetAreaFirman
+                    $isTargetAreaFirman = array_reduce($targetAreaFirman, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
+                    if ($isTargetAreaFirman) {
+                        $filteredPo = array_filter($poData, fn($po) => $po === 'Firman');
+                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Firman-related PO found';
+                    }
+
+                    // Check if administrative_area contains any targetAreaAnjar
+                    $isTargetAreaAnjar = array_reduce($targetAreaAnjar, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
+                    if ($isTargetAreaAnjar) {
+                        $filteredPo = array_filter($poData, fn($po) => $po === 'Anjar');
+                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Anjar-related PO found';
+                    }
+
+                    // Check if administrative_area contains any targetAreaNovan
+                    $isTargetAreaNovan = array_reduce($targetAreaNovan, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
+                    if ($isTargetAreaNovan) {
+                        $filteredPo = array_filter($poData, fn($po) => $po === 'Novan');
+                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Novan-related PO found';
+                    }
                 }
 
-                // Check if administrative_area contains any targetAreaAnjar
-                $isTargetAreaAnjar = array_reduce($targetAreaAnjar, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
-                if ($isTargetAreaAnjar) {
-                    $filteredPo = array_filter($poData, fn($po) => $po === 'Anjar');
-                    $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Anjar-related PO found';
-                }
-
-                // Check if administrative_area contains any targetAreaNovan
-                $isTargetAreaNovan = array_reduce($targetAreaNovan, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
-                if ($isTargetAreaNovan) {
-                    $filteredPo = array_filter($poData, fn($po) => $po === 'Novan');
-                    $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Novan-related PO found';
-                }
+                $province = $ticket->site ? $ticket->site->province : 'Unknown';
+                $report .= "{$counter}. {$ticket->site_id} - {$siteName} {$statusEmoji}\n";
+                $report .= "- *PO* : {$poString} | {$province}\n\n";
+                $counter++;
             }
-
-            $province = $ticket->site ? $ticket->site->province : 'Unknown';
-            $report .= "{$counter}. {$ticket->site_id} - {$siteName} {$statusEmoji}\n";
-            $report .= "PO : {$poString} | {$province}\n\n";
-            $counter++;
         }
 
         $report .= "Terimakasih";
