@@ -572,8 +572,8 @@ class NmtTicketsResource extends Resource
                 }
 
                 $province = $ticket->site ? $ticket->site->province : 'Unknown';
-                $report .= "{$counter}. {$ticket->site_id} - {$siteName} {$statusEmoji}\n";
-                $report .= "- *PO* : {$poString} | {$province}\n\n";
+                $report .= "{$counter}\t{$ticket->site_id} - {$siteName} {$statusEmoji}\n";
+                $report .= "> *PO* : {$poString} | {$province}\n\n";
                 $counter++;
             }
         }
