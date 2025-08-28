@@ -14,6 +14,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Artisan;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 
 class SweepingTicketResource extends Resource
 {
@@ -135,6 +136,9 @@ class SweepingTicketResource extends Resource
                             });
                         }
                     }),
+
+                DateRangeFilter::make('created_at')
+                    ->label('Date Created'),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
