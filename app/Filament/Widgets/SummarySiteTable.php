@@ -12,11 +12,17 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
+use pxlrbt\FilamentExcel\Columns\Column;
 
 class SummarySiteTable extends BaseWidget
 {
     public $month;
     public $year;
+    public $monthName;
 
     public function mount(): void
     {
@@ -24,6 +30,10 @@ class SummarySiteTable extends BaseWidget
         $this->month = $this->month ?? Carbon::now()->month;
         $this->year = $this->year ?? Carbon::now()->year;
     }
+
+    protected $listeners = [
+        'refreshTable' => '$refresh',
+    ];
 
     public function table(Table $table): Table
     {
@@ -33,6 +43,14 @@ class SummarySiteTable extends BaseWidget
 
         // Hitung jumlah hari di bulan terpilih
         $daysInMonth = Carbon::create($selectedYear, $selectedMonth, 1)->daysInMonth;
+
+        // Tentukan pembagi: hari ini untuk bulan sekarang, atau semua hari untuk bulan lalu
+        $divider = Carbon::create($selectedYear, $selectedMonth, 1)->isCurrentMonth()
+            ? min(Carbon::now()->day, $daysInMonth)
+            : $daysInMonth;
+
+        // Cek apakah bulan depan (atau masa depan)
+        $isFutureMonth = Carbon::create($selectedYear, $selectedMonth, 1)->isFuture();
 
         // Query untuk ambil semua site dan modem_uptime dari SiteLog berdasarkan bulan/tahun terpilih
         $siteLogs = SiteLog::select('site_id', 'created_at', 'modem_uptime')
@@ -50,30 +68,43 @@ class SummarySiteTable extends BaseWidget
                     ->label('Site Name')
                     ->sortable()
                     ->description(fn(SiteDetail $record): string => $record->site_id, position: 'above')
+                    ->limit(22)
+                    ->tooltip(function (TextColumn $column): ?string {
+                        $state = $column->getState();
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+                        return $state;
+                    })
                     ->searchable(['site_id', 'site_name', 'province']),
                 // Generate kolom dinamis untuk setiap tanggal di bulan terpilih
                 ...collect(range(1, $daysInMonth))->map(function ($day) use ($siteLogs, $selectedMonth, $selectedYear) {
                     return IconColumn::make("day_$day")
-                        ->label(Carbon::create($selectedYear, $selectedMonth, $day)->format('d M'))
+                        ->label(Carbon::create($selectedYear, $selectedMonth, $day)->format('d'))
                         ->getStateUsing(function (SiteDetail $record) use ($day, $siteLogs) {
-                            // Ambil modem_uptime untuk site_id dan tanggal tertentu
                             return $siteLogs->get($record->site_id, collect([]))
                                 ->get($day, collect([]))
                                 ->first()['modem_uptime'] ?? '-';
                         })
                         ->icon(function ($state) {
-                            // Handle kalau state adalah '-' atau null
                             if ($state === '-' || $state === null) {
                                 return 'phosphor-dot-duotone';
                             }
-                            // Konversi state ke integer untuk perbandingan
                             $uptime = (int) $state;
+
                             return match (true) {
-                                $uptime >= 5 => 'phosphor-arrow-circle-up-duotone',
-                                $uptime > 2 && $uptime < 5 => 'phosphor-warning-circle-duotone',
-                                $uptime <= 2 => 'phosphor-arrow-circle-down-duotone',
-                                default => 'phosphor-dots-three-circle-duotone',
+                                $uptime >= 5 => 'phosphor-record-duotone',
+                                $uptime > 2 && $uptime < 5 => 'phosphor-radio-button-duotone',
+                                $uptime <= 2 => 'phosphor-x-circle-duotone',
+                                default => 'phosphor-x-circle-duotone',
                             };
+
+                            // return match (true) {
+                            //     $uptime >= 5 => 'phosphor-arrow-circle-up-duotone',
+                            //     $uptime > 2 && $uptime < 5 => 'phosphor-warning-circle-duotone',
+                            //     $uptime <= 2 => 'phosphor-arrow-circle-down-duotone',
+                            //     default => 'phosphor-dots-three-circle-duotone',
+                            // };
                         })
                         ->tooltip(function ($state) {
                             if ($state !== '-') {
@@ -81,11 +112,9 @@ class SummarySiteTable extends BaseWidget
                             }
                         })
                         ->color(function ($state) {
-                            // Handle kalau state adalah '-' atau null
                             if ($state === '-' || $state === null) {
                                 return null;
                             }
-                            // Konversi state ke integer untuk perbandingan
                             $uptime = (int) $state;
                             return match (true) {
                                 $uptime >= 5 => 'success',
@@ -95,11 +124,35 @@ class SummarySiteTable extends BaseWidget
                             };
                         });
                 })->toArray(),
+                // Kolom Total Uptime
+                TextColumn::make('total_uptime')
+                    ->label('Uptime')
+                    ->getStateUsing(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                        // Kalau bulan depan, return 0%
+                        if ($isFutureMonth) {
+                            return '0%';
+                        }
+                        // Ambil log untuk site_id ini
+                        $logs = $siteLogs->get($record->site_id, collect([]));
+                        // Hitung hari dengan modem_uptime > 2
+                        $onlineDays = $logs->filter(function ($dayLogs) {
+                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                            return $uptime !== null && (int) $uptime > 2;
+                        })->count();
+                        // Kalau nggak ada log, return 0%
+                        if ($logs->isEmpty()) {
+                            return '0%';
+                        }
+                        // Hitung persen: (hari online / divider) * 100%
+                        $percentage = ($onlineDays / $divider) * 100;
+                        return number_format($percentage, 2) . '%';
+                    }),
             ])
             ->filters([
                 Filter::make('date_filter')
                     ->form([
                         Select::make('month')
+                            ->native(false)
                             ->label('Bulan')
                             ->options([
                                 1 => 'Januari',
@@ -119,22 +172,63 @@ class SummarySiteTable extends BaseWidget
                             ->live()
                             ->afterStateUpdated(function ($state) {
                                 $this->month = $state;
+                                $this->dispatch('refreshTable');
                             }),
                         Select::make('year')
+                            ->native(false)
                             ->label('Tahun')
-                            ->options(collect(range(2020, Carbon::now()->year))->mapWithKeys(fn($year) => [$year => $year]))
+                            ->options(collect(range(2024, Carbon::now()->year))->mapWithKeys(fn($year) => [$year => $year]))
                             ->default(Carbon::now()->year)
                             ->live()
                             ->afterStateUpdated(function ($state) {
                                 $this->year = $state;
+                                $this->dispatch('refreshTable');
                             }),
                     ])
                     ->query(function ($query, array $data) {
                         return $query;
                     }),
             ])
+            ->headerActions([
+                // Action::make('refresh')
+                //     ->label('Refresh Data')
+                //     ->icon('heroicon-o-arrow-path')
+                //     ->action(function () {
+                //         $this->dispatch('refreshTable');
+                //     }),
+                ActionGroup::make([
+                    ExportAction::make('export_csv')
+                        ->icon('phosphor-file-csv-duotone')
+                        ->label("Export to CSV")
+                        ->exports([
+                            ExcelExport::make()
+                                ->fromTable()
+                                ->withWriterType(\Maatwebsite\Excel\Excel::CSV)
+                                ->withFilename(fn() => 'Summary_Site_' . Carbon::create($selectedYear, $selectedMonth, 1)->format('M_Y') . '.csv')
+                                ->withChunkSize(50), // Turunin chunk size biar lebih aman
+                        ]),
+
+                    ExportAction::make('export_xlsx')
+                        ->icon('phosphor-file-xls-duotone')
+                        ->label("Export to XLSX")
+                        ->exports([
+                            ExcelExport::make()
+                                ->fromTable()
+                                ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
+                                ->withFilename(fn() => 'Summary_Site_' . Carbon::create($selectedYear, $selectedMonth, 1)->format('M_Y') . '.xlsx')
+                                ->withChunkSize(50), // Turunin chunk size biar lebih aman
+                        ]),
+                ])
+                    ->icon('heroicon-m-arrow-down-tray')
+                    ->label("Export Data")
+                    ->tooltip("Export Data"),
+            ])
+            ->heading(Carbon::create($selectedYear, $selectedMonth, 1)->format('F Y') . ' Summary')
+            ->description('All Site Summary BAKTI RTGS Mahaga per Month.')
             ->persistFiltersInSession()
             ->actions([])
-            ->bulkActions([]);
+            ->bulkActions([])
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(10);
     }
 }
