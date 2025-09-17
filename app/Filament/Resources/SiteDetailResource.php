@@ -116,6 +116,10 @@ class SiteDetailResource extends Resource
                             ->label('Access Point 2 SN'),
                         Forms\Components\TextInput::make('ap2_type')
                             ->label('Access Point 2 Type'),
+                        Forms\Components\TextInput::make('stabilizer_sn')
+                            ->label('Stabillizer SN'),
+                        Forms\Components\TextInput::make('stabilizer_type')
+                            ->label('Stabillizer Type'),
                     ])
                     ->columns(2)->columnSpanFull()
                     ->hiddenLabel()->itemLabel("Device Details")
