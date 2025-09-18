@@ -168,8 +168,8 @@ class SummarySiteTable extends BaseWidget
                         })->count();
                         $percentage = ($onlineDays / $divider) * 100;
                         return match (true) {
-                            $percentage > 50 => 'success',
-                            $percentage >= 30 && $percentage <= 50 => 'warning',
+                            $percentage > 70 => 'success',
+                            $percentage >= 30 && $percentage <= 70 => 'warning',
                             $percentage < 30 => 'danger',
                             default => 'gray',
                         };
@@ -185,8 +185,8 @@ class SummarySiteTable extends BaseWidget
                         })->count();
                         $percentage = ($onlineDays / $divider) * 100;
                         return match (true) {
-                            $percentage > 50 => 'phosphor-arrow-circle-up-duotone',
-                            $percentage >= 30 && $percentage <= 50 => 'phosphor-warning-circle-duotone',
+                            $percentage > 70 => 'phosphor-arrow-circle-up-duotone',
+                            $percentage >= 30 && $percentage <= 70 => 'phosphor-warning-circle-duotone',
                             $percentage < 30 => 'phosphor-arrow-circle-down-duotone',
                             default => 'phosphor-arrow-circle-down-duotone',
                         };
