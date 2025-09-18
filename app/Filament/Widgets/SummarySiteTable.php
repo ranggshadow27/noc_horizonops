@@ -12,6 +12,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
+use Filament\Support\Enums\IconPosition;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
@@ -124,29 +125,107 @@ class SummarySiteTable extends BaseWidget
                             };
                         });
                 })->toArray(),
-                // Kolom Total Uptime
-                TextColumn::make('total_uptime')
-                    ->label('Uptime')
+                // Kolom Online
+                TextColumn::make('online_count')
+                    ->label('Online')
                     ->getStateUsing(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                        // Kalau bulan depan, return 0%
                         if ($isFutureMonth) {
-                            return '0%';
+                            return '0x';
                         }
-                        // Ambil log untuk site_id ini
                         $logs = $siteLogs->get($record->site_id, collect([]));
-                        // Hitung hari dengan modem_uptime > 2
                         $onlineDays = $logs->filter(function ($dayLogs) {
                             $uptime = $dayLogs->first()['modem_uptime'] ?? null;
                             return $uptime !== null && (int) $uptime > 2;
                         })->count();
-                        // Kalau nggak ada log, return 0%
+                        if ($logs->isEmpty()) {
+                            return "0x";
+                        }
+                        return "$onlineDays";
+                    })
+                    ->description(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                        if ($isFutureMonth) {
+                            return '0%';
+                        }
+                        $logs = $siteLogs->get($record->site_id, collect([]));
+                        $onlineDays = $logs->filter(function ($dayLogs) {
+                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                            return $uptime !== null && (int) $uptime > 2;
+                        })->count();
                         if ($logs->isEmpty()) {
                             return '0%';
                         }
-                        // Hitung persen: (hari online / divider) * 100%
                         $percentage = ($onlineDays / $divider) * 100;
-                        return number_format($percentage, 2) . '%';
+                        return number_format($percentage, 1) . '%';
+                    }, position: 'below')
+                    ->color(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                        if ($isFutureMonth || $siteLogs->get($record->site_id, collect([]))->isEmpty()) {
+                            return 'gray';
+                        }
+                        $logs = $siteLogs->get($record->site_id, collect([]));
+                        $onlineDays = $logs->filter(function ($dayLogs) {
+                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                            return $uptime !== null && (int) $uptime > 2;
+                        })->count();
+                        $percentage = ($onlineDays / $divider) * 100;
+                        return match (true) {
+                            $percentage > 50 => 'success',
+                            $percentage >= 30 && $percentage <= 50 => 'warning',
+                            $percentage < 30 => 'danger',
+                            default => 'gray',
+                        };
+                    })
+                    ->icon(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                        if ($isFutureMonth || $siteLogs->get($record->site_id, collect([]))->isEmpty()) {
+                            return 'phosphor-arrow-circle-down-duotone';
+                        }
+                        $logs = $siteLogs->get($record->site_id, collect([]));
+                        $onlineDays = $logs->filter(function ($dayLogs) {
+                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                            return $uptime !== null && (int) $uptime > 2;
+                        })->count();
+                        $percentage = ($onlineDays / $divider) * 100;
+                        return match (true) {
+                            $percentage > 50 => 'phosphor-arrow-circle-up-duotone',
+                            $percentage >= 30 && $percentage <= 50 => 'phosphor-warning-circle-duotone',
+                            $percentage < 30 => 'phosphor-arrow-circle-down-duotone',
+                            default => 'phosphor-arrow-circle-down-duotone',
+                        };
                     }),
+
+                // Kolom Offline
+                TextColumn::make('offline_count')
+                    ->label('Offline')
+                    ->color('gray')
+                    ->icon('phosphor-arrow-circle-down-duotone')
+                    ->getStateUsing(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                        if ($isFutureMonth) {
+                            return '0';
+                        }
+                        $logs = $siteLogs->get($record->site_id, collect([]));
+                        $offlineDays = $logs->filter(function ($dayLogs) {
+                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                            return $uptime !== null && (int) $uptime <= 2;
+                        })->count();
+                        if ($logs->isEmpty()) {
+                            return "0";
+                        }
+                        return "$offlineDays";
+                    })
+                    ->description(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                        if ($isFutureMonth) {
+                            return '0%';
+                        }
+                        $logs = $siteLogs->get($record->site_id, collect([]));
+                        $offlineDays = $logs->filter(function ($dayLogs) {
+                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                            return $uptime !== null && (int) $uptime <= 2;
+                        })->count();
+                        if ($logs->isEmpty()) {
+                            return '0%';
+                        }
+                        $percentage = ($offlineDays / $divider) * 100;
+                        return number_format($percentage, 1) . '%';
+                    }, position: 'below'),
             ])
             ->filters([
                 Filter::make('date_filter')
