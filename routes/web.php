@@ -1,5 +1,7 @@
 <?php
 
+use App\Filament\Pages\DashboardHandover;
+use App\Filament\Pages\PublicDashboard;
 use Illuminate\Support\Facades\Route;
 
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +17,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+
+Route::get('/public-dashboard', PublicDashboard::class)->name('public-dashboard');
 
 Route::get('/export-zip/{id}', function ($id) {
     // Tentukan folder tempat file gambar
