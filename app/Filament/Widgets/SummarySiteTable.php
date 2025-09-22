@@ -86,6 +86,18 @@ class SummarySiteTable extends BaseWidget
                         return $state;
                     })
                     ->searchable(['site_id', 'site_name', 'province']),
+                TextColumn::make('province')
+                    ->label('Province/Area')
+                    ->sortable()
+                    ->description(fn(SiteDetail $record): string => $record->area->area, position: 'above')
+                    // ->limit(22)
+                    ->tooltip(function (TextColumn $column): ?string {
+                        $state = $column->getState();
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+                        return $state;
+                    }),
                 // Generate kolom dinamis untuk setiap tanggal di bulan terpilih
                 ...collect(range($startDay, $endDay))->map(function ($day) use ($siteLogs, $selectedMonth, $selectedYear) {
                     return IconColumn::make("day_$day")
@@ -137,7 +149,7 @@ class SummarySiteTable extends BaseWidget
                 })->toArray(),
                 // Kolom Online
                 TextColumn::make('online_count')
-                    ->label('Online')
+                    ->label('Online Day(s)')
                     ->getStateUsing(function (SiteDetail $record) use ($divider, $isFutureMonth) {
                         if ($isFutureMonth) {
                             return '0x';
@@ -205,7 +217,7 @@ class SummarySiteTable extends BaseWidget
 
                 // // Kolom Offline
                 TextColumn::make('offline_count')
-                    ->label('Offline')
+                    ->label('Offline Day(s)')
                     ->color('gray')
                     ->icon('phosphor-arrow-circle-down-duotone')
                     ->getStateUsing(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
