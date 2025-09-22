@@ -65,15 +65,10 @@ class SummarySiteTable extends BaseWidget
         return $table
             ->query(
                 SiteDetail::query()
-                    ->select('site_details.*')
-                    ->selectRaw('COUNT(CASE WHEN site_logs.modem_uptime > 2 THEN 1 END) as online_days')
-                    ->selectRaw('COUNT(CASE WHEN site_logs.modem_uptime <= 2 THEN 1 END) as offline_days')
-                    ->leftJoin('site_logs', function ($join) use ($selectedYear, $selectedMonth) {
-                        $join->on('site_details.site_id', '=', 'site_logs.site_id')
-                            ->whereYear('site_logs.created_at', $selectedYear)
-                            ->whereMonth('site_logs.created_at', $selectedMonth);
-                    })
-                    ->groupBy('site_details.site_id')
+                    ->with(['siteLogs' => function ($query) use ($selectedYear, $selectedMonth) {
+                        $query->whereYear('created_at', $selectedYear)
+                            ->whereMonth('created_at', $selectedMonth);
+                    }])
             )
             ->columns([
                 TextColumn::make('site_name')
@@ -90,13 +85,15 @@ class SummarySiteTable extends BaseWidget
                     })
                     ->searchable(['site_id', 'site_name', 'province']),
                 // Generate kolom dinamis untuk setiap tanggal di bulan terpilih
-                ...collect(range(1, $daysInMonth))->map(function ($day) use ($siteLogs, $selectedMonth, $selectedYear) {
+                ...collect(range(1, $daysInMonth))->map(function ($day) use ($selectedMonth, $selectedYear) {
                     return IconColumn::make("day_$day")
                         ->label(Carbon::create($selectedYear, $selectedMonth, $day)->format('d'))
-                        ->getStateUsing(function (SiteDetail $record) use ($day, $siteLogs) {
-                            return $siteLogs->get($record->site_id, collect([]))
-                                ->get($day, collect([]))
-                                ->first()['modem_uptime'] ?? '-';
+                        ->getStateUsing(function (SiteDetail $record) use ($day) {
+                            // Akses data dari relasi yang sudah di-eager load
+                            $log = $record->siteLogs->first(function ($log) use ($day) {
+                                return Carbon::parse($log->created_at)->day == $day;
+                            });
+                            return $log['modem_uptime'] ?? '-';
                         })
                         ->icon(function ($state) {
                             if ($state === '-' || $state === null) {
@@ -139,13 +136,14 @@ class SummarySiteTable extends BaseWidget
                 // Kolom Online
                 TextColumn::make('online_count')
                     ->label('Online')
-                    ->getStateUsing(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                    ->getStateUsing(function (SiteDetail $record) use ($divider, $isFutureMonth) {
                         if ($isFutureMonth) {
                             return '0x';
                         }
-                        $logs = $siteLogs->get($record->site_id, collect([]));
-                        $onlineDays = $logs->filter(function ($dayLogs) {
-                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                        // Akses data dari relasi yang sudah di-eager load
+                        $logs = $record->siteLogs;
+                        $onlineDays = $logs->filter(function ($log) {
+                            $uptime = $log['modem_uptime'] ?? null;
                             return $uptime !== null && (int) $uptime > 2;
                         })->count();
                         if ($logs->isEmpty()) {
@@ -153,9 +151,18 @@ class SummarySiteTable extends BaseWidget
                         }
                         return "$onlineDays";
                     })
-                    ->description(function (SiteDetail $record) use ($divider) {
-                        $onlineDays = $record->online_days ?? 0;
-                        if ($divider == 0) return '0%';
+                    ->description(function (SiteDetail $record) use ($divider, $isFutureMonth) {
+                        if ($isFutureMonth) {
+                            return '0%';
+                        }
+                        $logs = $record->siteLogs;
+                        $onlineDays = $logs->filter(function ($log) {
+                            $uptime = $log['modem_uptime'] ?? null;
+                            return $uptime !== null && (int) $uptime > 2;
+                        })->count();
+                        if ($logs->isEmpty()) {
+                            return '0%';
+                        }
                         $percentage = ($onlineDays / $divider) * 100;
                         return number_format($percentage, 1) . '%';
                     }, position: 'below')
