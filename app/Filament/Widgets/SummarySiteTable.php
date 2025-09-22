@@ -55,25 +55,23 @@ class SummarySiteTable extends BaseWidget
         // Cek apakah bulan depan (atau masa depan)
         $isFutureMonth = Carbon::create($selectedYear, $selectedMonth, 1)->isFuture();
 
-        // OPTIMASI: Preload siteLogs hanya untuk site di halaman ini
+        // OPTIMASI: Preload siteLogs untuk site di halaman ini
         return $table
-            ->query(function ($query) use ($selectedYear, $selectedMonth, $daysInMonth, $table) {
+            ->query(SiteDetail::query()) // Gunakan query sederhana sebagai base
+            ->modifyQueryUsing(function ($query) use ($selectedYear, $selectedMonth, $daysInMonth, $table) {
                 // Clone query untuk simulasi pagination
                 $paginatedQuery = clone $query;
 
-                // Apply filter dan sorting dari tabel
-                $paginatedQuery = $table->applyFiltersToQuery($paginatedQuery); // Perbaikan: pakai method yang benar
-                $paginatedQuery = $table->applySortingToQuery($paginatedQuery); // Perbaikan: pakai method yang benar
+                // Apply filter dan sorting menggunakan Filament
+                $paginatedQuery = $table->applyFilters($paginatedQuery);
+                $paginatedQuery = $table->applySorting($paginatedQuery);
 
                 // Ambil site_id untuk halaman saat ini
                 $recordsPerPage = $table->getRecordsPerPage();
-                $currentPage = $table->getPage();
-                $paginatedQuery = $paginatedQuery->forPage($currentPage, $recordsPerPage);
-                $siteIds = $paginatedQuery->pluck('site_id');
+                $currentPage = $table->getCurrentPage();
+                $siteIds = $paginatedQuery->forPage($currentPage, $recordsPerPage)->pluck('site_id');
 
                 // Preload siteLogs HANYA untuk siteIds ini
-                // Optional: Tambah cache kalau perlu
-                // $this->siteLogs = Cache::remember("site_logs_{$selectedYear}_{$selectedMonth}_page_{$currentPage}", 600, function () use ($siteIds, $selectedYear, $selectedMonth) {
                 $this->siteLogs = SiteLog::select('site_id', 'created_at', 'modem_uptime')
                     ->whereIn('site_id', $siteIds)
                     ->whereYear('created_at', $selectedYear)
@@ -82,13 +80,12 @@ class SummarySiteTable extends BaseWidget
                     ->groupBy(['site_id', function ($log) {
                         return Carbon::parse($log->created_at)->day;
                     }]);
-                // });
 
                 return $query; // Kembalikan query asli untuk tabel
             })
             ->columns([
                 TextColumn::make('site_name')
-                    ->label('Site Name')
+                    ->label('Grok Site Name') // Ubah label untuk debug
                     ->sortable()
                     ->description(fn(SiteDetail $record): string => $record->site_id, position: 'above')
                     ->limit(22)
