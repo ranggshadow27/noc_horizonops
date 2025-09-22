@@ -193,39 +193,39 @@ class SummarySiteTable extends BaseWidget
                     }),
 
                 // // Kolom Offline
-                TextColumn::make('offline_count')
-                    ->label('Offline')
-                    ->color('gray')
-                    ->icon('phosphor-arrow-circle-down-duotone')
-                    ->getStateUsing(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                        if ($isFutureMonth) {
-                            return '0';
-                        }
-                        $logs = $siteLogs->get($record->site_id, collect([]));
-                        $offlineDays = $logs->filter(function ($dayLogs) {
-                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                            return $uptime !== null && (int) $uptime <= 2;
-                        })->count();
-                        if ($logs->isEmpty()) {
-                            return "0";
-                        }
-                        return "$offlineDays";
-                    })
-                    ->description(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                        if ($isFutureMonth) {
-                            return '0%';
-                        }
-                        $logs = $siteLogs->get($record->site_id, collect([]));
-                        $offlineDays = $logs->filter(function ($dayLogs) {
-                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                            return $uptime !== null && (int) $uptime <= 2;
-                        })->count();
-                        if ($logs->isEmpty()) {
-                            return '0%';
-                        }
-                        $percentage = ($offlineDays / $divider) * 100;
-                        return number_format($percentage, 1) . '%';
-                    }, position: 'below'),
+                // TextColumn::make('offline_count')
+                //     ->label('Offline')
+                //     ->color('gray')
+                //     ->icon('phosphor-arrow-circle-down-duotone')
+                //     ->getStateUsing(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                //         if ($isFutureMonth) {
+                //             return '0';
+                //         }
+                //         $logs = $siteLogs->get($record->site_id, collect([]));
+                //         $offlineDays = $logs->filter(function ($dayLogs) {
+                //             $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                //             return $uptime !== null && (int) $uptime <= 2;
+                //         })->count();
+                //         if ($logs->isEmpty()) {
+                //             return "0";
+                //         }
+                //         return "$offlineDays";
+                //     })
+                //     ->description(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                //         if ($isFutureMonth) {
+                //             return '0%';
+                //         }
+                //         $logs = $siteLogs->get($record->site_id, collect([]));
+                //         $offlineDays = $logs->filter(function ($dayLogs) {
+                //             $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                //             return $uptime !== null && (int) $uptime <= 2;
+                //         })->count();
+                //         if ($logs->isEmpty()) {
+                //             return '0%';
+                //         }
+                //         $percentage = ($offlineDays / $divider) * 100;
+                //         return number_format($percentage, 1) . '%';
+                //     }, position: 'below'),
             ])
             ->filters([
                 Filter::make('date_filter')
