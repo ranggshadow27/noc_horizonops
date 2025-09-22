@@ -307,7 +307,7 @@ class SummarySiteTable extends BaseWidget
             ->persistFiltersInSession()
             ->actions([])
             ->bulkActions([])
-            ->paginated([10, 25, 50, 100])
+            ->paginated([2, 25, 50, 100])
             ->defaultPaginationPageOption(2);
     }
 }
