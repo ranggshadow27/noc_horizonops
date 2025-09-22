@@ -315,7 +315,7 @@ class SummarySiteTable extends BaseWidget
             ->description('All Site Summary BAKTI RTGS Mahaga per Month.')
             ->actions([])
             ->bulkActions([])
-            ->paginated([2, 5, 10, 20])
-            ->defaultPaginationPageOption(2);
+            ->paginated([5, 10])
+            ->defaultPaginationPageOption(5);
     }
 }
