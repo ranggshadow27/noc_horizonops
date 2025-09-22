@@ -40,49 +40,28 @@ class SummarySiteTable extends BaseWidget
 
     public function table(Table $table): Table
     {
-        // Ambil nilai dari filter atau properti
         $selectedMonth = $this->filters['date_filter']['month'] ?? $this->month;
         $selectedYear = $this->filters['date_filter']['year'] ?? $this->year;
-
-        // Hitung jumlah hari di bulan terpilih
         $daysInMonth = Carbon::create($selectedYear, $selectedMonth, 1)->daysInMonth;
 
-        // Tentukan pembagi: hari ini untuk bulan sekarang, atau semua hari untuk bulan lalu
-        $divider = Carbon::create($selectedYear, $selectedMonth, 1)->isCurrentMonth()
-            ? min(Carbon::now()->day, $daysInMonth)
-            : $daysInMonth;
+        // Preload di luar closure
+        $siteIds = SiteDetail::query()
+            ->when($table->getFilters(), fn($q) => $table->applyFilters($q))
+            ->when($table->getSortColumn(), fn($q) => $table->applySorting($q))
+            ->forPage($table->getCurrentPage(), $table->getRecordsPerPage())
+            ->pluck('site_id');
 
-        // Cek apakah bulan depan (atau masa depan)
-        $isFutureMonth = Carbon::create($selectedYear, $selectedMonth, 1)->isFuture();
+        $this->siteLogs = SiteLog::select('site_id', 'created_at', 'modem_uptime')
+            ->whereIn('site_id', $siteIds)
+            ->whereYear('created_at', $selectedYear)
+            ->whereMonth('created_at', $selectedMonth)
+            ->get()
+            ->groupBy(['site_id', function ($log) {
+                return Carbon::parse($log->created_at)->day;
+            }]);
 
-        // OPTIMASI: Preload siteLogs untuk site di halaman ini
         return $table
-            ->query(SiteDetail::query()) // Gunakan query sederhana sebagai base
-            ->modifyQueryUsing(function ($query) use ($selectedYear, $selectedMonth, $daysInMonth, $table) {
-                // Clone query untuk simulasi pagination
-                $paginatedQuery = clone $query;
-
-                // Apply filter dan sorting menggunakan Filament
-                $paginatedQuery = $table->applyFilters($paginatedQuery);
-                $paginatedQuery = $table->applySorting($paginatedQuery);
-
-                // Ambil site_id untuk halaman saat ini
-                $recordsPerPage = $table->getRecordsPerPage();
-                $currentPage = $table->getCurrentPage();
-                $siteIds = $paginatedQuery->forPage($currentPage, $recordsPerPage)->pluck('site_id');
-
-                // Preload siteLogs HANYA untuk siteIds ini
-                $this->siteLogs = SiteLog::select('site_id', 'created_at', 'modem_uptime')
-                    ->whereIn('site_id', $siteIds)
-                    ->whereYear('created_at', $selectedYear)
-                    ->whereMonth('created_at', $selectedMonth)
-                    ->get()
-                    ->groupBy(['site_id', function ($log) {
-                        return Carbon::parse($log->created_at)->day;
-                    }]);
-
-                return $query; // Kembalikan query asli untuk tabel
-            })
+            ->query(SiteDetail::query())
             ->columns([
                 TextColumn::make('site_name')
                     ->label('Grok Site Name') // Ubah label untuk debug
