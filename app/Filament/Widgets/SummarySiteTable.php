@@ -313,7 +313,6 @@ class SummarySiteTable extends BaseWidget
             ])
             ->heading(Carbon::create($selectedYear, $selectedMonth, 1)->format('F Y') . ' Summary')
             ->description('All Site Summary BAKTI RTGS Mahaga per Month.')
-            ->persistFiltersInSession()
             ->actions([])
             ->bulkActions([])
             ->paginated([2, 5, 10, 20])
