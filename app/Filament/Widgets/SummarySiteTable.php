@@ -38,17 +38,19 @@ class SummarySiteTable extends BaseWidget
 
     public function table(Table $table): Table
     {
-        // Ambil nilai dari filter atau properti
+        // Ambil nilai dari filter
         $selectedMonth = $this->filters['date_filter']['month'] ?? $this->month;
         $selectedYear = $this->filters['date_filter']['year'] ?? $this->year;
+        $selectedQuarter = $this->filters['date_filter']['quarter'] ?? 'first';
 
-        // Hitung jumlah hari di bulan terpilih
-        $daysInMonth = Carbon::create($selectedYear, $selectedMonth, 1)->daysInMonth;
+        // Tentukan rentang hari berdasarkan kuarter yang dipilih
+        $startDay = ($selectedQuarter === 'first') ? 1 : 16;
+        $endDay = ($selectedQuarter === 'first') ? 15 : Carbon::create($selectedYear, $selectedMonth, 1)->daysInMonth;
 
-        // Tentukan pembagi: hari ini untuk bulan sekarang, atau semua hari untuk bulan lalu
+        // Tentukan pembagi (divider) untuk kalkulasi online count
         $divider = Carbon::create($selectedYear, $selectedMonth, 1)->isCurrentMonth()
-            ? min(Carbon::now()->day, $daysInMonth)
-            : $daysInMonth;
+            ? min(Carbon::now()->day, $endDay) - $startDay + 1
+            : $endDay - $startDay + 1;
 
         // Cek apakah bulan depan (atau masa depan)
         $isFutureMonth = Carbon::create($selectedYear, $selectedMonth, 1)->isFuture();
@@ -75,7 +77,7 @@ class SummarySiteTable extends BaseWidget
                     ->label('Site Name')
                     ->sortable()
                     ->description(fn(SiteDetail $record): string => $record->site_id, position: 'above')
-                    ->limit(22)
+                    // ->limit(22)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
                         if (strlen($state) <= $column->getCharacterLimit()) {
@@ -85,7 +87,7 @@ class SummarySiteTable extends BaseWidget
                     })
                     ->searchable(['site_id', 'site_name', 'province']),
                 // Generate kolom dinamis untuk setiap tanggal di bulan terpilih
-                ...collect(range(1, $daysInMonth))->map(function ($day) use ($selectedMonth, $selectedYear) {
+                ...collect(range($startDay, $endDay))->map(function ($day) use ($siteLogs, $selectedMonth, $selectedYear) {
                     return IconColumn::make("day_$day")
                         ->label(Carbon::create($selectedYear, $selectedMonth, $day)->format('d'))
                         ->getStateUsing(function (SiteDetail $record) use ($day) {
@@ -202,39 +204,39 @@ class SummarySiteTable extends BaseWidget
                     }),
 
                 // // Kolom Offline
-                // TextColumn::make('offline_count')
-                //     ->label('Offline')
-                //     ->color('gray')
-                //     ->icon('phosphor-arrow-circle-down-duotone')
-                //     ->getStateUsing(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                //         if ($isFutureMonth) {
-                //             return '0';
-                //         }
-                //         $logs = $siteLogs->get($record->site_id, collect([]));
-                //         $offlineDays = $logs->filter(function ($dayLogs) {
-                //             $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                //             return $uptime !== null && (int) $uptime <= 2;
-                //         })->count();
-                //         if ($logs->isEmpty()) {
-                //             return "0";
-                //         }
-                //         return "$offlineDays";
-                //     })
-                //     ->description(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                //         if ($isFutureMonth) {
-                //             return '0%';
-                //         }
-                //         $logs = $siteLogs->get($record->site_id, collect([]));
-                //         $offlineDays = $logs->filter(function ($dayLogs) {
-                //             $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                //             return $uptime !== null && (int) $uptime <= 2;
-                //         })->count();
-                //         if ($logs->isEmpty()) {
-                //             return '0%';
-                //         }
-                //         $percentage = ($offlineDays / $divider) * 100;
-                //         return number_format($percentage, 1) . '%';
-                //     }, position: 'below'),
+                TextColumn::make('offline_count')
+                    ->label('Offline')
+                    ->color('gray')
+                    ->icon('phosphor-arrow-circle-down-duotone')
+                    ->getStateUsing(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                        if ($isFutureMonth) {
+                            return '0';
+                        }
+                        $logs = $siteLogs->get($record->site_id, collect([]));
+                        $offlineDays = $logs->filter(function ($dayLogs) {
+                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                            return $uptime !== null && (int) $uptime <= 2;
+                        })->count();
+                        if ($logs->isEmpty()) {
+                            return "0";
+                        }
+                        return "$offlineDays";
+                    })
+                    ->description(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                        if ($isFutureMonth) {
+                            return '0%';
+                        }
+                        $logs = $siteLogs->get($record->site_id, collect([]));
+                        $offlineDays = $logs->filter(function ($dayLogs) {
+                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                            return $uptime !== null && (int) $uptime <= 2;
+                        })->count();
+                        if ($logs->isEmpty()) {
+                            return '0%';
+                        }
+                        $percentage = ($offlineDays / $divider) * 100;
+                        return number_format($percentage, 1) . '%';
+                    }, position: 'below'),
             ])
             ->filters([
                 Filter::make('date_filter')
@@ -270,6 +272,18 @@ class SummarySiteTable extends BaseWidget
                             ->live()
                             ->afterStateUpdated(function ($state) {
                                 $this->year = $state;
+                                $this->dispatch('refreshTable');
+                            }),
+                        Select::make('quarter')
+                            ->native(false)
+                            ->label('Kuarter')
+                            ->options([
+                                'first' => '1 - 15',
+                                'second' => '16 - Akhir Bulan',
+                            ])
+                            ->default('first')
+                            ->live()
+                            ->afterStateUpdated(function ($state) {
                                 $this->dispatch('refreshTable');
                             }),
                     ])
