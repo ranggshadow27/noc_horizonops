@@ -63,7 +63,18 @@ class SummarySiteTable extends BaseWidget
             }]);
 
         return $table
-            ->query(SiteDetail::query())
+            ->query(
+                SiteDetail::query()
+                    ->select('site_details.*')
+                    ->selectRaw('COUNT(CASE WHEN site_logs.modem_uptime > 2 THEN 1 END) as online_days')
+                    ->selectRaw('COUNT(CASE WHEN site_logs.modem_uptime <= 2 THEN 1 END) as offline_days')
+                    ->leftJoin('site_logs', function ($join) use ($selectedYear, $selectedMonth) {
+                        $join->on('site_details.site_id', '=', 'site_logs.site_id')
+                            ->whereYear('site_logs.created_at', $selectedYear)
+                            ->whereMonth('site_logs.created_at', $selectedMonth);
+                    })
+                    ->groupBy('site_details.site_id')
+            )
             ->columns([
                 TextColumn::make('site_name')
                     ->label('Site Name')
@@ -142,18 +153,9 @@ class SummarySiteTable extends BaseWidget
                         }
                         return "$onlineDays";
                     })
-                    ->description(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                        if ($isFutureMonth) {
-                            return '0%';
-                        }
-                        $logs = $siteLogs->get($record->site_id, collect([]));
-                        $onlineDays = $logs->filter(function ($dayLogs) {
-                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                            return $uptime !== null && (int) $uptime > 2;
-                        })->count();
-                        if ($logs->isEmpty()) {
-                            return '0%';
-                        }
+                    ->description(function (SiteDetail $record) use ($divider) {
+                        $onlineDays = $record->online_days ?? 0;
+                        if ($divider == 0) return '0%';
                         $percentage = ($onlineDays / $divider) * 100;
                         return number_format($percentage, 1) . '%';
                     }, position: 'below')
