@@ -18,12 +18,14 @@ use Filament\Tables\Actions\ActionGroup;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Columns\Column;
+use Illuminate\Support\Facades\Cache;
 
 class SummarySiteTable extends BaseWidget
 {
     public $month;
     public $year;
     public $monthName;
+    public $siteLogs; // Property untuk simpan siteLogs preload per halaman
 
     public function mount(): void
     {
@@ -53,17 +55,37 @@ class SummarySiteTable extends BaseWidget
         // Cek apakah bulan depan (atau masa depan)
         $isFutureMonth = Carbon::create($selectedYear, $selectedMonth, 1)->isFuture();
 
-        // Query untuk ambil semua site dan modem_uptime dari SiteLog berdasarkan bulan/tahun terpilih
-        $siteLogs = SiteLog::select('site_id', 'created_at', 'modem_uptime')
-            ->whereYear('created_at', $selectedYear)
-            ->whereMonth('created_at', $selectedMonth)
-            ->get()
-            ->groupBy(['site_id', function ($log) {
-                return Carbon::parse($log->created_at)->day;
-            }]);
-
+        // OPTIMASI: Preload siteLogs hanya untuk site di halaman ini
         return $table
-            ->query(SiteDetail::query())
+            ->query(function ($query) use ($selectedYear, $selectedMonth, $daysInMonth, $table) {
+                // Clone query untuk simulasi pagination
+                $paginatedQuery = clone $query;
+
+                // Apply filter dan sorting dari tabel
+                $paginatedQuery = $table->applyFiltersToQuery($paginatedQuery); // Perbaikan: pakai method yang benar
+                $paginatedQuery = $table->applySortingToQuery($paginatedQuery); // Perbaikan: pakai method yang benar
+
+                // Ambil site_id untuk halaman saat ini
+                $recordsPerPage = $table->getRecordsPerPage();
+                $currentPage = $table->getPage();
+                $paginatedQuery = $paginatedQuery->forPage($currentPage, $recordsPerPage);
+                $siteIds = $paginatedQuery->pluck('site_id');
+
+                // Preload siteLogs HANYA untuk siteIds ini
+                // Optional: Tambah cache kalau perlu
+                // $this->siteLogs = Cache::remember("site_logs_{$selectedYear}_{$selectedMonth}_page_{$currentPage}", 600, function () use ($siteIds, $selectedYear, $selectedMonth) {
+                $this->siteLogs = SiteLog::select('site_id', 'created_at', 'modem_uptime')
+                    ->whereIn('site_id', $siteIds)
+                    ->whereYear('created_at', $selectedYear)
+                    ->whereMonth('created_at', $selectedMonth)
+                    ->get()
+                    ->groupBy(['site_id', function ($log) {
+                        return Carbon::parse($log->created_at)->day;
+                    }]);
+                // });
+
+                return $query; // Kembalikan query asli untuk tabel
+            })
             ->columns([
                 TextColumn::make('site_name')
                     ->label('Site Name')
@@ -79,11 +101,12 @@ class SummarySiteTable extends BaseWidget
                     })
                     ->searchable(['site_id', 'site_name', 'province']),
                 // Generate kolom dinamis untuk setiap tanggal di bulan terpilih
-                ...collect(range(1, $daysInMonth))->map(function ($day) use ($siteLogs, $selectedMonth, $selectedYear) {
+                ...collect(range(1, $daysInMonth))->map(function ($day) use ($selectedYear, $selectedMonth) {
                     return IconColumn::make("day_$day")
                         ->label(Carbon::create($selectedYear, $selectedMonth, $day)->format('d'))
-                        ->getStateUsing(function (SiteDetail $record) use ($day, $siteLogs) {
-                            return $siteLogs->get($record->site_id, collect([]))
+                        ->getStateUsing(function (SiteDetail $record) use ($day) {
+                            // Pakai $this->siteLogs yang sudah preload
+                            return $this->siteLogs->get($record->site_id, collect([]))
                                 ->get($day, collect([]))
                                 ->first()['modem_uptime'] ?? '-';
                         })
@@ -99,13 +122,6 @@ class SummarySiteTable extends BaseWidget
                                 $uptime <= 2 => 'phosphor-x-circle-duotone',
                                 default => 'phosphor-x-circle-duotone',
                             };
-
-                            // return match (true) {
-                            //     $uptime >= 5 => 'phosphor-arrow-circle-up-duotone',
-                            //     $uptime > 2 && $uptime < 5 => 'phosphor-warning-circle-duotone',
-                            //     $uptime <= 2 => 'phosphor-arrow-circle-down-duotone',
-                            //     default => 'phosphor-dots-three-circle-duotone',
-                            // };
                         })
                         ->tooltip(function ($state) {
                             if ($state !== '-') {
@@ -125,107 +141,6 @@ class SummarySiteTable extends BaseWidget
                             };
                         });
                 })->toArray(),
-                // Kolom Online
-                // TextColumn::make('online_count')
-                //     ->label('Online')
-                //     ->getStateUsing(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                //         if ($isFutureMonth) {
-                //             return '0x';
-                //         }
-                //         $logs = $siteLogs->get($record->site_id, collect([]));
-                //         $onlineDays = $logs->filter(function ($dayLogs) {
-                //             $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                //             return $uptime !== null && (int) $uptime > 2;
-                //         })->count();
-                //         if ($logs->isEmpty()) {
-                //             return "0x";
-                //         }
-                //         return "$onlineDays";
-                //     })
-                //     ->description(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                //         if ($isFutureMonth) {
-                //             return '0%';
-                //         }
-                //         $logs = $siteLogs->get($record->site_id, collect([]));
-                //         $onlineDays = $logs->filter(function ($dayLogs) {
-                //             $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                //             return $uptime !== null && (int) $uptime > 2;
-                //         })->count();
-                //         if ($logs->isEmpty()) {
-                //             return '0%';
-                //         }
-                //         $percentage = ($onlineDays / $divider) * 100;
-                //         return number_format($percentage, 1) . '%';
-                //     }, position: 'below')
-                //     ->color(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                //         if ($isFutureMonth || $siteLogs->get($record->site_id, collect([]))->isEmpty()) {
-                //             return 'gray';
-                //         }
-                //         $logs = $siteLogs->get($record->site_id, collect([]));
-                //         $onlineDays = $logs->filter(function ($dayLogs) {
-                //             $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                //             return $uptime !== null && (int) $uptime > 2;
-                //         })->count();
-                //         $percentage = ($onlineDays / $divider) * 100;
-                //         return match (true) {
-                //             $percentage > 70 => 'success',
-                //             $percentage >= 30 && $percentage <= 70 => 'warning',
-                //             $percentage < 30 => 'danger',
-                //             default => 'gray',
-                //         };
-                //     })
-                //     ->icon(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                //         if ($isFutureMonth || $siteLogs->get($record->site_id, collect([]))->isEmpty()) {
-                //             return 'phosphor-arrow-circle-down-duotone';
-                //         }
-                //         $logs = $siteLogs->get($record->site_id, collect([]));
-                //         $onlineDays = $logs->filter(function ($dayLogs) {
-                //             $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                //             return $uptime !== null && (int) $uptime > 2;
-                //         })->count();
-                //         $percentage = ($onlineDays / $divider) * 100;
-                //         return match (true) {
-                //             $percentage > 70 => 'phosphor-arrow-circle-up-duotone',
-                //             $percentage >= 30 && $percentage <= 70 => 'phosphor-warning-circle-duotone',
-                //             $percentage < 30 => 'phosphor-arrow-circle-down-duotone',
-                //             default => 'phosphor-arrow-circle-down-duotone',
-                //         };
-                //     }),
-
-                // // Kolom Offline
-                // TextColumn::make('offline_count')
-                //     ->label('Offline')
-                //     ->color('gray')
-                //     ->icon('phosphor-arrow-circle-down-duotone')
-                //     ->getStateUsing(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                //         if ($isFutureMonth) {
-                //             return '0';
-                //         }
-                //         $logs = $siteLogs->get($record->site_id, collect([]));
-                //         $offlineDays = $logs->filter(function ($dayLogs) {
-                //             $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                //             return $uptime !== null && (int) $uptime <= 2;
-                //         })->count();
-                //         if ($logs->isEmpty()) {
-                //             return "0";
-                //         }
-                //         return "$offlineDays";
-                //     })
-                //     ->description(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                //         if ($isFutureMonth) {
-                //             return '0%';
-                //         }
-                //         $logs = $siteLogs->get($record->site_id, collect([]));
-                //         $offlineDays = $logs->filter(function ($dayLogs) {
-                //             $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                //             return $uptime !== null && (int) $uptime <= 2;
-                //         })->count();
-                //         if ($logs->isEmpty()) {
-                //             return '0%';
-                //         }
-                //         $percentage = ($offlineDays / $divider) * 100;
-                //         return number_format($percentage, 1) . '%';
-                //     }, position: 'below'),
             ])
             ->filters([
                 Filter::make('date_filter')
@@ -269,12 +184,6 @@ class SummarySiteTable extends BaseWidget
                     }),
             ])
             ->headerActions([
-                // Action::make('refresh')
-                //     ->label('Refresh Data')
-                //     ->icon('heroicon-o-arrow-path')
-                //     ->action(function () {
-                //         $this->dispatch('refreshTable');
-                //     }),
                 ActionGroup::make([
                     ExportAction::make('export_csv')
                         ->icon('phosphor-file-csv-duotone')
@@ -284,9 +193,8 @@ class SummarySiteTable extends BaseWidget
                                 ->fromTable()
                                 ->withWriterType(\Maatwebsite\Excel\Excel::CSV)
                                 ->withFilename(fn() => 'Summary_Site_' . Carbon::create($selectedYear, $selectedMonth, 1)->format('M_Y') . '.csv')
-                                ->withChunkSize(50), // Turunin chunk size biar lebih aman
+                                ->withChunkSize(50),
                         ]),
-
                     ExportAction::make('export_xlsx')
                         ->icon('phosphor-file-xls-duotone')
                         ->label("Export to XLSX")
@@ -295,7 +203,7 @@ class SummarySiteTable extends BaseWidget
                                 ->fromTable()
                                 ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
                                 ->withFilename(fn() => 'Summary_Site_' . Carbon::create($selectedYear, $selectedMonth, 1)->format('M_Y') . '.xlsx')
-                                ->withChunkSize(50), // Turunin chunk size biar lebih aman
+                                ->withChunkSize(50),
                         ]),
                 ])
                     ->icon('heroicon-m-arrow-down-tray')
