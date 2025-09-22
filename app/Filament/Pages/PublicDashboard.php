@@ -11,6 +11,9 @@ class PublicDashboard extends SimplePage
 
     protected static string $view = 'filament.pages.public-dashboard';
 
+    protected ?string $heading = "";
+
+
     public function getColumns(): int | string | array
     {
         return 2;
