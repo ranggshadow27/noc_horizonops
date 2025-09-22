@@ -159,40 +159,40 @@ class SummarySiteTable extends BaseWidget
                         $percentage = ($onlineDays / $divider) * 100;
                         return number_format($percentage, 1) . '%';
                     }, position: 'below')
-                    ->color(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                        if ($isFutureMonth || $siteLogs->get($record->site_id, collect([]))->isEmpty()) {
-                            return 'gray';
-                        }
-                        $logs = $siteLogs->get($record->site_id, collect([]));
-                        $onlineDays = $logs->filter(function ($dayLogs) {
-                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                            return $uptime !== null && (int) $uptime > 2;
-                        })->count();
-                        $percentage = ($onlineDays / $divider) * 100;
-                        return match (true) {
-                            $percentage > 70 => 'success',
-                            $percentage >= 30 && $percentage <= 70 => 'warning',
-                            $percentage < 30 => 'danger',
-                            default => 'gray',
-                        };
-                    })
-                    ->icon(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
-                        if ($isFutureMonth || $siteLogs->get($record->site_id, collect([]))->isEmpty()) {
-                            return 'phosphor-arrow-circle-down-duotone';
-                        }
-                        $logs = $siteLogs->get($record->site_id, collect([]));
-                        $onlineDays = $logs->filter(function ($dayLogs) {
-                            $uptime = $dayLogs->first()['modem_uptime'] ?? null;
-                            return $uptime !== null && (int) $uptime > 2;
-                        })->count();
-                        $percentage = ($onlineDays / $divider) * 100;
-                        return match (true) {
-                            $percentage > 70 => 'phosphor-arrow-circle-up-duotone',
-                            $percentage >= 30 && $percentage <= 70 => 'phosphor-warning-circle-duotone',
-                            $percentage < 30 => 'phosphor-arrow-circle-down-duotone',
-                            default => 'phosphor-arrow-circle-down-duotone',
-                        };
-                    }),
+                // ->color(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                //     if ($isFutureMonth || $siteLogs->get($record->site_id, collect([]))->isEmpty()) {
+                //         return 'gray';
+                //     }
+                //     $logs = $siteLogs->get($record->site_id, collect([]));
+                //     $onlineDays = $logs->filter(function ($dayLogs) {
+                //         $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                //         return $uptime !== null && (int) $uptime > 2;
+                //     })->count();
+                //     $percentage = ($onlineDays / $divider) * 100;
+                //     return match (true) {
+                //         $percentage > 70 => 'success',
+                //         $percentage >= 30 && $percentage <= 70 => 'warning',
+                //         $percentage < 30 => 'danger',
+                //         default => 'gray',
+                //     };
+                // })
+                // ->icon(function (SiteDetail $record) use ($siteLogs, $divider, $isFutureMonth) {
+                //     if ($isFutureMonth || $siteLogs->get($record->site_id, collect([]))->isEmpty()) {
+                //         return 'phosphor-arrow-circle-down-duotone';
+                //     }
+                //     $logs = $siteLogs->get($record->site_id, collect([]));
+                //     $onlineDays = $logs->filter(function ($dayLogs) {
+                //         $uptime = $dayLogs->first()['modem_uptime'] ?? null;
+                //         return $uptime !== null && (int) $uptime > 2;
+                //     })->count();
+                //     $percentage = ($onlineDays / $divider) * 100;
+                //     return match (true) {
+                //         $percentage > 70 => 'phosphor-arrow-circle-up-duotone',
+                //         $percentage >= 30 && $percentage <= 70 => 'phosphor-warning-circle-duotone',
+                //         $percentage < 30 => 'phosphor-arrow-circle-down-duotone',
+                //         default => 'phosphor-arrow-circle-down-duotone',
+                //     };
+                // }),
 
                 // // Kolom Offline
                 // TextColumn::make('offline_count')
