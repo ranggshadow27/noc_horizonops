@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\SiteDetail;
 use App\Models\SiteMonitor;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -70,7 +71,7 @@ class SiteMonitorService
         Log::info('Total unique records to process: ' . $totalData);
 
         // Ambil semua site_id yang ada di SiteMonitor
-        $existingSiteIds = SiteMonitor::pluck('site_id')->toArray();
+        $existingSiteIds = SiteDetail::pluck('site_id')->toArray();
         $successfulUpdates = 0;
 
         // Proses data dalam batch
