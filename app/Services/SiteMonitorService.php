@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\SiteDetail;
 use App\Models\SiteMonitor;
+use App\Models\SiteDetail; // REVISI: Import model SiteDetail (asumsi nama ini; sesuaikan jika beda)
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -70,7 +70,7 @@ class SiteMonitorService
         $totalData = count($data);
         Log::info('Total unique records to process: ' . $totalData);
 
-        // Ambil semua site_id yang ada di SiteMonitor
+        // REVISI: Ambil existing site_id dari SiteDetail, bukan SiteMonitor, supaya site_id baru bisa diproses
         $existingSiteIds = SiteDetail::pluck('site_id')->toArray();
         $successfulUpdates = 0;
 
@@ -80,16 +80,16 @@ class SiteMonitorService
             foreach ($chunk as $apiItem) {
                 $terminalId = $apiItem['terminal_id'] ?? null;
 
-                // Cek apakah terminal_id ada di SiteMonitor
+                // REVISI: Cek apakah terminal_id ada di SiteDetail (bukan SiteMonitor)
                 if (!$terminalId || !in_array($terminalId, $existingSiteIds)) {
-                    Log::warning('Skipping data: terminal_id not found in SiteMonitor or invalid', [
+                    Log::warning('Skipping data: terminal_id not found in SiteDetail or invalid', [
                         'terminal_id' => $terminalId ?? 'Unknown'
                     ]);
                     continue;
                 }
 
                 try {
-                    // Ambil data berdasarkan site_id
+                    // REVISI: Ambil data dari SiteMonitor (jika ada), tapi sekarang allow create jika belum ada
                     $dbData = SiteMonitor::where('site_id', $terminalId)->first();
 
                     $updateData = [
@@ -99,28 +99,28 @@ class SiteMonitorService
                         'ap1' => $apiItem['AP1'] ?? 'Failed',
                         'ap2' => $apiItem['AP2'] ?? 'Failed',
                         'modem_last_up' =>
-                        $apiItem['modem'] === 'Down' && !$dbData->modem_last_up ?
+                        $apiItem['modem'] === 'Down' && (!$dbData || !$dbData->modem_last_up) ? // REVISI: Tambah check !$dbData untuk handle create baru
                             Carbon::now() : (
                                 $apiItem['modem'] !== 'Up' ?
-                                $dbData->modem_last_up : null
+                                ($dbData ? $dbData->modem_last_up : null) : null
                             ),
                         'mikrotik_last_up' =>
-                        $apiItem['mikrotik'] === 'Down' && !$dbData->mikrotik_last_up ?
+                        $apiItem['mikrotik'] === 'Down' && (!$dbData || !$dbData->mikrotik_last_up) ?
                             Carbon::now() : (
                                 $apiItem['mikrotik'] !== 'Up' ?
-                                $dbData->mikrotik_last_up : null
+                                ($dbData ? $dbData->mikrotik_last_up : null) : null
                             ),
                         'ap1_last_up' =>
-                        $apiItem['AP1'] === 'Down' && !$dbData->ap1_last_up ?
+                        $apiItem['AP1'] === 'Down' && (!$dbData || !$dbData->ap1_last_up) ?
                             Carbon::now() : (
                                 $apiItem['AP1'] !== 'Up' ?
-                                $dbData->ap1_last_up : null
+                                ($dbData ? $dbData->ap1_last_up : null) : null
                             ),
                         'ap2_last_up' =>
-                        $apiItem['AP2'] === 'Down' && !$dbData->ap2_last_up ?
+                        $apiItem['AP2'] === 'Down' && (!$dbData || !$dbData->ap2_last_up) ?
                             Carbon::now() : (
                                 $apiItem['AP2'] !== 'Up' ?
-                                $dbData->ap2_last_up : null
+                                ($dbData ? $dbData->ap2_last_up : null) : null
                             ),
                     ];
 
@@ -129,6 +129,13 @@ class SiteMonitorService
                         ['site_id' => $terminalId],
                         $updateData
                     );
+
+                    // REVISI: Log jika ini create baru
+                    if (!$dbData->wasRecentlyCreated) {
+                        Log::info('Updated existing SiteMonitor record', ['site_id' => $terminalId]);
+                    } else {
+                        Log::info('Created new SiteMonitor record from API', ['site_id' => $terminalId]);
+                    }
 
                     // Update status dan sensor_status
                     $this->updateStatus($dbData);
@@ -218,6 +225,9 @@ class SiteMonitorService
                     // AP1 dan AP2 down
                     $sensorStatus = 'AP1&2 Down';
                 }
+            } else {
+                // REVISI: Tambah fallback jika logic di atas tidak match (untuk handle kasus baru)
+                $sensorStatus = 'Unknown';
             }
         }
 
