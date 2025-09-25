@@ -94,6 +94,7 @@ class SiteMonitorService
 
                     $updateData = [
                         'site_id' => $apiItem['terminal_id'] ?? 'Failed',
+                        'sitecode' => $apiItem['sitecode'] ?? 'Failed',
                         'modem' => $apiItem['modem'] ?? 'Failed',
                         'mikrotik' => $apiItem['mikrotik'] ?? 'Failed',
                         'ap1' => $apiItem['AP1'] ?? 'Failed',
