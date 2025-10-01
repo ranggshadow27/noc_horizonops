@@ -19,9 +19,13 @@ class Kernel extends ConsoleKernel
         })->everyMinute();
 
         // Update SiteLog setiap 10 menit, 1 menit setelah SiteMonitor
-        $schedule->command('site:sync-logs')->everyTenMinutes()->when(function () {
-            return now()->minute % 10 === 1; // Jalan di menit ke-1 setiap 10 menit
-        });
+        $schedule->command('site:sync-logs')
+            ->everyTenMinutes()
+            ->when(function () {
+                return now()->minute % 10 === 1; // Jalan di menit ke-1 setiap 10 menit
+            });
+        $schedule->command('ticket:summary:update')
+            ->everyTwoHours();
 
         // Hapus notifikasi lama setiap hari
         $schedule->call(function () {
