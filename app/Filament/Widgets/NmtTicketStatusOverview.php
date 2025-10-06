@@ -147,7 +147,7 @@ class NmtTicketStatusOverview extends ApexChartWidget
                 ],
 
                 [
-                    'name' => 'Ticket Overall',
+                    'name' => 'Ticket Carry Over',
                     'data' => $openCounts,
                 ],
 
