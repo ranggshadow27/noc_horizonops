@@ -24,6 +24,7 @@ class Kernel extends ConsoleKernel
             ->when(function () {
                 return now()->minute % 10 === 1; // Jalan di menit ke-1 setiap 10 menit
             });
+
         $schedule->command('ticket:summary:update')
             ->everyTwoHours();
 
