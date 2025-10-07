@@ -36,7 +36,7 @@ class NmtTicketsOverview extends BaseWidget
                 ->description("Closed today")
                 ->color('success'),
 
-            Stat::make('Ticket Carryover', $todayOpen)
+            Stat::make('Ticket Carry Over', $todayOpen)
                 ->descriptionIcon('phosphor-hourglass-high-duotone')
                 ->description("Tickets in Progress")
                 ->color('warning'),
