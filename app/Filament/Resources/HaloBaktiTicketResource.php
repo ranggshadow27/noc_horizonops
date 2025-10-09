@@ -36,6 +36,12 @@ class HaloBaktiTicketResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
 
+    protected static ?string $navigationLabel = 'HaloBakti Ticket';
+    protected static ?string $navigationGroup = 'Trouble Tickets';
+
+    protected static ?string $pluralModelLabel = 'HaloBakti Ticket';
+    protected static ?string $modelLabel = 'HaloBakti Ticket';
+
     protected static ?string $recordTitleAttribute = 'ticket_id';
 
     public static function form(Form $form): Form
