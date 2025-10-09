@@ -115,6 +115,7 @@ class HaloBaktiTicketResource extends Resource
                     ->schema([
                         Textarea::make('new_comment')
                             ->label('Ticket Progress')
+                            ->placeholder('Update ticket progress here..')
                             ->reactive()
                             ->visible(fn($operation) => $operation === 'edit')
                             ->autosize(),
