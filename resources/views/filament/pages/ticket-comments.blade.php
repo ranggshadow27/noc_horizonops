@@ -35,7 +35,7 @@
                     </div>
                 </div>
                 <div class="flex">
-                    <p class="text-gray-800 mt-1">{{ $comment['comment'] }}</p>
+                    <p class="text-gray-800 mt-1">{!! str($comment['comment'])->markdown()->sanitizeHtml() !!}</p>
                 </div>
                 <div class="flex flex-col space-y-1">
                     @if (isset($comment['images']) && is_array($comment['images']) && count($comment['images']) > 0)

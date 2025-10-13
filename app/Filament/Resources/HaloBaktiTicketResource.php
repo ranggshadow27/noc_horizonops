@@ -9,6 +9,7 @@ use Filament\Tables\Actions\ActionGroup;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -42,7 +43,7 @@ class HaloBaktiTicketResource extends Resource
     protected static ?string $pluralModelLabel = 'HaloBakti Ticket';
     protected static ?string $modelLabel = 'HaloBakti Ticket';
 
-    protected static ?string $recordTitleAttribute = 'ticket_id';
+    // protected static ?string $recordTitleAttribute = 'hb_tt_number';
 
     public static function form(Form $form): Form
     {
@@ -113,12 +114,19 @@ class HaloBaktiTicketResource extends Resource
                     ->heading(fn($operation) => $operation === 'edit' ? '' : 'Ticket Progress')
                     ->visible(fn($operation) => $operation === 'edit' || 'view')
                     ->schema([
-                        Textarea::make('new_comment')
+                        RichEditor::make('new_comment')
                             ->label('Ticket Progress')
                             ->placeholder('Update ticket progress here..')
+                            ->toolbarButtons([
+                                'bold',
+                                'italic',
+                                'redo',
+                                'strike',
+                                'underline',
+                                'undo',
+                            ])
                             ->reactive()
-                            ->visible(fn($operation) => $operation === 'edit')
-                            ->autosize(),
+                            ->visible(fn($operation) => $operation === 'edit'),
                         // FileUpload::make('new_images')
                         //     ->label('Attached Images')
                         //     ->multiple()
@@ -212,7 +220,7 @@ class HaloBaktiTicketResource extends Resource
     {
         return $table
             ->defaultSort('created_at', 'desc')
-            ->recordTitleAttribute('ticket_id')
+            // ->recordTitleAttribute('ticket_id')
             ->columns([
                 TextColumn::make('hb_tt_number')
                     ->label("Ticket ID/Number")
