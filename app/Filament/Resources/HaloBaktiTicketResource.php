@@ -167,13 +167,13 @@ class HaloBaktiTicketResource extends Resource
                                     FileUpload::make('images')
                                         ->label('Images')
                                         ->multiple()
+                                        ->panelLayout('grid')
                                         ->disk('public')
                                         ->directory(fn($record) => $record ? "tickets/{$record->ticket_id}/images" : "tickets/MHG-HB-" . now()->format('Ymd') . '-' . str_pad(HaloBaktiTicket::whereDate('created_at', now()->toDateString())->count() + 1, 3, '0', STR_PAD_LEFT) . '/images')
                                         ->preserveFilenames()
                                         ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif'])
                                         ->maxFiles(5)
                                         ->maxSize(5120)
-                                        ->maxParallelUploads(1)
                                         // ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file): string {
                                         //     return (string) str("_comment.{$file->extension()}")->prepend(now()->timestamp);
                                         // })
