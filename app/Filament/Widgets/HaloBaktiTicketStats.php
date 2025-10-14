@@ -17,7 +17,7 @@ class HaloBaktiTicketStats extends BaseWidget
 
         return [
             Stat::make('Closed Today', HaloBaktiTicket::where('status', 'Closed')
-                ->whereDate('updated_at', $today)
+                ->whereDate('created_at', $today)
                 ->count())
                 ->description('Tickets closed today')
                 ->descriptionIcon('phosphor-check-circle-duotone')
@@ -32,8 +32,9 @@ class HaloBaktiTicketStats extends BaseWidget
                 ->description('Total unresolved tickets')
                 ->descriptionIcon('phosphor-exclamation-mark-duotone')
                 ->color('danger'),
-            Stat::make('Total Tickets', HaloBaktiTicket::count())
-                ->description('Overall Halo Bakti tickets')
+            Stat::make('Total Tickets', HaloBaktiTicket::whereDate('created_at', $today)
+                ->count())
+                ->description('Today Halo Bakti tickets')
                 ->descriptionIcon('phosphor-bookmarks-duotone')
                 ->color('gray'),
         ];
