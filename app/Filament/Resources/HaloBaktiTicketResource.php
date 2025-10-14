@@ -173,6 +173,7 @@ class HaloBaktiTicketResource extends Resource
                                         ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/gif'])
                                         ->maxFiles(5)
                                         ->maxSize(5120)
+                                        ->maxParallelUploads(1)
                                         // ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file): string {
                                         //     return (string) str("_comment.{$file->extension()}")->prepend(now()->timestamp);
                                         // })

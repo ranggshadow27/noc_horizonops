@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\AreaList;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -14,6 +15,8 @@ use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Columns\Column;
@@ -269,6 +272,7 @@ class SummarySiteTable extends BaseWidget
                                 $this->month = $state;
                                 $this->dispatch('refreshTable');
                             }),
+
                         Select::make('year')
                             ->native(false)
                             ->label('Tahun')
@@ -279,6 +283,7 @@ class SummarySiteTable extends BaseWidget
                                 $this->year = $state;
                                 $this->dispatch('refreshTable');
                             }),
+
                         Select::make('quarter')
                             ->native(false)
                             ->label('Quarter')
@@ -295,6 +300,17 @@ class SummarySiteTable extends BaseWidget
                     ])
                     ->query(function ($query, array $data) {
                         return $query;
+                    }),
+
+                SelectFilter::make('area')
+                    ->label("Area")
+                    ->options(fn() => AreaList::all()->pluck('area', 'area'))
+                    ->native(false)
+                    ->modifyQueryUsing(function (Builder $query, $state) {
+                        if (! $state['value']) {
+                            return $query;
+                        }
+                        return $query->whereHas('area', fn($query) => $query->where('area', $state['value']));
                     }),
             ])
             ->headerActions([
