@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\HaloBaktiTicketResource\Pages;
+use App\Models\AreaList;
 use App\Models\HaloBaktiTicket;
 use App\Models\SiteDetail;
 use Filament\Tables\Actions\ActionGroup;
@@ -24,7 +25,9 @@ use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -288,7 +291,16 @@ class HaloBaktiTicketResource extends Resource
                     ->dateTime(),
             ])
             ->filters([
-                // Tambah filter kalo perlu
+                SelectFilter::make('area')
+                    ->label("Area")
+                    ->options(fn() => AreaList::all()->pluck('area', 'area'))
+                    ->native(false)
+                    ->modifyQueryUsing(function (Builder $query, $state) {
+                        if (! $state['value']) {
+                            return $query;
+                        }
+                        return $query->whereHas('site', fn($query) => $query->whereHas('area', fn($query) => $query->where('area', $state['value'])));
+                    }),
             ])
             ->actions([
                 ActionGroup::make([

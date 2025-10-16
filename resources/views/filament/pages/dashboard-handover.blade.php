@@ -10,7 +10,7 @@
         </div>
     </div>
 
-    <div class="flex flex-wrap justify-center items-center gap-4 w-full">
+    <div class="flex sm:flex-row flex-col sm:w-1/2 gap-4">
         <div class="flex-1 sm:w-1/2">
             @livewire(\App\Filament\Widgets\NmtTicketsOverview::class)
         </div>
@@ -33,7 +33,6 @@
         <div class="flex-1 sm:w-1/2">
             @livewire(\App\Filament\Widgets\NmtTicketProblemDetailLineChart::class)
         </div>
-
     </div>
 
     <div class="flex sm:flex-row flex-col gap-4 space-y-0">
@@ -119,7 +118,7 @@
     <div class="flex sm:flex-row flex-col gap-4 space-y-0">
         <!-- Bagian Kiri (Div 1, 2, 4, 5) -->
         <div class="flex flex-col flex-1 sm:w-1/2 gap-4">
-             <div class="flex sm:flex-row flex-col sm:w-1/2 gap-4">
+            <div class="flex sm:flex-row flex-col sm:w-1/2 gap-4">
 
                 <div class="flex-1 sm:w-1/2">
                     @livewire(\App\Filament\Widgets\TmoLineChart::class)
