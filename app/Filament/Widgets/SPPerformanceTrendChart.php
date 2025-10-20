@@ -27,18 +27,19 @@ class SpPerformanceTrendChart extends ApexChartWidget
      * @var string|null
      */
     protected static ?string $subheading = 'Daily Ticket Percentage by Service Provider';
+    protected static ?string $heading = 'Daily Ticket Percentage by Service Provider';
 
     /**
      * Dynamic Heading
      */
-    protected function getHeading(): ?string
-    {
-        $filterData = $this->filterFormData;
-        $spId = $filterData['sp_id'] ?? "";
-        $sp = ServiceProvider::find($spId);
+    // protected function getHeading(): ?string
+    // {
+    //     $filterData = $this->filterFormData;
+    //     $spId = $filterData['sp_id'] ?? "";
+    //     $sp = ServiceProvider::find($spId);
 
-        return $sp ? "{$sp->sp_name} Performance Overview . Total Site {$sp->total_site}" : 'SP Performance Overview';
-    }
+    //     return $sp ? "{$sp->sp_name} Performance Overview . Total Site {$sp->total_site}" : 'SP Performance Overview';
+    // }
 
     /**
      * Chart options (series, labels, types, size, animations...)
