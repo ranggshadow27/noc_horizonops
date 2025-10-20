@@ -23,11 +23,11 @@ use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Illuminate\Support\Carbon;
 
-class ManageServiceProviders extends Page
+class ManageServiceProviders extends Page implements HasTable, HasActions
 {
     use HasPageShield;
 
-    // use InteractsWithTable;
+    use InteractsWithTable;
 
     protected static ?string $navigationLabel = 'SP Performance';
     protected ?string $subheading = 'Service Provider Performance Percentage';
@@ -133,6 +133,8 @@ class ManageServiceProviders extends Page
                     ->button()
             ])
             ->actions([])
+            ->paginated([2, 5, 10])
+            ->defaultPaginationPageOption(10)
             ->bulkActions([]);
     }
 }

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ServiceProvider extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['sp_id', 'sp_name', 'total_site'];
     public $incrementing = false;
     protected $primaryKey = 'sp_id';
