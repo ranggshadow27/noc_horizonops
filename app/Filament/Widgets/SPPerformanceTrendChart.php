@@ -34,7 +34,7 @@ class SpPerformanceTrendChart extends ApexChartWidget
     protected function getHeading(): ?string
     {
         $filterData = $this->filterFormData;
-        $spId = $filterData['sp_id'];
+        $spId = $filterData['sp_id'] ?? "";
         $sp = ServiceProvider::find($spId);
 
         return $sp ? "{$sp->sp_name} Performance Overview . Total Site {$sp->total_site}" : 'SP Performance Overview';

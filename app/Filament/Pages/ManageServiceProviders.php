@@ -25,7 +25,7 @@ use Illuminate\Support\Carbon;
 
 class ManageServiceProviders extends Page implements HasTable, HasActions
 {
-    // use HasPageShield;
+    use HasPageShield;
 
     use InteractsWithTable;
 
