@@ -32,7 +32,7 @@ class ManageServiceProviders extends Page implements HasTable, HasActions
     protected static ?string $navigationLabel = 'SP Performance';
     protected ?string $subheading = 'Service Provider Performance Percentage';
     protected static ?string $title = 'SP Performance';
-    protected static ?string $navigationGroup = 'Site Management';
+    // protected static ?string $navigationGroup = 'Site Management';
     protected static ?string $navigationIcon = 'phosphor-gauge-duotone';
 
     protected static string $view = 'filament.pages.manage-service-providers';
