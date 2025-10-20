@@ -2,7 +2,7 @@
     <div class="flex flex-wrap justify-between items-end gap-4 w-full">
         <div>
             <p class="text-xl"><b>Dashboard</b><br>
-            <span class="text-gray-400 text-base">Network Operation Center</span>
+                <span class="text-gray-400 text-base">Network Operation Center</span>
             </p>
         </div>
         <div>
@@ -103,7 +103,12 @@
             const now = new Date();
 
             // Format date in Indonesian
-            const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const optionsDate = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
             const formattedDate = now.toLocaleDateString('id-ID', optionsDate);
 
             // Get hours, minutes and seconds separately
@@ -121,4 +126,4 @@
         updateClock();
         setInterval(updateClock, 1000);
     });
-    </script>
+</script>

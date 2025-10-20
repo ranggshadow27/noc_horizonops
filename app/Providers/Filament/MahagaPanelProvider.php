@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\ManageServiceProviders;
 use App\Filament\Resources\MahagaResource\Pages\Auth\Login;
 use App\Filament\Resources\MahagaResource\Pages\Auth\Register;
 use App\Filament\Resources\MahagaResource\Pages\Auth\EditProfile;
@@ -57,6 +58,7 @@ class MahagaPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
+                ManageServiceProviders::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
