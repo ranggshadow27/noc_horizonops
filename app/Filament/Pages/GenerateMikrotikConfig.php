@@ -139,10 +139,11 @@ class GenerateMikrotikConfig extends Page
 
                             FileUpload::make('excel_file')
                                 ->label('Excel File')
-                                ->acceptedFileTypes([
-                                    'application/vnd.ms-excel',
-                                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                                ])
+                                // ->acceptedFileTypes([
+                                //     'application/vnd.ms-excel',
+                                //     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                // ])
+                                ->rules(['file', 'mimes:xls,xlsx'])
                                 ->storeFiles(false) // Jangan simpan permanen
                                 ->required()
                                 ->hint('Excel file must be include ["Nama Lokasi", "Timezone", "IP Modem"] in the first row')

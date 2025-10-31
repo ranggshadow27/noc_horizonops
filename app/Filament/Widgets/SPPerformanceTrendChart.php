@@ -54,6 +54,19 @@ class SpPerformanceTrendChart extends ApexChartWidget
                 ->label('Service Provider')
                 ->options(ServiceProvider::pluck('sp_name', 'sp_id'))
                 ->default(function () {
+                    $sp = ServiceProvider::where('sp_name', 'PSN')->first() // Ganti 'MHG' sesuai nama SP yang diinginkan
+                        ?? ServiceProvider::orderBy('sp_name')->first(); // Fallback ke SP pertama urut alfabet
+                    return $sp?->sp_id;
+                })
+                ->native(false)
+                ->searchable()
+                ->required()
+                ->reactive(), // Pastiin re-render pas ganti SP
+
+            Select::make('sp_id2')
+                ->label('Service Provider')
+                ->options(ServiceProvider::pluck('sp_name', 'sp_id'))
+                ->default(function () {
                     $sp = ServiceProvider::where('sp_name', 'MAHAGA')->first() // Ganti 'MHG' sesuai nama SP yang diinginkan
                         ?? ServiceProvider::orderBy('sp_name')->first(); // Fallback ke SP pertama urut alfabet
                     return $sp?->sp_id;
@@ -62,6 +75,7 @@ class SpPerformanceTrendChart extends ApexChartWidget
                 ->searchable()
                 ->required()
                 ->reactive(), // Pastiin re-render pas ganti SP
+
             DatePicker::make('date_start')
                 ->default(now()->subDays(10)->startOfDay())
                 ->reactive(),
@@ -75,9 +89,18 @@ class SpPerformanceTrendChart extends ApexChartWidget
     {
         $filterData = $this->filterFormData;
         $spId = $filterData['sp_id'];
-        $sp = ServiceProvider::find($spId);
+        $spId2 = $filterData['sp_id2'];
 
-        if (!$sp) {
+        $sp = ServiceProvider::find($spId);
+        $sp2 = ServiceProvider::find($spId2);
+
+        if ($sp) {
+            $sp_name = $sp->sp_name; // Ambil sp_name dari objek $sp
+            $sp_name2 = $sp2->sp_name; // Ambil sp_name dari objek $sp
+            // Gunakan $sp_name sesuai kebutuhan
+        }
+
+        if (!$sp && !$sp2) {
             return []; // Kalo no SP, chart kosong
         }
 
@@ -93,6 +116,19 @@ class SpPerformanceTrendChart extends ApexChartWidget
             ->sum('today_ticket');
 
         $percentages = $ticketTrends->map(function (TrendValue $value) use ($totalSite) {
+            return round(($value->aggregate / $totalSite) * 100, 2);
+        });
+
+        $ticketTrends2 = Trend::query(SpPerformance::where('sp_id', $spId2))
+            ->between(
+                start: Carbon::parse($filterData['date_start'])->startOfDay(),
+                end: Carbon::parse($filterData['date_end'])->endOfDay(),
+            )
+            ->dateColumn('created_at')
+            ->perDay()
+            ->sum('today_ticket');
+
+        $percentages2 = $ticketTrends2->map(function (TrendValue $value) use ($totalSite) {
             return round(($value->aggregate / $totalSite) * 100, 2);
         });
 
@@ -117,8 +153,12 @@ class SpPerformanceTrendChart extends ApexChartWidget
 
             'series' => [
                 [
-                    'name' => 'Ticket Percentage (%)',
+                    'name' => $sp_name . ' Ticket Percentage (%)',
                     'data' => $percentages,
+                ],
+                [
+                    'name' => $sp_name2 . ' Ticket Percentage (%)',
+                    'data' => $percentages2,
                 ],
             ],
 
@@ -181,7 +221,11 @@ class SpPerformanceTrendChart extends ApexChartWidget
             dataLabels: {
                 enabled: true,
                 formatter: function (val) {
-                    return val + "%";
+                    if (val == 0) {
+                        return "";
+                    } else {
+                        return val + "%";
+                    }
                 },
                 offsetY: -20,
                 style: {
