@@ -6,7 +6,7 @@ use App\Filament\Resources\HaloBaktiTicketResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 
-class ViewHaloBaktiTicket extends ViewRecord
+class ViewzzHaloBaktiTicket extends ViewRecord
 {
     protected static string $resource = HaloBaktiTicketResource::class;
 
