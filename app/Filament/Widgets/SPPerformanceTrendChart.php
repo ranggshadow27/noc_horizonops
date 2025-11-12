@@ -12,75 +12,51 @@ use Flowframe\Trend\TrendValue;
 use Illuminate\Support\Carbon;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class SpPerformanceTrendChart extends ApexChartWidget
+class SPPerformanceTrendChart extends ApexChartWidget
 {
-    /**
-     * Chart Id
-     *
-     * @var string
-     */
     protected static ?string $chartId = 'spPerformanceTrendChart';
-
-    /**
-     * Widget Title
-     *
-     * @var string|null
-     */
-    protected static ?string $subheading = 'Daily Ticket Percentage by Service Provider';
     protected static ?string $heading = 'Daily Ticket Percentage by Service Provider';
+    protected static ?string $subheading = 'Daily Ticket Percentage by Service Provider';
 
-    /**
-     * Dynamic Heading
-     */
+    protected int | string | array $columnSpan = 'full';
+
     protected function getHeading(): ?string
     {
         $filterData = $this->filterFormData;
-        $spId = $filterData['sp_id'] ?? "";
-        $sp = ServiceProvider::find($spId);
+        $selectedSpIds = $filterData['sp_ids'] ?? [];
 
-        return $sp ? "{$sp->sp_name} Performance Overview . Total Site {$sp->total_site}" : 'SP Performance Overview';
+        if (empty($selectedSpIds)) {
+            return 'SP Performance Overview';
+        }
+
+        $sps = ServiceProvider::whereIn('sp_id', $selectedSpIds)->get();
+        $names = $sps->pluck('sp_name')->implode(' vs ');
+        $totalSites = $sps->sum('total_site');
+
+        return "{$names} . Total Sites: {$totalSites}";
     }
 
-    /**
-     * Chart options (series, labels, types, size, animations...)
-     * https://apexcharts.com/docs/options
-     *
-     * @return array
-     */
     protected function getFormSchema(): array
     {
         return [
-            Select::make('sp_id')
-                ->label('Service Provider')
-                ->options(ServiceProvider::pluck('sp_name', 'sp_id'))
-                ->default(function () {
-                    $sp = ServiceProvider::where('sp_name', 'PSN')->first() // Ganti 'MHG' sesuai nama SP yang diinginkan
-                        ?? ServiceProvider::orderBy('sp_name')->first(); // Fallback ke SP pertama urut alfabet
-                    return $sp?->sp_id;
-                })
-                ->native(false)
+            Select::make('sp_ids')
+                ->label('Service Providers')
+                ->multiple()
+                ->options(ServiceProvider::orderBy('sp_name')->pluck('sp_name', 'sp_id'))
+                ->default(fn() => ServiceProvider::whereIn('sp_name', ['PSN', 'MAHAGA'])->pluck('sp_id')->toArray())
                 ->searchable()
-                ->required()
-                ->reactive(), // Pastiin re-render pas ganti SP
-
-            Select::make('sp_id2')
-                ->label('Service Provider')
-                ->options(ServiceProvider::pluck('sp_name', 'sp_id'))
-                ->default(function () {
-                    $sp = ServiceProvider::where('sp_name', 'MAHAGA')->first() // Ganti 'MHG' sesuai nama SP yang diinginkan
-                        ?? ServiceProvider::orderBy('sp_name')->first(); // Fallback ke SP pertama urut alfabet
-                    return $sp?->sp_id;
-                })
-                ->native(false)
-                ->searchable()
-                ->required()
-                ->reactive(), // Pastiin re-render pas ganti SP
+                ->reactive()
+                ->placeholder('Pilih SP...')
+                ->required(),
 
             DatePicker::make('date_start')
-                ->default(now()->subDays(10)->startOfDay())
+                ->label('Start Date')
+                ->default(now()->subDays(60)->startOfDay())
                 ->reactive(),
+
             DatePicker::make('date_end')
-                ->default(now()->addDays(4)->endOfDay())
+                ->label('End Date')
+                ->default(now()->subDays(50)->endOfDay())
                 ->reactive(),
         ];
     }
@@ -88,58 +64,73 @@ class SpPerformanceTrendChart extends ApexChartWidget
     protected function getOptions(): array
     {
         $filterData = $this->filterFormData;
-        $spId = $filterData['sp_id'];
-        $spId2 = $filterData['sp_id2'];
+        $selectedSpIds = $filterData['sp_ids'] ?? [];
 
-        $sp = ServiceProvider::find($spId);
-        $sp2 = ServiceProvider::find($spId2);
-
-        if ($sp) {
-            $sp_name = $sp->sp_name; // Ambil sp_name dari objek $sp
-            $sp_name2 = $sp2->sp_name; // Ambil sp_name dari objek $sp
-            // Gunakan $sp_name sesuai kebutuhan
+        if (empty($selectedSpIds)) {
+            return [
+                'series' => [],
+                'xaxis' => ['categories' => []],
+            ];
         }
 
-        if (!$sp && !$sp2) {
-            return []; // Kalo no SP, chart kosong
+        $start = Carbon::parse($filterData['date_start'])->startOfDay();
+        $end = Carbon::parse($filterData['date_end'])->endOfDay();
+
+        // Generate semua tanggal
+        $dates = [];
+        $current = $start->copy();
+        while ($current->lte($end)) {
+            $dates[] = $current->format('Y-m-d');
+            $current->addDay();
         }
 
-        $totalSite = $sp->total_site ?: 1; // Hindari divide by zero, default 1
-        $totalSite2 = $sp2->total_site ?: 1; // Hindari divide by zero, default 1
+        $series = [];
+        $colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
 
-        $ticketTrends = Trend::query(SpPerformance::where('sp_id', $spId))
-            ->between(
-                start: Carbon::parse($filterData['date_start'])->startOfDay(),
-                end: Carbon::parse($filterData['date_end'])->endOfDay(),
-            )
-            ->dateColumn('created_at')
-            ->perDay()
-            ->sum('today_ticket');
+        foreach ($selectedSpIds as $spId) {
+            $sp = ServiceProvider::find($spId);
+            if (!$sp || !$sp->total_site) continue;
 
-        $percentages = $ticketTrends->map(function (TrendValue $value) use ($totalSite) {
-            return round(($value->aggregate / $totalSite) * 100, 2);
-        });
+            $totalSite = $sp->total_site;
 
-        $ticketTrends2 = Trend::query(SpPerformance::where('sp_id', $spId2))
-            ->between(
-                start: Carbon::parse($filterData['date_start'])->startOfDay(),
-                end: Carbon::parse($filterData['date_end'])->endOfDay(),
-            )
-            ->dateColumn('created_at')
-            ->perDay()
-            ->sum('today_ticket');
+            // PAKAI Trend
+            $trend = Trend::query(SpPerformance::where('sp_id', $spId))
+                ->between($start, $end)
+                ->perDay()
+                ->sum('today_ticket');
 
-        $percentages2 = $ticketTrends2->map(function (TrendValue $value) use ($totalSite2) {
-            return round(($value->aggregate / $totalSite2) * 100, 2);
-        });
+            // UBAH TrendValue → array primitif
+            $trendData = $trend->map(fn(TrendValue $value) => [
+                'date' => $value->date,
+                'value' => $value->aggregate,
+            ])->pluck('value', 'date')->toArray();
+
+            // Isi semua tanggal, kosong = 0
+            $percentages = collect($dates)->map(function ($date) use ($trendData, $totalSite) {
+                $total = $trendData[$date] ?? 0;
+
+                // KALAU TOTAL = 0 → return null, bukan 0.0
+                return $total > 0 ? round(($total / $totalSite) * 100, 2) : null;
+            })->values()->toArray();
+
+            $series[] = [
+                'name' => $sp->sp_name . ' (%)',
+                'data' => $percentages,
+            ];
+        }
+
+        $categories = collect($dates)
+            ->map(fn($d) => Carbon::parse($d)->translatedFormat('d M'))
+            ->values()
+            ->toArray();
 
         return [
             'chart' => [
-                'type' => 'bar',
+                'type' => 'line',
                 'height' => 625,
                 'fontFamily' => 'inherit',
                 'toolbar' => [
-                    'autoSelected' => 'pan',
+                    'autoSelected' => "pan",
                     'tools' => [
                         'download' => true,
                         'selection' => false,
@@ -151,36 +142,42 @@ class SpPerformanceTrendChart extends ApexChartWidget
                     ]
                 ],
             ],
-
-            'series' => [
-                [
-                    'name' => $sp_name . ' Ticket Percentage (%)',
-                    'data' => $percentages,
-                ],
-                [
-                    'name' => $sp_name2 . ' Ticket Percentage (%)',
-                    'data' => $percentages2,
-                ],
-            ],
-
+            'series' => $series,
             'xaxis' => [
-                'categories' => $ticketTrends->map(fn(TrendValue $value) => Carbon::parse($value->date)->translatedFormat('d M')),
+                'categories' => $categories,
             ],
-
-            'grid' => [
-                'strokeDashArray' => 10,
-                'position' => 'back',
-                'clipMarkers' => true,
-                'yaxis' => [
-                    'lines' => [
-                        'show' => true
-                    ]
-                ],
+            // 'yaxis' => [
+            //     'min' => 0,
+            //     'max' => 100,
+            //     'labels' => [
+            //         'formatter' => RawJs::make("function(v) { return v + '%'; }"),
+            //     ],
+            // ],
+            'stroke' => [
+                'curve' => 'smooth',
+                'width' => 6,
             ],
+            'markers' => [
+                'size' => 5,
+                'strokeWidth' => 2,
+                'strokeColors' => '#ffffff', // Warna garis luar
 
+            ],
+            'colors' => array_slice($colors, 0, count($series)),
             'legend' => [
-                'fontSize' => '14px',
-                'fontWeight' => 600,
+                'position' => 'top',
+            ],
+            // 'tooltip' => [
+            //     'shared' => true,
+            //     'intersect' => false,
+            //     'y' => [
+            //         'formatter' => RawJs::make("function(v) { return v + '%'; }"),
+            //     ],
+            // ],
+            'grid' => [
+                'show' => true,
+                'borderColor' => '#e5e7eb',
+                'strokeDashArray' => 5,
             ],
         ];
     }
@@ -189,53 +186,49 @@ class SpPerformanceTrendChart extends ApexChartWidget
     {
         return RawJs::make(<<<JS
         {
-            plotOptions: {
-                bar: {
-                    borderRadius: 10,
-                    borderRadiusApplication: 'end',
-                    columnWidth: '50%',
-                    barHeight: '50%',
-                    dataLabels: {
-                        position: 'top',
-                    },
-                }
-            },
-
-            fill: {
-                type: 'gradient',
-                gradient: {
-                    shade: 'light',
-                    type: "horizontal",
-                    shadeIntensity: 0.25,
-                    gradientToColors: undefined,
-                    inverseColors: true,
-                    opacityFrom: 0.85,
-                    opacityTo: 0.85,
-                    stops: [50, 0, 100]
+            chart: {
+                dropShadow: {
+                    enabled: true,
+                    color: '#000',
+                    top: 12,
+                    left: 7,
+                    blur: 10,
+                    opacity: 0.1
                 },
             },
-
-            stroke: {
-                width: 0
-            },
-
             dataLabels: {
                 enabled: true,
                 formatter: function (val) {
-                    if (val == 0) {
-                        return "";
-                    } else {
-                        return val + "%";
-                    }
+                    return val > 0 ? val.toFixed(1) + '%' : '';
                 },
-                offsetY: -20,
+                offsetY: -5,
                 style: {
-                    fontSize: '16px',
+                    fontSize: '14px',
                     fontWeight: 'bold',
-                    colors: ["#304758"]
+                    // colors: ['#1f2937']
+                },
+                background: {
+                    enabled: false,
+                    foreColor: '#fff',
+                    borderRadius: 2,
+                    padding: 4,
+                    opacity: 0.9,
+                    borderWidth: 1,
+                    borderColor: '#e5e7eb'
                 }
+            },
+            fill: {
+                opacity: 1
             }
         }
         JS);
+    }
+
+    // KUNCI UTAMA: PAKSA LIVEWIRE HANYA SIMPAN ARRAY PRIMITIF
+    protected function dehydrateStateUsing(): array
+    {
+        return [
+            'options' => $this->getOptions(),
+        ];
     }
 }
