@@ -31,9 +31,9 @@ class SPPerformanceTrendChart extends ApexChartWidget
 
         $sps = ServiceProvider::whereIn('sp_id', $selectedSpIds)->get();
         $names = $sps->pluck('sp_name')->implode(' vs ');
-        $totalSites = $sps->sum('total_site');
+        // $totalSites = $sps->sum('total_site');
 
-        return "{$names} . Total Sites: {$totalSites}";
+        return "{$names}";
     }
 
     protected function getFormSchema(): array
