@@ -105,6 +105,7 @@ class SpPerformanceTrendChart extends ApexChartWidget
         }
 
         $totalSite = $sp->total_site ?: 1; // Hindari divide by zero, default 1
+        $totalSite2 = $sp2->total_site ?: 1; // Hindari divide by zero, default 1
 
         $ticketTrends = Trend::query(SpPerformance::where('sp_id', $spId))
             ->between(
@@ -128,8 +129,8 @@ class SpPerformanceTrendChart extends ApexChartWidget
             ->perDay()
             ->sum('today_ticket');
 
-        $percentages2 = $ticketTrends2->map(function (TrendValue $value) use ($totalSite) {
-            return round(($value->aggregate / $totalSite) * 100, 2);
+        $percentages2 = $ticketTrends2->map(function (TrendValue $value) use ($totalSite2) {
+            return round(($value->aggregate / $totalSite2) * 100, 2);
         });
 
         return [
