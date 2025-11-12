@@ -218,7 +218,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
                 }
             },
             fill: {
-                opacity: 1
+                opacity: .4
             }
         }
         JS);
