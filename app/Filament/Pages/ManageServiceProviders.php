@@ -91,6 +91,8 @@ class ManageServiceProviders extends Page implements HasTable, HasActions
                                 ->schema([
                                     Select::make('sp_id')
                                         ->label('SP Name')
+                                        ->native(false)
+                                        ->searchable()
                                         ->options($sps->pluck('sp_name', 'sp_id'))
                                         ->required(),
                                     TextInput::make('today_ticket')
