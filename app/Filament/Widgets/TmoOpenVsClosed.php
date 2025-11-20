@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\CbossTicket;
 use App\Models\CbossTmo;
 use Filament\Support\RawJs;
 use Flowframe\Trend\Trend;
@@ -12,37 +11,21 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class TmoOpenVsClosed extends ApexChartWidget
 {
-    /**
-     * Chart Id
-     *
-     * @var string
-     */
     protected static ?string $chartId = 'tmoOpenVsClosed';
-
-    /**
-     * Widget Title
-     *
-     * @var string|null
-     */
-    protected static ?string $heading = 'TMO Progress Summary';
-    protected static ?string $subheading = 'Overall TMO Maintenance Corrective & Preventive';
+    protected static ?string $heading = 'TMO Total';
+    protected static ?string $subheading = 'Overall TMO Progress per Month';
 
     protected static ?string $pollingInterval = '60s';
 
-    /**
-     * Chart options (series, labels, types, size, animations...)
-     * https://apexcharts.com/docs/options
-     *
-     * @return array
-     */
     protected function getOptions(): array
     {
-
+        // Query data per bulan (2 bulan lalu sampai 3 bulan ke depan)
         $cmData = Trend::query(
             CbossTmo::whereRaw('NOT JSON_CONTAINS(LOWER(action), \'"pm"\')')
+                ->whereRaw('NOT JSON_CONTAINS(LOWER(action), \'"instalasi"\')')
         )
             ->between(
-                start: Carbon::parse(now()->subMonth(2)),
+                start: Carbon::parse(now()->subMonths(2)),
                 end: Carbon::parse(now()->addMonths(3))
             )
             ->dateColumn('tmo_date')
@@ -53,13 +36,43 @@ class TmoOpenVsClosed extends ApexChartWidget
             CbossTmo::whereRaw('JSON_CONTAINS(LOWER(action), \'"pm"\')')
         )
             ->between(
-                start: Carbon::parse(now()->subMonth(2)),
+                start: Carbon::parse(now()->subMonths(2)),
                 end: Carbon::parse(now()->addMonths(3))
             )
             ->dateColumn('tmo_date')
             ->perMonth()
             ->count();
 
+        // Tambah New Instalation
+        $instalasiData = Trend::query(
+            CbossTmo::whereRaw('JSON_CONTAINS(LOWER(action), \'"instalasi"\')')
+        )
+            ->between(
+                start: Carbon::parse(now()->subMonths(2)),
+                end: Carbon::parse(now()->addMonths(3))
+            )
+            ->dateColumn('tmo_date')
+            ->perMonth()
+            ->count();
+
+        // Pastikan semua bulan punya data (biar categories urut & ga bolong)
+        $allMonths = collect();
+        $current = now()->subMonths(2)->startOfMonth();
+        $endDate = now()->addMonths(3)->endOfMonth();
+
+        while ($current->lte($endDate)) {
+            $allMonths->push($current->copy());
+            $current->addMonth();
+        }
+
+        $getValue = fn($trend, $date) => $trend->firstWhere('date', $date->format('Y-m'))?->aggregate ?? 0;
+
+        $pmValues        = $allMonths->map(fn($m) => $getValue($pmData, $m))->toArray();
+        $instalasiValues = $allMonths->map(fn($m) => $getValue($instalasiData, $m))->toArray();
+        $cmValues        = $allMonths->map(fn($m) => $getValue($cmData, $m))->toArray();
+
+        $categories = $allMonths->map(fn($m) => $m->translatedFormat('M Y'))->toArray();
+        // Contoh output: "Okt 2025", "Nov 2025", "Des 2025", dll
 
         return [
             'chart' => [
@@ -82,17 +95,20 @@ class TmoOpenVsClosed extends ApexChartWidget
             'series' => [
                 [
                     'name' => 'TMO Corrective',
-                    'data' => $cmData->map(fn(TrendValue $value) => $value->aggregate),
+                    'data' => $cmValues,
                 ],
                 [
                     'name' => 'TMO Preventive',
-                    'data' => $pmData->map(fn(TrendValue $value) => $value->aggregate),
+                    'data' => $pmValues,
+                ],
+                [
+                    'name' => 'New Instalation',
+                    'data' => $instalasiValues,
                 ],
             ],
 
             'xaxis' => [
-                // 'type' => 'datetime',
-                'categories' => $pmData->map(fn(TrendValue $value) => Carbon::parse($value->date)->translatedFormat('M')),
+                'categories' => $categories,
                 'labels' => [
                     'style' => [
                         'fontFamily' => 'inherit',
@@ -110,7 +126,8 @@ class TmoOpenVsClosed extends ApexChartWidget
                 ],
             ],
 
-            'colors' => ['#ef4444', '#10b981'], // Hijau untuk PM, Merah untuk CM
+            // Warna sesuai urutan series di atas
+            'colors' => ['#ef4444', '#10b981', '#3b82f6'], // PM hijau, Instalasi biru, CM merah
 
             'legend' => [
                 'fontSize' => '14px',
@@ -128,11 +145,6 @@ class TmoOpenVsClosed extends ApexChartWidget
     {
         return RawJs::make(<<<'JS'
         {
-            // theme: {
-            //     mode:'light',
-            //     palette: 'palette3',
-            // },
-
             toolbar: {
                 show: false
             },
@@ -149,15 +161,13 @@ class TmoOpenVsClosed extends ApexChartWidget
                 bar: {
                     horizontal: true,
                     borderRadius: 6,
-                    borderRadiusWhenStacked: 'all', // 'all', 'last'
-                    borderRadiusApplication: 'end', // 'around', 'end'
+                    borderRadiusWhenStacked: 'all',
+                    borderRadiusApplication: 'end',
                     dataLabels: {
-                        // offsetY: 30,
                         total: {
                             enabled: true,
-                        style: {
-                            fontSize: '12px',
-                            // fontWeight: 900
+                            style: {
+                                fontSize: '12px',
                             }
                         }
                     }
@@ -166,7 +176,6 @@ class TmoOpenVsClosed extends ApexChartWidget
 
             legend: {
                 position: 'bottom',
-                // offsetY: 40
             },
 
             responsive: [{

@@ -45,7 +45,7 @@ class CbossTmoResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('spmk_number')
                     ->maxLength(255),
-                Forms\Components\TextInput::make('techinican_name')
+                Forms\Components\TextInput::make('technician_name')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('techinican_number')
                     ->maxLength(255),
@@ -93,8 +93,8 @@ class CbossTmoResource extends Resource
                     ->label("ST/SPMK Number")
                     ->tooltip(fn($state) => $state)
                     ->formatStateUsing(function ($state) {
-                        if (str_contains($state, "NA1-MHG/NOM/")) {
-                            return explode("-", $state)[0] . "/" .explode("/", $state)[2] . "/" . explode("/", $state)[3];
+                        if (str_contains($state, "NA1-MHG/") || str_contains($state, "BACKBONE-MHG/")) {
+                            return explode("-", $state)[0] . "/" . explode("/", $state)[1] . "/" . explode("/", $state)[2] . "/" . explode("/", $state)[3];
                         }
 
                         return $state;
@@ -125,7 +125,7 @@ class CbossTmoResource extends Resource
                     ->formatStateUsing(fn($state) => ucwords(strtolower($state)))
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('techinican_name')
+                Tables\Columns\TextColumn::make('technician_name')
                     ->label("Technician")
                     ->default("-")
                     ->description(fn($record): string => $record->techinican_number ?? "-")
@@ -314,72 +314,90 @@ class CbossTmoResource extends Resource
         Carbon::setLocale('id');
 
         $now = Carbon::now();
-        $formattedDate = $now->translatedFormat('d F Y'); // Contoh: Minggu, 20 April 2025
+        $formattedDate = $now->translatedFormat('d F Y');
 
-        // Fetch TMO records for the given date
+        // Fetch TMO records for today
         $tmos = CbossTmo::whereDate('tmo_date', $now->startOfDay())
             ->with('siteDetail')
             ->get();
 
         // Initialize counters
-        $preventiveCount = 0;
-        $correctiveCount = 0;
+        $preventiveCount      = 0;
+        $correctiveCount       = 0;
+        $newInstalationCount   = 0;
 
-        // Process each TMO to categorize based on action
         foreach ($tmos as $tmo) {
             $action = is_string($tmo->action) ? json_decode($tmo->action, true) : $tmo->action;
-            $actionString = is_array($action) ? implode(', ', $action) : $action;
+            $actionArray = is_array($action) ? $action : [$action];
 
-            if (is_array($action) && in_array('PM', $action)) {
+            $hasPM        = in_array('PM', $actionArray);
+            $hasInstalasi = in_array('INSTALASI', $actionArray);
+
+            if ($hasPM && $hasInstalasi) {
+                // Jika ada PM + INSTALASI, boleh masuk ke dua-duanya atau pilih salah satu.
+                // Sesuai request kamu, INSTALASI lebih prioritas jadi hitung sebagai New Instalation
+                $newInstalationCount++;
+                $preventiveCount++; // atau tidak, terserah policy kamu. Kalau mau eksklusif, hapus baris ini.
+            } elseif ($hasPM) {
                 $preventiveCount++;
+            } elseif ($hasInstalasi) {
+                $newInstalationCount++;
             } else {
                 $correctiveCount++;
             }
         }
 
-        $totalTmo = $preventiveCount + $correctiveCount;
+        $totalTmo = $tmos->count(); // lebih akurat daripada jumlahin manual
 
-        // Group TMO by Approver (tmo_by) and count occurrences
+        // Group by approver
         $tmoByCounts = $tmos->groupBy('tmo_by')
-            ->map(function ($group) {
-                return [
-                    'count' => $group->count(),
-                    'tmos' => $group // Sort TMO by tmo_date desc within each Approver
-                ];
-            })
-            ->sortByDesc('count'); // Sort Approvers by TMO count desc
+            ->map(fn($group) => ['count' => $group->count(), 'tmos' => $group])
+            ->sortByDesc('count');
 
-        // Start building the report
+        // Build report
         $report = "Dear All,\n\n";
         $report .= "Berikut summary TMO Maintenance RTGS Mahaga, {$formattedDate} :\n\n";
         $report .= "> Maintenance Category\n";
-        $report .= "- Preventive\t: {$preventiveCount}\n";
-        $report .= "- Corrective\t: {$correctiveCount}\n";
+        $report .= "- Preventive\t\t: {$preventiveCount}\n";
+
+        // Hanya tampilkan New Instalation jika ada
+        if ($newInstalationCount > 0) {
+            $report .= "- New Instalation\t: {$newInstalationCount}\n";
+        }
+
+        $report .= "- Corrective\t\t: {$correctiveCount}\n";
         $report .= "\n- Total TMO\t\t: {$totalTmo}\n\n";
 
-        // Detailed site information
+        // Detail list semua TMO
         $index = 1;
         foreach ($tmoByCounts as $approver => $data) {
             foreach ($data['tmos'] as $tmo) {
                 $action = is_string($tmo->action) ? json_decode($tmo->action, true) : $tmo->action;
                 $actionString = is_array($action) ? implode(', ', $action) : $action;
 
-                $spmkSuffix = $tmo->spmk_number ? explode("/", $tmo->spmk_number): "-";
-                $spmkPreffix = $tmo->spmk_number ? explode("-", $tmo->spmk_number): "-";
+                // Format SPMK yang lebih aman
+                $spmkFormat = '-';
+                if ($tmo->spmk_number) {
+                    $parts = explode('/', $tmo->spmk_number);
+                    if (count($parts) >= 4) {
+                        $prefix = explode('-', $tmo->spmk_number)[0] ?? '';
+                        $spmkFormat = $prefix . '/' . $parts[2] . '/' . $parts[3];
+                    } else {
+                        $spmkFormat = $tmo->spmk_number;
+                    }
+                }
 
-                $spmkFormat = $tmo->spmk_number ? $spmkPreffix[0] . "/" . $spmkSuffix[2] . "/" . $spmkSuffix[3] : "-";
-
-                $siteName = $tmo->siteDetail ? $tmo->siteDetail->site_name : 'N/A';
-                $siteProvince = $tmo->siteDetail ? $tmo->siteDetail->province : 'N/A';
-                $technicianName = $tmo->techinican_name ? $tmo->techinican_name : 'N/A';
-
-                $tmoBy = $tmo->tmo_by ? $tmo->tmo_by : 'N/A';
-                $tmoCode = $tmo->tmo_code ? $tmo->tmo_code : 'N/A';
+                $siteName       = $tmo->siteDetail?->site_name ?? 'N/A';
+                $siteProvince   = $tmo->siteDetail?->province ?? 'N/A';
+                $technicianName = $tmo->technician_name ?? 'N/A'; // koreksi typo: techinican_name → technician_name
+                $tmoBy          = $tmo->tmo_by ?? 'N/A';
+                $tmoCode        = $tmo->tmo_code ?? 'N/A';
 
                 $report .= "> {$index}. SPMK : *{$spmkFormat}* - {$tmo->site_id} - {$siteName} - {$siteProvince}\n";
                 $report .= "EoS : *{$technicianName}*\n";
                 $report .= "Action : {$actionString}\n";
                 $report .= "Approver : *{$tmoBy}*  |  Kode Lapor : *{$tmoCode}*\n\n";
+
                 $index++;
             }
         }

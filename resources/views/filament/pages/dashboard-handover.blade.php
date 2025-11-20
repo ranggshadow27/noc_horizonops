@@ -96,7 +96,7 @@
 
     <div class="flex flex-wrap justify-between items-end gap-4 w-full">
         <div>
-            <p class="text-xl"><b>CBOSS Trouble Ticket & Maintenance</b><br>
+            <p class="text-xl"><b>CBOSS Trouble Ticket & TMO Progress Summary</b><br>
                 <span class="text-gray-400 text-base">Network Operation Center</span>
             </p>
         </div>
