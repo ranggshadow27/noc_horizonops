@@ -366,7 +366,7 @@ class CbossTmoResource extends Resource
 
         // === BAGIAN INSTALATION (hanya kalau ada) ===
         if ($instalationCount > 0) {
-            $report .= str_repeat('━━━', 2) . " *Instalation* " . str_repeat('━━━', 2) . "\n\n";
+            $report .= "┃" . " *Instalation*" . "\n\n";
 
             $index = 1;
             foreach ($instalationTmos as $tmo) {
@@ -378,7 +378,7 @@ class CbossTmoResource extends Resource
 
         // === BAGIAN MAINTENANCE (Preventive + Corrective) ===
         if ($maintenanceTmos->isNotEmpty()) {
-            $report .= str_repeat('━━━', 2) . " *Maintenance* " . str_repeat('━━━', 2) . "\n\n";
+            $report .= "┃" . " *Maintenance*" . "\n\n";
 
             $index = 1;
             foreach ($maintenanceTmos as $tmo) {
