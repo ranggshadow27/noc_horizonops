@@ -94,15 +94,15 @@ class TmoOpenVsClosed extends ApexChartWidget
             ],
             'series' => [
                 [
-                    'name' => 'TMO Corrective',
+                    'name' => 'Corrective',
                     'data' => $cmValues,
                 ],
                 [
-                    'name' => 'TMO Preventive',
+                    'name' => 'Preventive',
                     'data' => $pmValues,
                 ],
                 [
-                    'name' => 'New Instalation',
+                    'name' => 'Instalation',
                     'data' => $instalasiValues,
                 ],
             ],

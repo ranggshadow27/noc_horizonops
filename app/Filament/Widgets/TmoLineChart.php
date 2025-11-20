@@ -109,17 +109,17 @@ class TmoLineChart extends ApexChartWidget
             ],
             'series' => [
                 [
-                    'name' => 'Preventive Maintenance',
+                    'name' => 'Preventive',
                     'data' => $pmData,
                     'type' => 'line',
                 ],
                 [
-                    'name' => 'New Instalation',
+                    'name' => 'Instalation',
                     'data' => $instalasiData, // garis biru akan putus kalau 0
                     'type' => 'line',
                 ],
                 [
-                    'name' => 'Corrective Maintenance',
+                    'name' => 'Corrective',
                     'data' => $cmData,
                     'type' => 'line',
                 ],
