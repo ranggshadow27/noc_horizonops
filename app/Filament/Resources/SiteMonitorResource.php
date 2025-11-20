@@ -273,7 +273,21 @@ class SiteMonitorResource extends Resource
                         ->openUrlInNewTab(),
                     Tables\Actions\Action::make('Grafana')
                         ->icon('phosphor-chart-line-duotone')
-                        ->url(fn(SiteMonitor $record): string => $record->site->ip_hub == 'H58' ? "https://mon-rtgs.mahaga-pratama.co.id/d/-wTRuDqSz/rtgs-h58-remote-terminal-monitoring?orgId=1&refresh=30s&var-Terminal_id={$record->site_id}" : "https://mon-rtgs.mahaga-pratama.co.id/d/dGmoBucIk/rtgs-h10-remote-terminal-monitoring?orgId=1&var-Terminal_id={$record->site_id}")
+                        ->url(function (SiteMonitor $record) {
+                            $iphub = $record->site->ip_hub;
+
+                            if ($iphub == 'H58') {
+                                return "https://mon-rtgs.mahaga-pratama.co.id/d/-wTRuDqSz/rtgs-h58-remote-terminal-monitoring?orgId=1&refresh=30s&var-Terminal_id={$record->site_id}";
+                            };
+
+                            if ($iphub == 'H10') {
+                                return "https://mon-rtgs.mahaga-pratama.co.id/d/dGmoBucIk/rtgs-h10-remote-terminal-monitoring?orgId=1&var-Terminal_id={$record->site_id}";
+                            };
+
+                            if ($iphub == 'H47') {
+                                return "https://mon-rtgs.mahaga-pratama.co.id/d/ffpVJlbHk/rtgs-h47-remote-terminal-monitoring?orgId=1&var-Terminal_id={$record->site_id}";
+                            };
+                        })
                         ->openUrlInNewTab(),
                     Tables\Actions\Action::make('Copy Site Info')
                         ->label("Copy Site Info")
