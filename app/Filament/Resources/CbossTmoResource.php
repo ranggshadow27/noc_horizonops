@@ -353,7 +353,7 @@ class CbossTmoResource extends Resource
 
         // Mulai report
         $report = "Dear All,\n\n";
-        $report .= "Berikut summary TMO Maintenance RTGS Mahaga, {$formattedDate} :\n\n";
+        $report .= "Berikut summary TMO RTGS Mahaga, {$formattedDate} :\n\n";
         $report .= "> Maintenance Category\n";
         $report .= "- Preventive\t\t: *{$preventiveCount}*\n";
 
