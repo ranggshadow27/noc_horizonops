@@ -355,14 +355,14 @@ class CbossTmoResource extends Resource
         $report = "Dear All,\n\n";
         $report .= "Berikut summary TMO Maintenance RTGS Mahaga, {$formattedDate} :\n\n";
         $report .= "> Maintenance Category\n";
-        $report .= "- Preventive\t\t: {$preventiveCount}\n";
+        $report .= "- Preventive\t\t: *{$preventiveCount}*\n";
 
         if ($instalationCount > 0) {
-            $report .= "- Instalation\t\t: {$instalationCount}\n";
+            $report .= "- Instalation\t\t: *{$instalationCount}*\n";
         }
 
-        $report .= "- Corrective\t\t: {$correctiveCount}\n";
-        $report .= "\n- Total TMO\t\t: {$totalTmo}\n\n";
+        $report .= "- Corrective\t\t: *{$correctiveCount}*\n";
+        $report .= "\n- Total TMO\t\t: *{$totalTmo}*\n\n";
 
         // === BAGIAN INSTALATION (hanya kalau ada) ===
         if ($instalationCount > 0) {
