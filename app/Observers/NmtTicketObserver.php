@@ -37,17 +37,17 @@ class NmtTicketObserver
      */
     public function updated(NmtTickets $nmtTickets): void
     {
-        if ($nmtTickets->site_id) {
-            // Ambil data dari site_details
-            $site = SiteDetail::find($nmtTickets->site_id);
+        // if ($nmtTickets->site_id) {
+        //     // Ambil data dari site_details
+        //     $site = SiteDetail::find($nmtTickets->site_id);
 
-            if ($site) {
-                // Update field di tmo_data
-                $nmtTickets->update([
-                    'site_province' => ucwords($site->province),
-                ]);
-            }
-        }
+        //     if ($site) {
+        //         // Update field di tmo_data
+        //         $nmtTickets->update([
+        //             'site_province' => ucwords($site->province),
+        //         ]);
+        //     }
+        // }
     }
 
     /**
