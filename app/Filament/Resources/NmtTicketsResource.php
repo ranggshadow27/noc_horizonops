@@ -515,7 +515,7 @@ class NmtTicketsResource extends Resource
         $now = Carbon::now();
         $date = $now->translatedFormat('d F Y');
 
-        $query = $livewire->getFilteredSortedTableQuery()
+        $records = $livewire->getFilteredSortedTableQuery()
             ->with(['site', 'area'])
             ->where(function ($query) use ($now) {
                 $query->where('status', 'OPEN')
@@ -524,61 +524,78 @@ class NmtTicketsResource extends Resource
                             ->whereDate('closed_date', $now->startOfDay());
                     });
             })
-            ->orderBy('aging', 'desc');
+            ->orderBy('aging', 'desc')
+            ->get();
 
-        $records = $query->get();
+        if ($records->isEmpty()) {
+            return "Tidak ada TT Prioritas hari ini, {$date}. Alhamdulillah semuanya lancar!";
+        }
+
         $groupedRecords = $records->groupBy('aging')->sortKeysDesc();
 
         $report = "Berikut TT Prioritas, tanggal {$date}:\n\n";
         $counter = 1;
+
         foreach ($groupedRecords as $aging => $tickets) {
             $report .= "Aging {$aging} Hari\n";
-            $report .= "=========\n";
+            $report .= str_repeat('=', 20) . "\n";
+
             foreach ($tickets as $ticket) {
-                $siteName = $ticket->site ? $ticket->site->site_name : 'Unknown';
+                $site      = $ticket->site;
+                $siteName  = $site?->site_name ?? 'Unknown';
+                $province  = $site?->province ?? 'Unknown';
+                $adminArea = strtolower($site?->administrative_area ?? '');
                 $statusEmoji = $ticket->status === 'OPEN' ? '❌' : '✅';
 
-                // Handle PO data
-                $poData = $ticket->area && is_array($ticket->area->po) ? $ticket->area->po : [];
-                $poString = !empty($poData) ? implode(', ', $poData) : 'No PO data';
-
-                // Conditional logic for Nusa Tenggara Timur
-                if ($ticket->site && strtolower($ticket->site->province) === 'nusa tenggara timur') {
-                    $administrativeArea = strtolower($ticket->site->administrative_area ?? '');
-                    $targetAreaAnjar = ['sumba'];
-                    $targetAreaFirman = ['kupang', 'timor tengah', 'timur tengah', 'malaka', 'belu', 'rote', 'ndao', 'raijua', 'sabu', 'alor'];
-                    $targetAreaNovan = ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata', 'sika'];
-
-                    // Check if administrative_area contains any targetAreaFirman
-                    $isTargetAreaFirman = array_reduce($targetAreaFirman, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
-                    if ($isTargetAreaFirman) {
-                        $filteredPo = array_filter($poData, fn($po) => $po === 'Firman');
-                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Firman-related PO found';
-                    }
-
-                    // Check if administrative_area contains any targetAreaAnjar
-                    $isTargetAreaAnjar = array_reduce($targetAreaAnjar, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
-                    if ($isTargetAreaAnjar) {
-                        $filteredPo = array_filter($poData, fn($po) => $po === 'Anjar');
-                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Anjar-related PO found';
-                    }
-
-                    // Check if administrative_area contains any targetAreaNovan
-                    $isTargetAreaNovan = array_reduce($targetAreaNovan, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
-                    if ($isTargetAreaNovan) {
-                        $filteredPo = array_filter($poData, fn($po) => $po === 'Novan');
-                        $poString = !empty($filteredPo) ? implode(', ', $filteredPo) : 'No Novan-related PO found';
-                    }
+                // Ambil PO dari area (pastikan array)
+                $poData = [];
+                if ($ticket->area && is_array($ticket->area->po ?? null)) {
+                    $poData = array_map('trim', $ticket->area->po);
                 }
 
-                $province = $ticket->site ? $ticket->site->province : 'Unknown';
-                $report .= "{$counter}\t{$ticket->site_id} - {$siteName} {$statusEmoji}\n";
-                $report .= "> *PO* : {$poString} | {$province}\n\n";
+                // Default PO string
+                $poString = !empty($poData)
+                    ? implode(', ', $poData)
+                    : 'No PO data';
+
+                // === KHUSUS NUSA TENGGARA TIMUR ===
+                if ($site && strtolower($province) === 'nusa tenggara timur') {
+
+                    // Mapping PIC berdasarkan wilayah
+                    $picMapping = [
+                        'Firman' => ['kupang', 'timor tengah', 'timur tengah', 'malaka', 'belu', 'rote', 'ndao', 'raijua', 'sabu', 'alor'],
+                        'Anjar'  => ['sumba'],
+                        'Novan'  => ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata', 'sika'],
+                    ];
+
+                    $matchedPic = null;
+                    foreach ($picMapping as $pic => $keywords) {
+                        foreach ($keywords as $keyword) {
+                            if (str_contains($adminArea, $keyword)) {
+                                $matchedPic = $pic;
+                                break 2; // keluar dari 2 loop sekaligus
+                            }
+                        }
+                    }
+
+                    // Hanya override kalau memang ketemu PIC-nya
+                    if ($matchedPic) {
+                        $hasRelatedPo = in_array($matchedPic, $poData, true);
+                        $poString = $hasRelatedPo
+                            ? $matchedPic
+                            : "No {$matchedPic}-related PO found";
+                    }
+                    // Kalau nggak match PIC manapun → tetap pakai $poString asli (bisa ada PO lain)
+                }
+
+                $report .= "{$counter}. {$ticket->site_id} - {$siteName} {$statusEmoji}\n";
+                $report .= "> *PO*: {$poString} | {$province}\n\n";
+
                 $counter++;
             }
         }
 
-        $report .= "Terimakasih";
+        $report .= "Terimakasih, semoga cepat selesai semua ";
         return $report;
     }
 
