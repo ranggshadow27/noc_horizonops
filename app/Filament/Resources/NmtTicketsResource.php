@@ -529,15 +529,14 @@ class NmtTicketsResource extends Resource
             ->get();
 
         if ($records->isEmpty()) {
-            return "Tidak ada TT Prioritas hari ini, {$date}. Semuanya lancar!";
+            return "Tidak ada TT Prioritas hari ini, {$date}. Aman terkendali!";
         }
 
         $groupedRecords = $records->groupBy('aging')->sortKeysDesc();
-
         $report = "Berikut TT Prioritas, tanggal {$date}:\n\n";
         $counter = 1;
 
-        // Mapping PO NTT/NTB sesuai logika GenerateFollowUpTickets (yang sudah terbukti benar)
+        // Mapping kabupaten NTT/NTB (lowercase biar aman)
         $poKabupatenMapping = [
             'Anjar'  => ['sumba', 'lombok'],
             'Firman' => ['kupang', 'malaka', 'timur tengah', 'timor tengah', 'belu', 'rote', 'sabu', 'raijua', 'alor'],
@@ -553,37 +552,36 @@ class NmtTicketsResource extends Resource
                 $area      = $ticket->area;
                 $siteName  = $site?->site_name ?? 'Unknown';
                 $province  = $site?->province ?? 'Unknown';
+                $provinceLower = strtolower(trim($province)); // ← KUNCI FIX!
                 $adminArea = strtolower($site?->administrative_area ?? '');
-                $statusEmoji = $ticket->status === 'OPEN' ? 'Cross' : 'Check';
+                $statusEmoji = $ticket->status === 'OPEN' ? '❌' : '✅';
 
-                // === LOGIKA PO YANG SAMA PERSIS DENGAN GenerateFollowUpTickets.php ===
+                // Default PO
                 $poString = 'No PO data';
+                $poList = [];
 
                 if ($area && !empty($area->po)) {
-                    $poList = is_array($area->po) ? $area->po : [$area->po];
+                    $poList = is_array($area->po) ? array_map('trim', $area->po) : [trim($area->po)];
 
-                    if (in_array($province, ['Nusa Tenggara Timur', 'Nusa Tenggara Barat'])) {
-                        // Cek apakah ada PO yang match dengan kabupaten
+                    // Cek apakah NTT atau NTB (case-insensitive!)
+                    $isNttNtb = str_contains($provinceLower, 'nusa tenggara timur') ||
+                        str_contains($provinceLower, 'nusa tenggara barat');
+
+                    if ($isNttNtb) {
                         $matchedPo = null;
-                        foreach ($poKabupatenMapping as $poName => $kabupatens) {
-                            if (
-                                in_array($poName, $poList, true) &&
-                                collect($kabupatens)->contains(fn($kab) => str_contains($adminArea, $kab))
-                            ) {
+                        foreach ($poKabupatenMapping as $poName => $keywords) {
+                            $hasPo = in_array($poName, $poList, true);
+                            $hasArea = collect($keywords)->contains(fn($k) => str_contains($adminArea, $k));
+
+                            if ($hasPo && $hasArea) {
                                 $matchedPo = $poName;
                                 break;
                             }
                         }
-
-                        $poString = $matchedPo ?? Arr::first($poList); // fallback ke PO pertama kalau ga match
+                        $poString = $matchedPo ?? Arr::first($poList) ?? 'No PO data';
                     } else {
-                        // Luar NTT/NTB → tampilkan PO pertama
-                        $poString = Arr::first($poList);
-                    }
-
-                    // Kalau ada multiple PO, tampilkan semua (opsional)
-                    if (count($poList) > 1 && !in_array($province, ['Nusa Tenggara Timur', 'Nusa Tenggara Barat'])) {
-                        $poString = implode(', ', $poList);
+                        // Luar NTT/NTB → tampilkan semua PO atau yang pertama
+                        $poString = count($poList) > 1 ? implode(', ', $poList) : $poList[0];
                     }
                 }
 
@@ -593,7 +591,7 @@ class NmtTicketsResource extends Resource
             }
         }
 
-        $report .= "Terimakasih, mohon segera ditindaklanjuti ya ";
+        $report .= "Terimakasih, mohon segera ditindaklanjuti ya Tim!";
         return $report;
     }
 
