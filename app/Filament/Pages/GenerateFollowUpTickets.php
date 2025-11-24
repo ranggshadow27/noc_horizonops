@@ -131,8 +131,8 @@ class GenerateFollowUpTickets extends Page
         ]);
 
         $site = SiteDetail::with('area')->findOrFail($this->siteId);
-        $area = $site->area; // Ambil AreaList via relasi
-        $head_po = Str::of($area->head_po)->title()->trim() ?? "Unknown";
+        $area = Str::of($site->area)->title()->trim(); // Ambil AreaList via relasi
+        $head_po = $area->head_po ?? "Unknown";
 
         // Mapping PO ke kabupaten untuk NTT/NTB
         $po_kabupaten_mapping = [
