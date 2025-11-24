@@ -20,7 +20,7 @@ class NmtTicketObserver
             if ($site) {
                 // Update field di tmo_data
                 $nmtTickets->update([
-                    'site_province' => $site->province,
+                    'site_province' => ucwords($site->province),
                 ]);
             }
         }
