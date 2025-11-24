@@ -8,6 +8,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Split;
 use Filament\Pages\Page;
+use Illuminate\Support\Str;
 use Filament\Support\Enums\Alignment;
 use Illuminate\Support\Arr;
 use Webbingbrasil\FilamentCopyActions\Pages\Actions\CopyAction;
@@ -131,7 +132,7 @@ class GenerateFollowUpTickets extends Page
 
         $site = SiteDetail::with('area')->findOrFail($this->siteId);
         $area = $site->area; // Ambil AreaList via relasi
-        $head_po = $area->head_po;
+        $head_po = Str::of($area->head_po)->title()->trim() ?? "Unknown";
 
         // Mapping PO ke kabupaten untuk NTT/NTB
         $po_kabupaten_mapping = [
