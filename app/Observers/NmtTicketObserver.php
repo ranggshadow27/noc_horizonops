@@ -37,11 +37,17 @@ class NmtTicketObserver
      */
     public function updated(NmtTickets $nmtTickets): void
     {
-        // if ($nmtTickets->status == "CLOSED") {
-        //     $nmtTickets->update([
-        //         'closed_date' => Carbon::parse(now())->format('Y-m-d H:i:s')
-        //     ]);
-        // }
+        if ($nmtTickets->site_id) {
+            // Ambil data dari site_details
+            $site = SiteDetail::find($nmtTickets->site_id);
+
+            if ($site) {
+                // Update field di tmo_data
+                $nmtTickets->update([
+                    'site_province' => ucwords($site->province),
+                ]);
+            }
+        }
     }
 
     /**
