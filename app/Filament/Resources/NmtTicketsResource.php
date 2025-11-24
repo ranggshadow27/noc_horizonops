@@ -533,7 +533,7 @@ class NmtTicketsResource extends Resource
 
         $groupedRecords = $records->groupBy('aging')->sortKeysDesc();
 
-        $report = "Berikut TT Prioritas, tanggal {$date}:\n\n";
+        $report = "Berikut TTz Prioritas, tanggal {$date}:\n\n";
         $counter = 1;
 
         foreach ($groupedRecords as $aging => $tickets) {
