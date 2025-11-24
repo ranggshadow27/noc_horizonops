@@ -25,6 +25,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Artisan;
 use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 use Webbingbrasil\FilamentCopyActions\Tables\Actions\CopyAction;
@@ -528,74 +529,71 @@ class NmtTicketsResource extends Resource
             ->get();
 
         if ($records->isEmpty()) {
-            return "Tidak ada TT Prioritas hari ini, {$date}. Alhamdulillah semuanya lancar!";
+            return "Tidak ada TT Prioritas hari ini, {$date}. Semuanya lancar!";
         }
 
         $groupedRecords = $records->groupBy('aging')->sortKeysDesc();
 
-        $report = "Berikut TTz Prioritas, tanggal {$date}:\n\n";
+        $report = "Berikut TT Prioritas, tanggal {$date}:\n\n";
         $counter = 1;
+
+        // Mapping PO NTT/NTB sesuai logika GenerateFollowUpTickets (yang sudah terbukti benar)
+        $poKabupatenMapping = [
+            'Anjar'  => ['sumba', 'lombok'],
+            'Firman' => ['kupang', 'malaka', 'timur tengah', 'timor tengah', 'belu', 'rote', 'sabu', 'raijua', 'alor'],
+            'Novan'  => ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata'],
+        ];
 
         foreach ($groupedRecords as $aging => $tickets) {
             $report .= "Aging {$aging} Hari\n";
-            $report .= str_repeat('=', 20) . "\n";
+            $report .= str_repeat('=', 25) . "\n";
 
             foreach ($tickets as $ticket) {
                 $site      = $ticket->site;
+                $area      = $ticket->area;
                 $siteName  = $site?->site_name ?? 'Unknown';
                 $province  = $site?->province ?? 'Unknown';
                 $adminArea = strtolower($site?->administrative_area ?? '');
-                $statusEmoji = $ticket->status === 'OPEN' ? '❌' : '✅';
+                $statusEmoji = $ticket->status === 'OPEN' ? 'Cross' : 'Check';
 
-                // Ambil PO dari area (pastikan array)
-                $poData = [];
-                if ($ticket->area && is_array($ticket->area->po ?? null)) {
-                    $poData = array_map('trim', $ticket->area->po);
-                }
+                // === LOGIKA PO YANG SAMA PERSIS DENGAN GenerateFollowUpTickets.php ===
+                $poString = 'No PO data';
 
-                // Default PO string
-                $poString = !empty($poData)
-                    ? implode(', ', $poData)
-                    : 'No PO data';
+                if ($area && !empty($area->po)) {
+                    $poList = is_array($area->po) ? $area->po : [$area->po];
 
-                // === KHUSUS NUSA TENGGARA TIMUR ===
-                if ($site && strtolower($province) === 'nusa tenggara timur') {
-
-                    // Mapping PIC berdasarkan wilayah
-                    $picMapping = [
-                        'Firman' => ['kupang', 'timor tengah', 'timur tengah', 'malaka', 'belu', 'rote', 'ndao', 'raijua', 'sabu', 'alor'],
-                        'Anjar'  => ['sumba'],
-                        'Novan'  => ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata', 'sika'],
-                    ];
-
-                    $matchedPic = null;
-                    foreach ($picMapping as $pic => $keywords) {
-                        foreach ($keywords as $keyword) {
-                            if (str_contains($adminArea, $keyword)) {
-                                $matchedPic = $pic;
-                                break 2; // keluar dari 2 loop sekaligus
+                    if (in_array($province, ['Nusa Tenggara Timur', 'Nusa Tenggara Barat'])) {
+                        // Cek apakah ada PO yang match dengan kabupaten
+                        $matchedPo = null;
+                        foreach ($poKabupatenMapping as $poName => $kabupatens) {
+                            if (
+                                in_array($poName, $poList, true) &&
+                                collect($kabupatens)->contains(fn($kab) => str_contains($adminArea, $kab))
+                            ) {
+                                $matchedPo = $poName;
+                                break;
                             }
                         }
+
+                        $poString = $matchedPo ?? Arr::first($poList); // fallback ke PO pertama kalau ga match
+                    } else {
+                        // Luar NTT/NTB → tampilkan PO pertama
+                        $poString = Arr::first($poList);
                     }
 
-                    // Hanya override kalau memang ketemu PIC-nya
-                    if ($matchedPic) {
-                        $hasRelatedPo = in_array($matchedPic, $poData, true);
-                        $poString = $hasRelatedPo
-                            ? $matchedPic
-                            : "No {$matchedPic}-related PO found";
+                    // Kalau ada multiple PO, tampilkan semua (opsional)
+                    if (count($poList) > 1 && !in_array($province, ['Nusa Tenggara Timur', 'Nusa Tenggara Barat'])) {
+                        $poString = implode(', ', $poList);
                     }
-                    // Kalau nggak match PIC manapun → tetap pakai $poString asli (bisa ada PO lain)
                 }
 
                 $report .= "{$counter}. {$ticket->site_id} - {$siteName} {$statusEmoji}\n";
                 $report .= "> *PO*: {$poString} | {$province}\n\n";
-
                 $counter++;
             }
         }
 
-        $report .= "Terimakasih, semoga cepat selesai semua ";
+        $report .= "Terimakasih, mohon segera ditindaklanjuti ya ";
         return $report;
     }
 
