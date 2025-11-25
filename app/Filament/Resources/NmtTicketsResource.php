@@ -591,7 +591,7 @@ class NmtTicketsResource extends Resource
             }
         }
 
-        $report .= "Terimakasih, mohon segera ditindaklanjuti ya Tim!";
+        $report .= "Terimakasih";
         return $report;
     }
 
