@@ -2,14 +2,13 @@
 
 namespace App\Console\Commands;
 
-// use Carbon\Carbon;
 use Illuminate\Console\Command;
 use App\Models\CheckUpdate;
 use App\Models\NmtTickets;
 use App\Models\SiteDetail;
 use Illuminate\Support\Facades\Http;
-use App\Models\TmoData;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class FetchNmtTickets extends Command
@@ -19,9 +18,17 @@ class FetchNmtTickets extends Command
 
     public function handle()
     {
-        $lastUpdateApiUrl = 'https://script.google.com/macros/s/AKfycbyh7RPiVKhwkPEnjzz2Fkf3e6T3g81I4yQgGd-yCqZSCbSjwTsymytKMzcpy-YUCq5Q2w/exec'; // Ganti dengan API last_update
+        // Langkah 1: Validasi Token OSS dengan cache 1 jam
+        if (!$this->validateOssToken()) {
+            $this->error('Token OSS tidak valid atau sudah expired. Fetch dibatalkan.');
+            return;
+        }
 
-        // Fetch last_update dari API
+        $this->info('Token OSS valid. Lanjut cek update...');
+
+        // Langkah 2: Cek last_update
+        $lastUpdateApiUrl = 'https://script.google.com/macros/s/AKfycbyh7RPiVKhwkPEnjzz2Fkf3e6T3g81I4yQgGd-yCqZSCbSjwTsymytKMzcpy-YUCq5Q2w/exec';
+
         $response = Http::get($lastUpdateApiUrl);
         if ($response->failed()) {
             $this->error('Gagal mengambil data last_update');
@@ -30,9 +37,8 @@ class FetchNmtTickets extends Command
 
         $apiLastUpdate = Carbon::parse($response->json()['last_update'])
             ->setTimezone('Asia/Jakarta')
-            ->format('Y-m-d'); // Sesuaikan key JSON
+            ->format('Y-m-d');
 
-        // Cek last_update di DB
         $dbLastUpdate = CheckUpdate::where('update_name', 'NMT Ticket')->first();
 
         if ($dbLastUpdate && $dbLastUpdate->update_time === $apiLastUpdate) {
@@ -40,16 +46,95 @@ class FetchNmtTickets extends Command
             return;
         }
 
-        // Jika berbeda, update last_update di database
-        $this->info('Ada perubahan, otw fetch...');
+        $this->info('Ada perubahan, otw fetch NMT Tickets...');
 
         CheckUpdate::updateOrCreate(
-            ['update_name' => 'NMT Ticket'], // Key
-            ['update_time' => $apiLastUpdate] // Field yang diperbarui
+            ['update_name' => 'NMT Ticket'],
+            ['update_time' => $apiLastUpdate]
         );
 
-        // Panggil function untuk fetch dan insert data
         $this->fetchAndInsertNmtTickets();
+    }
+
+    private function validateOssToken(): bool
+    {
+        $envToken = env('OSS_TOKEN');
+
+        if (!$envToken) {
+            Log::warning('OSS_TOKEN tidak ditemukan di .env');
+            return false;
+        }
+
+        $cacheKey = 'oss_token_validation';
+        $now = Carbon::now('Asia/Jakarta');
+
+        // Cek cache dulu (valid 1 jam)
+        $cached = Cache::get($cacheKey);
+
+        if ($cached && isset($cached['api_token']) && isset($cached['expired_at'])) {
+            $cachedExpiredAt = Carbon::parse($cached['expired_at'], 'Asia/Jakarta');
+
+            // Kalau token dari cache masih sama dengan ENV dan belum expired
+            if ($cached['api_token'] === $envToken && $now->lessThan($cachedExpiredAt)) {
+                $this->info("Token dari cache valid sampai: " . $cachedExpiredAt->format('d M Y H:i:s'));
+                return true;
+            }
+
+            // Kalau token di ENV berubah (misal diganti manual), tetap invalid
+            if ($cached['api_token'] !== $envToken) {
+                Log::warning('Token di .env berubah! Cache dibuang.');
+            }
+        }
+
+        // Kalau tidak ada cache / sudah kadaluarsa → ambil dari API
+        $tokenApiUrl = 'https://script.google.com/macros/s/AKfycbyGv08iyugoWolQlg2AGZzZxooQy3nqd_S1x7n5GOTH0mwlqz-FpbldIuMPp-HJMwKI/exec?app_type=oss_app';
+
+        try {
+            $response = Http::timeout(30)->get($tokenApiUrl);
+
+            if ($response->failed() || !$response->json()) {
+                Log::error('Gagal mengambil data token dari OSS API');
+                return false;
+            }
+
+            $data = $response->json();
+
+            if (!isset($data['token']) || !isset($data['expired'])) {
+                Log::error('Response token tidak lengkap', $data);
+                return false;
+            }
+
+            $apiToken = trim($data['token']);
+            $expiredAt = Carbon::parse($data['expired'], 'Asia/Jakarta');
+
+            // Validasi token cocok
+            if ($apiToken !== $envToken) {
+                Log::warning("Token mismatch! ENV: {$envToken} | API: {$apiToken}");
+                return false;
+            }
+
+            // Validasi belum expired
+            if ($now->greaterThanOrEqualTo($expiredAt)) {
+                Log::warning("Token sudah expired sejak: " . $expiredAt->format('Y-m-d H:i:s'));
+                return false;
+            }
+
+            // Simpan ke cache selama 1 jam (atau sampai 5 menit sebelum expired, mana yang lebih kecil)
+            $cacheMinutes = $now->diffInMinutes($expiredAt, false) - 5; // 5 menit sebelum expired
+            $cacheMinutes = $cacheMinutes > 60 ? 60 : ($cacheMinutes > 0 ? $cacheMinutes : 1);
+
+            Cache::put($cacheKey, [
+                'api_token' => $apiToken,
+                'expired_at' => $expiredAt->toDateTimeString(),
+                'checked_at' => $now->toDateTimeString()
+            ], now()->addMinutes($cacheMinutes));
+
+            $this->info("Token valid & dicache sampai: " . $expiredAt->format('d M Y H:i:s'));
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Error validasi token OSS: ' . $e->getMessage());
+            return false;
+        }
     }
 
     private function fetchAndInsertNmtTickets()

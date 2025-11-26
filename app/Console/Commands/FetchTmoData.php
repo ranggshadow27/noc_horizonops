@@ -4,10 +4,12 @@ namespace App\Console\Commands;
 
 use App\Models\CheckUpdate;
 use App\Models\SiteDetail;
+use App\Models\TmoData;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
-use App\Models\TmoData;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class FetchTmoData extends Command
 {
@@ -16,6 +18,14 @@ class FetchTmoData extends Command
 
     public function handle()
     {
+        // GATE KEAMANAN: Validasi Token OSS dulu (cache bersama semua command)
+        if (!$this->validateOssToken()) {
+            $this->error('Token OSS tidak valid atau sudah expired. Fetch TMO Data dibatalkan.');
+            return;
+        }
+
+        $this->info('Token OSS valid. Lanjut fetch TMO Data...');
+
         $lastUpdateApiUrl = 'https://script.google.com/macros/s/AKfycby2OigwtWovjzIF-oAnZZeRXnploV_F5UujtOm-AqmMinvI3I5EMBOskg-a_4inYgPKig/exec'; // Ganti dengan API last_update
         // $tmoDataApiUrl = 'https://example.com/api/tmo_data'; // Ganti dengan API data TMO
 
@@ -48,6 +58,83 @@ class FetchTmoData extends Command
 
         // Panggil function untuk fetch dan insert data
         $this->fetchAndInsertTmoData();
+    }
+
+    private function validateOssToken(): bool
+    {
+        $envToken = env('OSS_TOKEN');
+
+        if (!$envToken) {
+            Log::warning('OSS_TOKEN tidak ditemukan di .env [FetchTmoData]');
+            return false;
+        }
+
+        $cacheKey = 'oss_token_validation'; // Cache dibagi dengan semua command lain
+        $now = Carbon::now('Asia/Jakarta');
+
+        // Cek cache dulu
+        if (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+
+            if (
+                isset($cached['api_token']) &&
+                isset($cached['expired_at']) &&
+                $cached['api_token'] === $envToken
+            ) {
+                $expiredAt = Carbon::parse($cached['expired_at'], 'Asia/Jakarta');
+                if ($now->lessThan($expiredAt)) {
+                    return true;
+                }
+            }
+        }
+
+        // Kalau cache kosong / expired → ambil dari API
+        $url = 'https://script.google.com/macros/s/AKfycbyGv08iyugoWolQlg2AGZzZxooQy3nqd_S1x7n5GOTH0mwlqz-FpbldIuMPp-HJMwKI/exec?app_type=oss_app';
+
+        try {
+            $response = Http::timeout(30)->get($url);
+
+            if ($response->failed() || !$response->json()) {
+                Log::error('Gagal ambil token OSS [FetchTmoData]');
+                return false;
+            }
+
+            $data = $response->json();
+
+            if (!isset($data['token']) || !isset($data['expired'])) {
+                Log::error('Format response token OSS salah [FetchTmoData]', $data);
+                return false;
+            }
+
+            $apiToken = trim($data['token']);
+            $expiredAt = Carbon::parse($data['expired'], 'Asia/Jakarta');
+
+            // Validasi token cocok
+            if ($apiToken !== $envToken) {
+                Log::warning("Token OSS mismatch! ENV ≠ API [FetchTmoData]");
+                return false;
+            }
+
+            // Validasi belum expired
+            if ($now->greaterThanOrEqualTo($expiredAt)) {
+                Log::warning("Token OSS sudah expired pada: " . $expiredAt->format('d-m-Y H:i:s') . " [FetchTmoData]");
+                return false;
+            }
+
+            // Cache ulang dengan durasi dinamis (maks 1 jam, minimal 1 menit, buffer 5 menit)
+            $minutesUntilExpire = $now->diffInMinutes($expiredAt, false);
+            $cacheMinutes = max(1, min(60, $minutesUntilExpire - 5));
+
+            Cache::put($cacheKey, [
+                'api_token' => $apiToken,
+                'expired_at' => $expiredAt->toDateTimeString(),
+            ], now()->addMinutes($cacheMinutes));
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Exception validasi token OSS [FetchTmoData]: ' . $e->getMessage());
+            return false;
+        }
     }
 
     private function fetchAndInsertTmoData()

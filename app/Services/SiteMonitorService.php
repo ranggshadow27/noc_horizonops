@@ -3,15 +3,24 @@
 namespace App\Services;
 
 use App\Models\SiteMonitor;
-use App\Models\SiteDetail; // REVISI: Import model SiteDetail (asumsi nama ini; sesuaikan jika beda)
+use App\Models\SiteDetail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class SiteMonitorService
 {
     public function fetchAndSaveData()
     {
+        // GATE KEAMANAN: Validasi Token OSS dulu (cache bersama semua service/command)
+        if (!$this->validateOssToken()) {
+            Log::error('Token OSS tidak valid atau sudah expired. SiteMonitorService dibatalkan.');
+            return;
+        }
+
+        Log::info('Token OSS valid. Memulai fetch SiteMonitor data...');
+
         // URL API pertama
         $url1 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h10/mhg';
         // URL API kedua
@@ -93,36 +102,16 @@ class SiteMonitorService
                     $dbData = SiteMonitor::where('site_id', $terminalId)->first();
 
                     $updateData = [
-                        'site_id' => $apiItem['terminal_id'] ?? 'Failed',
+                        'site_id' => $terminalId,
                         'sitecode' => $apiItem['sitecode'] ?? 'Failed',
                         'modem' => $apiItem['modem'] ?? 'Failed',
                         'mikrotik' => $apiItem['mikrotik'] ?? 'Failed',
                         'ap1' => $apiItem['AP1'] ?? 'Failed',
                         'ap2' => $apiItem['AP2'] ?? 'Failed',
-                        'modem_last_up' =>
-                        $apiItem['modem'] === 'Down' && (!$dbData || !$dbData->modem_last_up) ? // REVISI: Tambah check !$dbData untuk handle create baru
-                            Carbon::now() : (
-                                $apiItem['modem'] !== 'Up' ?
-                                ($dbData ? $dbData->modem_last_up : null) : null
-                            ),
-                        'mikrotik_last_up' =>
-                        $apiItem['mikrotik'] === 'Down' && (!$dbData || !$dbData->mikrotik_last_up) ?
-                            Carbon::now() : (
-                                $apiItem['mikrotik'] !== 'Up' ?
-                                ($dbData ? $dbData->mikrotik_last_up : null) : null
-                            ),
-                        'ap1_last_up' =>
-                        $apiItem['AP1'] === 'Down' && (!$dbData || !$dbData->ap1_last_up) ?
-                            Carbon::now() : (
-                                $apiItem['AP1'] !== 'Up' ?
-                                ($dbData ? $dbData->ap1_last_up : null) : null
-                            ),
-                        'ap2_last_up' =>
-                        $apiItem['AP2'] === 'Down' && (!$dbData || !$dbData->ap2_last_up) ?
-                            Carbon::now() : (
-                                $apiItem['AP2'] !== 'Up' ?
-                                ($dbData ? $dbData->ap2_last_up : null) : null
-                            ),
+                        'modem_last_up' => $this->determineLastUp($apiItem['modem'], $dbData?->modem_last_up),
+                        'mikrotik_last_up' => $this->determineLastUp($apiItem['mikrotik'], $dbData?->mikrotik_last_up),
+                        'ap1_last_up' => $this->determineLastUp($apiItem['AP1'], $dbData?->ap1_last_up),
+                        'ap2_last_up' => $this->determineLastUp($apiItem['AP2'], $dbData?->ap2_last_up),
                     ];
 
                     // Update atau buat data baru
@@ -187,6 +176,90 @@ class SiteMonitorService
                 'site_id' => $dbData->site_id,
                 'error' => 'Status update operation returned false'
             ]);
+        }
+    }
+
+    // Helper biar kode lebih bersih
+    private function determineLastUp($currentStatus, $existingLastUp)
+    {
+        if ($currentStatus === 'Down') {
+            return $existingLastUp ?? Carbon::now('Asia/Jakarta');
+        }
+        return null; // Up = reset last_up
+    }
+
+    private function validateOssToken(): bool
+    {
+        $envToken = env('OSS_TOKEN');
+
+        if (!$envToken) {
+            Log::warning('OSS_TOKEN tidak ada di .env [SiteMonitorService]');
+            return false;
+        }
+
+        $cacheKey = 'oss_token_validation';
+        $now = Carbon::now('Asia/Jakarta');
+
+        // Cek cache dulu
+        if (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+            if (
+                isset($cached['api_token']) &&
+                isset($cached['expired_at']) &&
+                $cached['api_token'] === $envToken &&
+                $now->lessThan(Carbon::parse($cached['expired_at'], 'Asia/Jakarta'))
+            ) {
+                return true;
+            }
+        }
+
+        // Ambil dari API kalau cache ga valid
+        $url = 'https://script.google.com/macros/s/AKfycbyGv08iyugoWolQlg2AGZzZxooQy3nqd_S1x7n5GOTH0mwlqz-FpbldIuMPp-HJMwKI/exec?app_type=oss_app';
+
+        try {
+            $response = Http::timeout(30)->get($url);
+
+            if ($response->failed() || !$response->json()) {
+                Log::error('Gagal ambil token OSS [SiteMonitorService]');
+                return false;
+            }
+
+            $data = $response->json();
+
+            if (!isset($data['token']) || !isset($data['expired'])) {
+                Log::error('Format token OSS salah [SiteMonitorService]', $data);
+                return false;
+            }
+
+            $apiToken = trim($data['token']);
+            $expiredAt = Carbon::parse($data['expired'], 'Asia/Jakarta');
+
+            if ($apiToken !== $envToken) {
+                Log::warning('Token OSS mismatch! [SiteMonitorService]');
+                return false;
+            }
+
+            if ($now->greaterThanOrEqualTo($expiredAt)) {
+                Log::warning('Token OSS sudah expired! [SiteMonitorService]', [
+                    'expired_at' => $expiredAt->format('d-m-Y H:i:s')
+                ]);
+                return false;
+            }
+
+            // Cache dinamis
+            $minutesLeft = $now->diffInMinutes($expiredAt, false);
+            $cacheMinutes = max(1, min(60, $minutesLeft - 5));
+
+            Cache::put($cacheKey, [
+                'api_token' => $apiToken,
+                'expired_at' => $expiredAt->toDateTimeString(),
+            ], now()->addMinutes($cacheMinutes));
+
+            Log::info("Token OSS valid sampai {$expiredAt->format('d-m-Y H:i:s')} [SiteMonitorService]");
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Exception validasi token OSS [SiteMonitorService]: ' . $e->getMessage());
+            return false;
         }
     }
 
