@@ -483,7 +483,7 @@ class NmtTicketsResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->poll('20s')
+            ->poll('30s')
             ->deferLoading()
             ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(10)

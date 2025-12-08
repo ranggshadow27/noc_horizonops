@@ -333,6 +333,8 @@ class SiteMonitorResource extends Resource
 
             ])
             ->paginated([10, 25, 50, 100])
+            ->deferLoading()
+            ->poll(null)
             ->recordUrl(null);
     }
 

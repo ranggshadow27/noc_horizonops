@@ -148,6 +148,8 @@ class SweepingTicketResource extends Resource
             ->headerActions([])
             ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(10)
+            ->deferLoading()
+            ->poll(null)
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
