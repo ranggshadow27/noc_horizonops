@@ -25,6 +25,7 @@ class SweepingTicketWarningTrendChart extends ApexChartWidget
      */
     protected static ?string $heading = 'Warning Sweeping Overview';
     protected static ?string $subheading = 'Trends in Sweeping Warning Sites by Classification';
+    protected static ?string $pollingInterval = '300s';
 
     /**
      * Chart options (series, labels, types, size, animations...)

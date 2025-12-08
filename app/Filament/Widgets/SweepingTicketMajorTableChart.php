@@ -30,7 +30,7 @@ class SweepingTicketMajorTableChart extends BaseWidget
 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'Open' => 'warning',
                         'PIC Tidak Respon' => 'warning',
                         'Ter Follow Up' => 'info',
@@ -49,6 +49,8 @@ class SweepingTicketMajorTableChart extends BaseWidget
             ->paginated(false)
             ->filters([])
             ->actions([])
+            ->poll('300s')
+            ->deferLoading()
             ->bulkActions([]);
     }
 }

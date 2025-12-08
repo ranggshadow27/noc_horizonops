@@ -25,6 +25,7 @@ class SweepingTicketMajorTrendChart extends ApexChartWidget
      */
     protected static ?string $heading = 'Major Sweeping Overview';
     protected static ?string $subheading = 'Trends in Sweeping Major Sites by Classification';
+    protected static ?string $pollingInterval = '300s';
 
     /**
      * Chart options (series, labels, types, size, animations...)

@@ -53,6 +53,8 @@ class SweepingTicketMinorTableChart extends BaseWidget
             ->paginated(false)
             ->filters([])
             ->actions([])
+            ->poll('300s')
+            ->deferLoading()
             ->bulkActions([]);
     }
 }
