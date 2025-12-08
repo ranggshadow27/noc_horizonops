@@ -92,73 +92,74 @@ class SyncSiteLogsCommand extends Command
         $envToken = env('OSS_TOKEN');
 
         if (!$envToken) {
-            Log::warning('OSS_TOKEN tidak ditemukan di .env [SyncSiteLogsCommand]');
+            Log::warning('OSS_TOKEN tidak ditemukan di .env');
             return false;
         }
 
-        $cacheKey = 'oss_token_validation'; // Sama dengan command lain → cache dibagi
+        $cacheKey = 'oss_token_validation';
         $now = Carbon::now('Asia/Jakarta');
 
-        // Cek cache dulu (1 jam atau sampai mendekati expired)
-        if (Cache::has($cacheKey)) {
-            $cached = Cache::get($cacheKey);
+        // SELALU cache EXACTLY 60 menit — tidak peduli expired di API berapa lama lagi
+        $cached = Cache::get($cacheKey);
 
-            if (
-                isset($cached['api_token']) &&
-                isset($cached['expired_at']) &&
-                $cached['api_token'] === $envToken
-            ) {
-                $expiredAt = Carbon::parse($cached['expired_at'], 'Asia/Jakarta');
+        if ($cached && isset($cached['checked_at'])) {
+            $checkedAt = Carbon::parse($cached['checked_at'], 'Asia/Jakarta');
 
-                if ($now->lessThan($expiredAt)) {
+            // Kalau belum lewat 60 menit dari terakhir cek → langsung pakai cache
+            if ($checkedAt->diffInMinutes($now) < 60) {
+                // Token dari cache harus sama dengan ENV
+                if ($cached['api_token'] === $envToken) {
                     return true;
                 }
             }
         }
 
-        // Kalau cache ga ada / invalid → ambil dari API
+        // Kalau cache kosong / sudah 60 menit → WAJIB hit API
         $url = 'https://script.google.com/macros/s/AKfycbyGv08iyugoWolQlg2AGZzZxooQy3nqd_S1x7n5GOTH0mwlqz-FpbldIuMPp-HJMwKI/exec?app_type=oss_app';
 
         try {
             $response = Http::timeout(30)->get($url);
 
             if ($response->failed() || !$response->json()) {
-                Log::error('Gagal ambil token OSS di SyncSiteLogsCommand');
+                Log::error('Gagal ambil token dari OSS API (tidak bisa konek)');
                 return false;
             }
 
             $data = $response->json();
 
             if (!isset($data['token']) || !isset($data['expired'])) {
-                Log::error('Format response token OSS salah', $data);
+                Log::error('Format response token salah', $data);
                 return false;
             }
 
             $apiToken = trim($data['token']);
-            $expiredAt = Carbon::parse($data['expired'], 'Asia/Jakarta');
+            $apiExpiredAt = Carbon::parse($data['expired'], 'Asia/Jakarta');
 
+            // Validasi 1: Token harus cocok
             if ($apiToken !== $envToken) {
-                Log::warning("Token OSS mismatch di SyncSiteLogsCommand! ENV ≠ API");
+                Log::warning('Token OSS MISMATCH! API ≠ ENV');
                 return false;
             }
 
-            if ($now->greaterThanOrEqualTo($expiredAt)) {
-                Log::warning("Token OSS sudah expired pada: " . $expiredAt->format('d-m-Y H:i:s'));
+            // Validasi 2: Token belum boleh expired
+            if ($now->greaterThanOrEqualTo($apiExpiredAt)) {
+                Log::warning('Token OSS SUDAH EXPIRED di API!', [
+                    'expired_at' => $apiExpiredAt->format('Y-m-d H:i:s')
+                ]);
                 return false;
             }
 
-            // Cache ulang (dengan durasi dinamis)
-            $minutesUntilExpire = $now->diffInMinutes($expiredAt, false);
-            $cacheMinutes = max(1, min(60, $minutesUntilExpire - 5)); // max 1 jam, minimal 1 menit, buffer 5 menit
-
+            // KALAU LOLOS → Simpan ke cache EXACTLY 60 menit
             Cache::put($cacheKey, [
                 'api_token' => $apiToken,
-                'expired_at' => $expiredAt->toDateTimeString(),
-            ], now()->addMinutes($cacheMinutes));
+                'checked_at' => $now->toDateTimeString(),
+                'expired_at_api' => $apiExpiredAt->toDateTimeString(), // cuma buat info
+            ], now()->addMinutes(60)); // FIXED 60 menit!
 
+            Log::info('Token OSS valid! Cache diperbarui untuk 60 menit ke depan.');
             return true;
         } catch (\Exception $e) {
-            Log::error('Exception saat validasi token OSS [SyncSiteLogsCommand]: ' . $e->getMessage());
+            Log::error('Exception saat cek token OSS: ' . $e->getMessage());
             return false;
         }
     }
