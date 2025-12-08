@@ -19,12 +19,10 @@ class FetchNmtTickets extends Command
     public function handle()
     {
         // Langkah 1: Validasi Token OSS dengan cache 1 jam
-        // if (!$this->validateOssToken()) {
-        //     $this->error('Token OSS tidak valid atau sudah expired. Fetch dibatalkan.');
-        //     return;
-        // }
-
-        $this->validateOssToken();
+        if (!$this->validateOssToken()) {
+            $this->error('Token OSS tidak valid atau sudah expired. Fetch dibatalkan.');
+            return;
+        }
 
         $this->info('Token OSS valid. Lanjut cek update...');
 
@@ -71,22 +69,22 @@ class FetchNmtTickets extends Command
         $now = Carbon::now('Asia/Jakarta');
 
         // Cek cache dulu (valid 1 jam)
-        // $cached = Cache::get($cacheKey);
+        $cached = Cache::get($cacheKey);
 
-        // if ($cached && isset($cached['api_token']) && isset($cached['expired_at'])) {
-        //     $cachedExpiredAt = Carbon::parse($cached['expired_at'], 'Asia/Jakarta');
+        if ($cached && isset($cached['api_token']) && isset($cached['expired_at'])) {
+            $cachedExpiredAt = Carbon::parse($cached['expired_at'], 'Asia/Jakarta');
 
-        //     // Kalau token dari cache masih sama dengan ENV dan belum expired
-        //     if ($cached['api_token'] === $envToken && $now->lessThan($cachedExpiredAt)) {
-        //         $this->info("Token dari cache valid sampai: " . $cachedExpiredAt->format('d M Y H:i:s'));
-        //         return true;
-        //     }
+            // Kalau token dari cache masih sama dengan ENV dan belum expired
+            if ($cached['api_token'] === $envToken && $now->lessThan($cachedExpiredAt)) {
+                $this->info("Token dari cache valid sampai: " . $cachedExpiredAt->format('d M Y H:i:s'));
+                return true;
+            }
 
-        //     // Kalau token di ENV berubah (misal diganti manual), tetap invalid
-        //     if ($cached['api_token'] !== $envToken) {
-        //         Log::warning('Token di .env berubah! Cache dibuang.');
-        //     }
-        // }
+            // Kalau token di ENV berubah (misal diganti manual), tetap invalid
+            if ($cached['api_token'] !== $envToken) {
+                Log::warning('Token di .env berubah! Cache dibuang.');
+            }
+        }
 
         // Kalau tidak ada cache / sudah kadaluarsa → ambil dari API
         $tokenApiUrl = 'https://script.google.com/macros/s/AKfycbyGv08iyugoWolQlg2AGZzZxooQy3nqd_S1x7n5GOTH0mwlqz-FpbldIuMPp-HJMwKI/exec?app_type=oss_app';
