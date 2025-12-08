@@ -68,67 +68,71 @@ class FetchNmtTickets extends Command
         $cacheKey = 'oss_token_validation';
         $now = Carbon::now('Asia/Jakarta');
 
-        // SELALU cache EXACTLY 60 menit — tidak peduli expired di API berapa lama lagi
+        // Cek cache dulu (valid 1 jam)
         $cached = Cache::get($cacheKey);
 
-        if ($cached && isset($cached['checked_at'])) {
-            $checkedAt = Carbon::parse($cached['checked_at'], 'Asia/Jakarta');
+        if ($cached && isset($cached['api_token']) && isset($cached['expired_at'])) {
+            $cachedExpiredAt = Carbon::parse($cached['expired_at'], 'Asia/Jakarta');
 
-            // Kalau belum lewat 60 menit dari terakhir cek → langsung pakai cache
-            if ($checkedAt->diffInMinutes($now) < 60) {
-                // Token dari cache harus sama dengan ENV
-                if ($cached['api_token'] === $envToken) {
-                    return true;
-                }
+            // Kalau token dari cache masih sama dengan ENV dan belum expired
+            if ($cached['api_token'] === $envToken && $now->lessThan($cachedExpiredAt)) {
+                $this->info("Token dari cache valid sampai: " . $cachedExpiredAt->format('d M Y H:i:s'));
+                return true;
+            }
+
+            // Kalau token di ENV berubah (misal diganti manual), tetap invalid
+            if ($cached['api_token'] !== $envToken) {
+                Log::warning('Token di .env berubah! Cache dibuang.');
             }
         }
 
-        // Kalau cache kosong / sudah 60 menit → WAJIB hit API
-        $url = 'https://script.google.com/macros/s/AKfycbyGv08iyugoWolQlg2AGZzZxooQy3nqd_S1x7n5GOTH0mwlqz-FpbldIuMPp-HJMwKI/exec?app_type=oss_app';
+        // Kalau tidak ada cache / sudah kadaluarsa → ambil dari API
+        $tokenApiUrl = 'https://script.google.com/macros/s/AKfycbyGv08iyugoWolQlg2AGZzZxooQy3nqd_S1x7n5GOTH0mwlqz-FpbldIuMPp-HJMwKI/exec?app_type=oss_app';
 
         try {
-            $response = Http::timeout(30)->get($url);
+            $response = Http::timeout(30)->get($tokenApiUrl);
 
             if ($response->failed() || !$response->json()) {
-                Log::error('Gagal ambil token dari OSS API (tidak bisa konek)');
+                Log::error('Gagal mengambil data token dari OSS API');
                 return false;
             }
 
             $data = $response->json();
 
             if (!isset($data['token']) || !isset($data['expired'])) {
-                Log::error('Format response token salah', $data);
+                Log::error('Response token tidak lengkap', $data);
                 return false;
             }
 
             $apiToken = trim($data['token']);
-            $apiExpiredAt = Carbon::parse($data['expired'], 'Asia/Jakarta');
+            $expiredAt = Carbon::parse($data['expired'], 'Asia/Jakarta');
 
-            // Validasi 1: Token harus cocok
+            // Validasi token cocok
             if ($apiToken !== $envToken) {
-                Log::warning('Token OSS MISMATCH! API ≠ ENV');
+                Log::warning("Token mismatch! ENV: {$envToken} | API: {$apiToken}");
                 return false;
             }
 
-            // Validasi 2: Token belum boleh expired
-            if ($now->greaterThanOrEqualTo($apiExpiredAt)) {
-                Log::warning('Token OSS SUDAH EXPIRED di API!', [
-                    'expired_at' => $apiExpiredAt->format('Y-m-d H:i:s')
-                ]);
+            // Validasi belum expired
+            if ($now->greaterThanOrEqualTo($expiredAt)) {
+                Log::warning("Token sudah expired sejak: " . $expiredAt->format('Y-m-d H:i:s'));
                 return false;
             }
 
-            // KALAU LOLOS → Simpan ke cache EXACTLY 60 menit
+            // Simpan ke cache selama 1 jam (atau sampai 5 menit sebelum expired, mana yang lebih kecil)
+            $cacheMinutes = $now->diffInMinutes($expiredAt, false) - 5; // 5 menit sebelum expired
+            $cacheMinutes = $cacheMinutes > 60 ? 60 : ($cacheMinutes > 0 ? $cacheMinutes : 1);
+
             Cache::put($cacheKey, [
                 'api_token' => $apiToken,
-                'checked_at' => $now->toDateTimeString(),
-                'expired_at_api' => $apiExpiredAt->toDateTimeString(), // cuma buat info
-            ], now()->addMinutes(60)); // FIXED 60 menit!
+                'expired_at' => $expiredAt->toDateTimeString(),
+                'checked_at' => $now->toDateTimeString()
+            ], now()->addMinutes($cacheMinutes));
 
-            Log::info('Token OSS valid! Cache diperbarui untuk 60 menit ke depan.');
+            $this->info("Token valid & dicache sampai: " . $expiredAt->format('d M Y H:i:s'));
             return true;
         } catch (\Exception $e) {
-            Log::error('Exception saat cek token OSS: ' . $e->getMessage());
+            Log::error('Error validasi token OSS: ' . $e->getMessage());
             return false;
         }
     }
