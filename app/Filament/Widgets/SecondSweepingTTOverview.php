@@ -9,6 +9,9 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class SecondSweepingTTOverview extends BaseWidget
 {
+    protected static ?string $pollingInterval = '300s';
+    protected static bool $deferLoading = true;
+
     protected function getStats(): array
     {
         $today = Carbon::today();

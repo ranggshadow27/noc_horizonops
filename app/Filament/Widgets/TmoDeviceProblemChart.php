@@ -29,6 +29,8 @@ class TmoDeviceProblemChart extends ApexChartWidget
     protected static ?string $subheading = 'Summary of NMT Ticket Status';
 
     protected static ?string $pollingInterval = null;
+    protected static bool $deferLoading = true;
+
 
     /**
      * Chart options (series, labels, types, size, animations...)

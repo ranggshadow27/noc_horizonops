@@ -16,6 +16,8 @@ class TmoOpenVsClosed extends ApexChartWidget
     protected static ?string $subheading = 'Overall TMO Progress per Month';
 
     protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
+
 
     protected function getOptions(): array
     {

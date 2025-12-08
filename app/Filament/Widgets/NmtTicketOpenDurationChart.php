@@ -25,6 +25,7 @@ class NmtTicketOpenDurationChart extends ApexChartWidget
     protected static ?string $subheading = 'NMT Tickets Currently Open (duration)';
 
     protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
 
 
     /**

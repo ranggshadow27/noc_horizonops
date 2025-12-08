@@ -30,6 +30,7 @@ class NmtTicketStatusOverview extends ApexChartWidget
     protected static ?string $subheading = 'Summary of NMT Ticket Status';
 
     protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
 
     /**
      * Chart options (series, labels, types, size, animations...)

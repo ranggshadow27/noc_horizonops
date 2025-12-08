@@ -10,8 +10,12 @@ use Illuminate\Support\Collection;
 
 class SweepingTicketMajorTableChart extends BaseWidget
 {
+    protected static ?string $pollingInterval = '300s';
+    protected static bool $deferLoading = true;
+
     public function table(Table $table): Table
     {
+
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('classification')

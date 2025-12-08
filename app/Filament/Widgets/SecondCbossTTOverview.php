@@ -9,6 +9,9 @@ use Illuminate\Support\Carbon;
 
 class SecondCbossTTOverview extends BaseWidget
 {
+    protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
+
     protected function getStats(): array
     {
         $today = Carbon::today();

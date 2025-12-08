@@ -12,6 +12,7 @@ use Flowframe\Trend\TrendValue;
 class NmtTicketsOverview extends BaseWidget
 {
     protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
 
     protected function getStats(): array
     {

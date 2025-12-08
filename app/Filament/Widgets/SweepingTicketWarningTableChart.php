@@ -9,6 +9,9 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class SweepingTicketWarningTableChart extends BaseWidget
 {
+    protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
+
     public function table(Table $table): Table
     {
         return $table

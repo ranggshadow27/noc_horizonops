@@ -16,6 +16,8 @@ class TmoLineChart extends ApexChartWidget
     protected static ?string $subheading = 'Daily Mahaga RTGS TMO Progression';
 
     protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
+
     protected int | string | null $cachedFor = 300; // optional: cache 5 menit
 
     protected function getFormSchema(): array

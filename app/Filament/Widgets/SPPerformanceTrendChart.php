@@ -20,6 +20,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
 
     protected int | string | array $columnSpan = 'full';
     protected static ?string $pollingInterval = '300s';
+    protected static bool $deferLoading = true;
 
 
     protected function getHeading(): ?string

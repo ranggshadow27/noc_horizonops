@@ -24,6 +24,10 @@ class SweepingTTStatusChart extends ApexChartWidget
      * @var string|null
      */
     protected static ?string $heading = 'SweepingTTStatusChart';
+    protected static bool $deferLoading = true;
+    protected static ?string $pollingInterval = null;
+
+
 
     /**
      * Chart options (series, labels, types, size, animations...)

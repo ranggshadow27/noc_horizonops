@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 
 class SecondCBOSSTicketOverview extends BaseWidget
 {
+    protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
+
     protected function getStats(): array
     {
         $today = Carbon::today();
@@ -27,7 +30,7 @@ class SecondCBOSSTicketOverview extends BaseWidget
             ->whereNot('status', 'Closed')
             ->count();
 
-            $oduProblem = CbossTicket::where('problem_map', "MASALAH PERANGKAT ODU")
+        $oduProblem = CbossTicket::where('problem_map', "MASALAH PERANGKAT ODU")
             ->whereNot('status', 'Closed')
             ->count();
 

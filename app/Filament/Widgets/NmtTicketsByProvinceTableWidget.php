@@ -10,6 +10,8 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class NmtTicketsByProvinceTableWidget extends BaseWidget
 {
+    protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
 
     public function table(Table $table): Table
     {
@@ -31,7 +33,7 @@ class NmtTicketsByProvinceTableWidget extends BaseWidget
                 TextColumn::make('total_tickets')
                     ->label('Total Open')
                     ->badge()
-                    ->color(function($state) {
+                    ->color(function ($state) {
                         if ($state >= 20) {
                             return 'danger';
                         } elseif ($state >= 8 && $state < 20) {

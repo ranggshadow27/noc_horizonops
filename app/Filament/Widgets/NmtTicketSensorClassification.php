@@ -16,6 +16,7 @@ class NmtTicketSensorClassification extends BaseWidget
     // protected int | string | array $columnSpan = 6;
 
     protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
 
 
     public function getData(): array

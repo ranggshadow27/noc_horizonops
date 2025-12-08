@@ -27,6 +27,7 @@ class NmtTicketOpenVsClosedChart extends ApexChartWidget
     protected static ?string $subheading = 'Overall NMT Tickets Open vs Closed';
 
     protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
 
 
     /**

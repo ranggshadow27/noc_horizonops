@@ -23,6 +23,9 @@ class NmtTicketTeknisNonTeknisChart extends ApexChartWidget
     protected static ?string $heading = 'Teknis/Non Teknis';
     protected static ?string $subheading = 'NMT Ticket Currently Open (Teknis/Non Teknis)';
 
+    protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
+
     /**
      * Chart options (series, labels, types, size, animations...)
      * https://apexcharts.com/docs/options

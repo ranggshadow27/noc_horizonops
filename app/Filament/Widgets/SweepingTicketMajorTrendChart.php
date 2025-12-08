@@ -25,7 +25,9 @@ class SweepingTicketMajorTrendChart extends ApexChartWidget
      */
     protected static ?string $heading = 'Major Sweeping Overview';
     protected static ?string $subheading = 'Trends in Sweeping Major Sites by Classification';
-    protected static ?string $pollingInterval = '300s';
+    protected static ?string $pollingInterval = null;
+    protected static bool $deferLoading = true;
+
 
     /**
      * Chart options (series, labels, types, size, animations...)
@@ -46,6 +48,15 @@ class SweepingTicketMajorTrendChart extends ApexChartWidget
 
     protected function getOptions(): array
     {
+
+        //showing a loading indicator immediately after the page load
+        if (!$this->readyToLoad) {
+            return [];
+        }
+
+        //slow query
+        sleep(2);
+
         $openTT = Trend::model(SweepingTicket::class)
             ->between(
                 start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
