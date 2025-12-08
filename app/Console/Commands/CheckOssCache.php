@@ -28,6 +28,7 @@ class CheckOssCache extends Command
                 ['Cache Key', $key],
                 ['API Token (preview)', substr($data['api_token'] ?? '-', 0, 15) . '...'],
                 ['Expired At', $data['expired_at'] ?? '-'],
+                ['Api Expired', $data['expired_at_api'] ?? '-'],
                 ['ENV Token (preview)', substr(env('OSS_TOKEN', '-'), 0, 15) . '...'],
                 ['Cache Driver', config('cache.default')],
                 ['Sekarang', now('Asia/Jakarta')->format('Y-m-d H:i:s')],
