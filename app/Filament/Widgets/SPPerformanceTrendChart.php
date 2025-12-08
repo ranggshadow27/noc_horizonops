@@ -19,6 +19,8 @@ class SPPerformanceTrendChart extends ApexChartWidget
     protected static ?string $subheading = 'Daily Ticket Percentage by Service Provider';
 
     protected int | string | array $columnSpan = 'full';
+    protected static ?string $pollingInterval = '300s';
+
 
     protected function getHeading(): ?string
     {

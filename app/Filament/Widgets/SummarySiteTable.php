@@ -346,6 +346,8 @@ class SummarySiteTable extends BaseWidget
             ->actions([])
             ->bulkActions([])
             ->paginated([5, 10, 20])
+            ->poll('300s')
+            ->deferLoading()
             ->defaultPaginationPageOption(10);
     }
 }

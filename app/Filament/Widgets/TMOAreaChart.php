@@ -27,6 +27,8 @@ class TMOAreaChart extends ApexChartWidget
     protected static ?string $heading = 'Maintenance Overall';
     protected static ?string $subheading = 'Summary of TMO PM/CM Data per Area';
 
+    protected static ?string $pollingInterval = '60s';
+
 
     /**
      * Chart options (series, labels, types, size, animations...)

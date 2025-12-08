@@ -11,6 +11,8 @@ use Flowframe\Trend\TrendValue;
 
 class NmtTicketsOverview extends BaseWidget
 {
+    protected static ?string $pollingInterval = '60s';
+
     protected function getStats(): array
     {
         $today = Carbon::today();
