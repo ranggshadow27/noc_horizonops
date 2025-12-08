@@ -19,10 +19,12 @@ class FetchNmtTickets extends Command
     public function handle()
     {
         // Langkah 1: Validasi Token OSS dengan cache 1 jam
-        if (!$this->validateOssToken()) {
-            $this->error('Token OSS tidak valid atau sudah expired. Fetch dibatalkan.');
-            return;
-        }
+        // if (!$this->validateOssToken()) {
+        //     $this->error('Token OSS tidak valid atau sudah expired. Fetch dibatalkan.');
+        //     return;
+        // }
+
+        $this->validateOssToken();
 
         $this->info('Token OSS valid. Lanjut cek update...');
 
