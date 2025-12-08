@@ -27,6 +27,8 @@ class NmtTicketByAreaChart extends ApexChartWidget
     protected static ?string $subheading = 'Summary of NMT Ticket Open by Area';
 
     protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
+
 
 
     /**
