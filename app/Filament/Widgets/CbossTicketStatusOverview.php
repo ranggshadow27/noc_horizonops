@@ -28,6 +28,7 @@ class CbossTicketStatusOverview extends ApexChartWidget
     protected static ?string $subheading = 'Summary of CBOSS Ticket Status';
 
     protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
 
     /**
      * Chart options (series, labels, types, size, animations...)

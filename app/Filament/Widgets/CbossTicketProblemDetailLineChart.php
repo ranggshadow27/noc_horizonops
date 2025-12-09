@@ -28,6 +28,7 @@ class CbossTicketProblemDetailLineChart extends ApexChartWidget
     protected static ?string $subheading = 'Summary CBOSS Open (Relokasi, Renovasi, Bencana, Libur)';
 
     protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
 
     /**
      * Chart options (series, labels, types, size, animations...)

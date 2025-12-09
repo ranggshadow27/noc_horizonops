@@ -25,6 +25,7 @@ class CbossTicketOpenDurationChart extends ApexChartWidget
     protected static ?string $subheading = 'CBOSS Tickets Currently Open (duration)';
 
     protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
 
     /**
      * Chart options (series, labels, types, size, animations...)

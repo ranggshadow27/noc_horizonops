@@ -11,12 +11,17 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class CbossTicketByProvinceTableWidget extends BaseWidget
 {
+    protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
+
     public function table(Table $table): Table
     {
         return $table
             ->heading("Ticket Open per Trouble Category")
             ->description("Live Highest Trouble Categories")
             ->paginated([14])
+            ->poll('60s')
+            ->deferLoading()
             ->query(
                 CbossTicket::query()
                     ->selectRaw('MIN(ticket_id) as ticket_id, trouble_category, COUNT(*) as total_tickets') // Tambahkan ID untuk Filament
@@ -36,7 +41,7 @@ class CbossTicketByProvinceTableWidget extends BaseWidget
                 TextColumn::make('total_tickets')
                     ->label('Total Open')
                     ->badge()
-                    ->color(function($state) {
+                    ->color(function ($state) {
                         if ($state >= 20) {
                             return 'danger';
                         } elseif ($state >= 8 && $state < 20) {

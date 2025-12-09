@@ -24,6 +24,7 @@ class NmtTicketByProblemClassChart extends ApexChartWidget
     protected static ?string $subheading = 'Total NMT Tickets Open by Problem Classification (Live)';
 
     protected static ?string $pollingInterval = '60s';
+    protected static bool $deferLoading = true;
 
     /**
      * Chart options (series, labels, types, size, animations...)
