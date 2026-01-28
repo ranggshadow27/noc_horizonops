@@ -62,7 +62,7 @@ class SecondNmtTicketsOverview extends BaseWidget
                 ->description("Ticket Closed")
                 ->color('success'),
 
-            Stat::make('Today O&M Progress', $omProgress . " | " . $closedbyNSO . " visit")
+            Stat::make('Today O&M Progress', $omProgress . "/" . $closedbyNSO . " visit")
                 ->descriptionIcon('phosphor-hand-deposit-duotone')
                 ->description("Ticket Resolved")
                 ->color('success'),
