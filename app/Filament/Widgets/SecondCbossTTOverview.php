@@ -31,7 +31,8 @@ class SecondCbossTTOverview extends BaseWidget
 
         // Tiket Non-Teknis: selain teknis
         $nonTechnicalTickets = CbossTicket::where(function ($query) {
-            $query->where('problem_map', 'not like', '%MASALAH PERANGKAT ODU%')
+            $query
+                ->where('problem_map', 'not like', '%MASALAH PERANGKAT ODU%')
                 ->where('problem_map', 'not like', '%MASALAH PERANGKAT IDU%');
         })
             ->whereNot('status', 'Closed')
