@@ -44,8 +44,7 @@ class SecondNmtTicketsOverview extends BaseWidget
             ->where('status', 'CLOSED')
             ->count();
 
-        $omProgress = NmtTickets::whereNot('problem_detail', 'KUNJUNGAN')
-            ->where('aging', ">=", 3)
+        $omProgress = NmtTickets::where('aging', ">=", 3)
             ->whereDate('closed_date', $today)
             ->where('status', 'CLOSED')
             ->count();
@@ -63,7 +62,7 @@ class SecondNmtTicketsOverview extends BaseWidget
                 ->description("Ticket Closed")
                 ->color('success'),
 
-            Stat::make('Today O&M Progress', $omProgress)
+            Stat::make('Today O&M Progress', $omProgress + $closedbyNSO)
                 ->descriptionIcon('phosphor-hand-deposit-duotone')
                 ->description("Ticket Resolved")
                 ->color('success'),
