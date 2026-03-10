@@ -13,7 +13,7 @@ class SweepingTicketMinorTableChart extends BaseWidget
 {
 
     // protected static string $view = 'filament.widgets.custom-table-widget';
-    protected static ?string $pollingInterval = '60s';
+    protected static ?string $pollingInterval = '300s';
     protected static bool $deferLoading = true;
 
     public function table(Table $table): Table

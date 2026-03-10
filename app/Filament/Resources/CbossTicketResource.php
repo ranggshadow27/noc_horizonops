@@ -71,7 +71,7 @@ class CbossTicketResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('ticket_id')
                     ->label("Ticket ID")
-                    ->description(function($record): string {
+                    ->description(function ($record): string {
                         $spmkState = $record->spmk;
 
                         if (str_contains($spmkState, "NA1-MHG/NOM/")) {
@@ -131,12 +131,14 @@ class CbossTicketResource extends Resource
 
                 Tables\Columns\TextColumn::make('problem_map')
                     ->label("Problem Map")
+                    ->default("Unknown")
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('trouble_category')
                     ->label("Trouble Category")
-                    ->description(fn($record): string => $record->problem_map, 'above')
+                    ->default("Unknown")
+                    ->description(fn($record): string => $record ? $record->problem_map : "Unkown", 'above')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('status')
@@ -298,14 +300,14 @@ class CbossTicketResource extends Resource
 
                     Tables\Filters\SelectFilter::make('problem_map')
                         ->label("Problem Map")
-                        ->options(fn() => CbossTicket::all()->pluck('problem_map', 'problem_map'))
+                        ->options(fn() => CbossTicket::whereNotNull('problem_map')->pluck('problem_map', 'problem_map'))
                         ->native(false)
                         ->searchable(),
 
                     Tables\Filters\SelectFilter::make('trouble_category')
                         ->label("Category")
                         ->multiple()
-                        ->options(fn() => CbossTicket::all()->pluck('trouble_category', 'trouble_category'))
+                        ->options(fn() => CbossTicket::whereNotNull('trouble_category')->pluck('trouble_category', 'trouble_category'))
                         ->native(false)
                         ->searchable(),
 
