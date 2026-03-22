@@ -140,7 +140,7 @@ class CbossTicketResource extends Resource
                     ->default("Unknown")
                     ->description(fn($record) => is_null($record) ? "Unkown" : $record->problem_map, 'above')
                     ->searchable(),
-
+                #
                 Tables\Columns\TextColumn::make('status')
                     ->label("Status")
                     ->badge()
