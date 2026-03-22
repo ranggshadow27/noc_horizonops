@@ -138,7 +138,7 @@ class CbossTicketResource extends Resource
                 Tables\Columns\TextColumn::make('trouble_category')
                     ->label("Trouble Category")
                     ->default("Unknown")
-                    ->description(fn($record): string => $record ? $record->problem_map : "Unkown", 'above')
+                    ->description(fn($record) => is_null($record) ? "Unkown" : $record->problem_map, 'above')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('status')
