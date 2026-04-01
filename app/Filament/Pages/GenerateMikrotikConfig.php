@@ -186,7 +186,7 @@ class GenerateMikrotikConfig extends Page
                                 ->rules(['file', 'mimes:xls,xlsx'])
                                 ->storeFiles(false) // Jangan simpan permanen
                                 ->required()
-                                ->hint('Excel file must be include ["Nama Lokasi", "Timezone", "IP Modem"] in the first row')
+                                ->hint('Excel file must be include ["Nama Lokasi", "Timezone", "IP Modem", "IP Controller"] in the first row (header)')
                                 ->columnSpanFull(),
                         ])
                         ->action(function (array $data) {
