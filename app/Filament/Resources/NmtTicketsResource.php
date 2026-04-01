@@ -664,8 +664,8 @@ class NmtTicketsResource extends Resource
                 if ($record->site && strtolower($record->site->province) === 'nusa tenggara timur') {
                     $administrativeArea = strtolower($record->site->administrative_area ?? '');
                     $targetAreaAnjar = [];
-                    $targetAreaFirman = ['kupang', 'timor tengah', 'timur tengah', 'malaka', 'belu', 'rote', 'ndao', 'raijua', 'sabu', 'alor'];
-                    $targetAreaNovan = ['manggarai', 'sumba', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata', 'sika'];
+                    $targetAreaFirman = ['kupang', 'sumba', 'timor tengah', 'timur tengah', 'malaka', 'belu', 'rote', 'ndao', 'raijua', 'sabu', 'alor'];
+                    $targetAreaNovan = ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata', 'sika'];
 
                     // Check if administrative_area contains any targetAreaFirman
                     $isTargetAreaFirman = array_reduce($targetAreaFirman, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
