@@ -538,9 +538,8 @@ class NmtTicketsResource extends Resource
 
         // Mapping kabupaten NTT/NTB (lowercase biar aman)
         $poKabupatenMapping = [
-            'Anjar'  => ['sumba', 'lombok'],
-            'Firman' => ['kupang', 'malaka', 'timur tengah', 'timor tengah', 'belu', 'rote', 'sabu', 'raijua', 'alor'],
-            'Novan'  => ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata'],
+            'Firman' => ['sumba', 'kupang', 'malaka', 'timur tengah', 'timor tengah', 'belu', 'rote', 'sabu', 'raijua', 'alor'],
+            'Novan'  => ['manggarai', 'lombok', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata'],
         ];
 
         foreach ($groupedRecords as $aging => $tickets) {
@@ -664,9 +663,9 @@ class NmtTicketsResource extends Resource
                 // Conditional logic for Nusa Tenggara Timur
                 if ($record->site && strtolower($record->site->province) === 'nusa tenggara timur') {
                     $administrativeArea = strtolower($record->site->administrative_area ?? '');
-                    $targetAreaAnjar = ['sumba'];
+                    $targetAreaAnjar = [];
                     $targetAreaFirman = ['kupang', 'timor tengah', 'timur tengah', 'malaka', 'belu', 'rote', 'ndao', 'raijua', 'sabu', 'alor'];
-                    $targetAreaNovan = ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata', 'sika'];
+                    $targetAreaNovan = ['manggarai', 'sumba', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata', 'sika'];
 
                     // Check if administrative_area contains any targetAreaFirman
                     $isTargetAreaFirman = array_reduce($targetAreaFirman, fn($carry, $area) => $carry || stripos($administrativeArea, $area) !== false, false);
