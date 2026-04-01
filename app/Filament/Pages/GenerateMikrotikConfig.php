@@ -36,6 +36,8 @@ class GenerateMikrotikConfig extends Page
     public $siteId = '';
     public $timezone = '';
     public $configType = 'mikrotik';
+    public $controllerIp = '103.169.124.221';   // default
+    public $controllerIpCustom = '';
 
     public function getMaxContentWidth(): MaxWidth
     {
@@ -96,12 +98,50 @@ class GenerateMikrotikConfig extends Page
                         ->reactive()
                         ->afterStateUpdated(function ($state, callable $set) {
                             $set('configType', $state);
+
+                            if ($state === 'mikrotik') {
+                                $set('controllerIp', null);
+                            }
                         })
                         ->disabled(function (callable $get): bool {
                             return empty($get('siteId'));
                         })
                         ->live()
                         // ->inlineLabel(false)
+                        ->columnSpanFull(),
+
+                    // === CONTROLLER IP (hanya muncul di Grandstream) ===
+                    Radio::make('controllerIp')
+                        ->label('GWN Controller IP')
+                        ->options([
+                            '103.169.124.221' => 'GWN .221',
+                            '103.169.124.74'  => 'GWN .74',
+                            'custom'          => 'Custom',
+                        ])
+                        ->descriptions([
+                            '103.169.124.221' => '103.169.124.221',
+                            '103.169.124.74'  => '103.169.124.74',
+                            'custom'          => 'Custom',
+                        ])
+                        ->default('103.169.124.221')
+                        ->reactive()
+                        ->inline()
+                        ->visible(fn(callable $get) => $get('configType') === 'grandstream')
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            if ($state !== 'custom') {
+                                $set('controllerIpCustom', '');
+                            }
+                        })
+                        ->columnSpanFull(),
+
+                    TextInput::make('controllerIpCustom')
+                        ->label('Custom Controller IP')
+                        ->placeholder('Contoh: 103.169.124.100 atau 103.169.124.100:10014')
+                        ->visible(
+                            fn(callable $get) =>
+                            $get('configType') === 'grandstream' && $get('controllerIp') === 'custom'
+                        )
+                        ->reactive()
                         ->columnSpanFull(),
 
                     TextInput::make('timezone')
@@ -282,6 +322,30 @@ class GenerateMikrotikConfig extends Page
                 }
                 $ipNetwork = implode('.', $ipParts);
 
+                // === LOGIKA CONTROLLER IP YANG LEBIH BAIK ===
+                $controller = '';
+
+                if ($this->controllerIp === 'custom') {
+                    $controller = trim($this->controllerIpCustom ?? '');
+
+                    if (empty($controller)) {
+                        Notification::make()
+                            ->title('Error')
+                            ->body('Custom Controller IP tidak boleh kosong jika memilih opsi "Custom"')
+                            ->danger()
+                            ->send();
+                        // throw new \Exception('Custom Controller IP wajib diisi.');
+                    }
+                } else {
+                    // Pilih 103.169.124.221 atau 103.169.124.74
+                    $controller = $this->controllerIp;
+                }
+
+                // Tambah port :10014 kalau belum ada
+                if (strpos($controller, ':') === false) {
+                    $controller .= ':10014';
+                }
+
                 $template = Storage::disk('public')->get('templates/template_gs.txt');
 
                 $replacements = [
@@ -292,6 +356,7 @@ class GenerateMikrotikConfig extends Page
                     '{$IP_AP2}' => $deviceNetwork->ap2_ip,
                     '{$NAMA_LOKASI}' => $site->site_name,
                     '{$TIMEZONE}' => $this->timezone,
+                    '{$IP_CONTROLLER}' => $controller,
                 ];
 
                 $configContent = str_replace(
