@@ -87,7 +87,7 @@ class SiteMonitorResource extends Resource
                     ->label('Site ID')
                     ->copyable()
                     ->searchable(['site_id', 'sitecode'])
-                    ->description(fn(SiteMonitor $record): string => $record->sitecode),
+                    ->description(fn(SiteMonitor $record): string => $record->site?->site_name ?? '-'),
 
                 Tables\Columns\TextColumn::make('sitecode')
                     ->hidden(),
