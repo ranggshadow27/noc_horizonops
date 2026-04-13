@@ -20,19 +20,7 @@
         </div>
     </div>
 
-    <div class="flex flex-wrap justify-center items-center gap-4 w-full">
-        <div class="flex-1 sm:w-1/2">
-            @livewire(\App\Filament\Widgets\SweepingTicketWarningTableChart::class)
-        </div>
 
-        <div class="flex-1 sm:w-1/2">
-            @livewire(\App\Filament\Widgets\SweepingTicketMinorTableChart::class)
-        </div>
-
-        <div class="flex-1 sm:w-1/2">
-            @livewire(\App\Filament\Widgets\SweepingTicketMajorTableChart::class)
-        </div>
-    </div>
 
     <div class="flex flex-wrap justify-center items-center gap-4 w-full">
         <div class="flex-1 sm:w-1/2">
