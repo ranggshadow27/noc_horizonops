@@ -60,18 +60,23 @@ class SiteMonitorService
                     $dbData  = SiteMonitor::where('site_id', $terminalId)->first();
 
                     if ($apiItem !== null) {
-                        // Site DITEMUKAN di API
+                        // Normalisasi data dari API
+                        $modem     = $this->normalizeStatus($apiItem['modem'] ?? null);
+                        $mikrotik  = $this->normalizeStatus($apiItem['mikrotik'] ?? null);
+                        $ap1       = $this->normalizeStatus($apiItem['AP1'] ?? null);
+                        $ap2       = $this->normalizeStatus($apiItem['AP2'] ?? null);
+
                         $updateData = [
                             'site_id'          => $terminalId,
-                            'sitecode'         => $apiItem['sitecode'] ?? 'Failed',
-                            'modem'            => $apiItem['modem'] ?? 'Failed',
-                            'mikrotik'         => $apiItem['mikrotik'] ?? 'Failed',
-                            'ap1'              => $apiItem['AP1'] ?? 'Failed',
-                            'ap2'              => $apiItem['AP2'] ?? 'Failed',
-                            'modem_last_up'    => $this->determineLastUp($apiItem['modem'] ?? null, $dbData?->modem_last_up),
-                            'mikrotik_last_up' => $this->determineLastUp($apiItem['mikrotik'] ?? null, $dbData?->mikrotik_last_up),
-                            'ap1_last_up'      => $this->determineLastUp($apiItem['AP1'] ?? null, $dbData?->ap1_last_up),
-                            'ap2_last_up'      => $this->determineLastUp($apiItem['AP2'] ?? null, $dbData?->ap2_last_up),
+                            'sitecode'         => $apiItem['sitecode'] ?? 'Failed',   // sitecode jarang null
+                            'modem'            => $modem,
+                            'mikrotik'         => $mikrotik,
+                            'ap1'              => $ap1,
+                            'ap2'              => $ap2,
+                            'modem_last_up'    => $this->determineLastUp($modem, $dbData?->modem_last_up),
+                            'mikrotik_last_up' => $this->determineLastUp($mikrotik, $dbData?->mikrotik_last_up),
+                            'ap1_last_up'      => $this->determineLastUp($ap1, $dbData?->ap1_last_up),
+                            'ap2_last_up'      => $this->determineLastUp($ap2, $dbData?->ap2_last_up),
                         ];
 
                         Log::info('Processed from API', ['site_id' => $terminalId]);
@@ -177,9 +182,24 @@ class SiteMonitorService
         }
     }
 
-    // Helper biar kode lebih bersih
+    private function normalizeStatus($status)
+    {
+        if (is_null($status) || $status === "" || $status === "null" || $status === "NULL") {
+            return "Failed";
+        }
+
+        // Trim dan capitalize pertama (biar konsisten)
+        $status = trim($status);
+        return ucfirst(strtolower($status));
+    }
+
     private function determineLastUp($currentStatus, $existingLastUp)
     {
+        // Normalisasi dulu: ubah "null", null, empty, dll menjadi string lowercase
+        if (is_null($currentStatus) || $currentStatus === "" || $currentStatus === "null" || $currentStatus === "NULL") {
+            $currentStatus = "Failed";
+        }
+
         if ($currentStatus === "Down") {
             return $existingLastUp ?? Carbon::now('Asia/Jakarta');
         }
@@ -188,7 +208,7 @@ class SiteMonitorService
             return null;
         }
 
-        // Untuk kasus 'Failed' atau nilai lain yang tidak dikenali
+        // Semua kasus lain (Failed, null, "null", unknown status) → dianggap tidak ada data
         return Carbon::parse('1990-01-01 00:00:00');
     }
 
