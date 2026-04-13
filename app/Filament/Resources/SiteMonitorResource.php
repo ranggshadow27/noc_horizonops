@@ -82,13 +82,13 @@ class SiteMonitorResource extends Resource
     {
         return $table
             ->columns([
-
                 Tables\Columns\TextColumn::make('site_id')
+                    ->label('Site ID')
                     ->hidden(),
 
                 Tables\Columns\TextColumn::make('sitecode')
                     ->sortable()
-                    ->label('Site ID')
+                    ->label('Site Name')
                     ->copyable()
                     ->searchable(['site_id', 'sitecode'])
                     ->description(fn(SiteMonitor $record): string => $record->site_id, position: 'above')
