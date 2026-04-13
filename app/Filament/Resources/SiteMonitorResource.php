@@ -123,27 +123,34 @@ class SiteMonitorResource extends Resource
                 Tables\Columns\TextColumn::make('modem')->label('Modem')
                     ->sortable()->color(fn(string $state): string => match ($state) {
                         'Down' => 'danger',
+                        'Failed' => 'gray',
                         'Up' => 'success',
                     })
                     ->weight(FontWeight::Bold)
                     ->description(fn(SiteMonitor $record): string => $record->modem_last_up === null ? "Normal" : $record->modem_last_up->since()),
+
                 Tables\Columns\TextColumn::make('mikrotik')->label('Router')
                     ->sortable()->color(fn(string $state): string => match ($state) {
                         'Down' => 'danger',
+                        'Failed' => 'gray',
                         'Up' => 'success',
                     })
                     ->weight(FontWeight::Bold)
                     ->description(fn(SiteMonitor $record): string => $record->mikrotik_last_up === null ? "Normal" : $record->mikrotik_last_up->since()),
+
                 Tables\Columns\TextColumn::make('ap1')->label('AP 1')
                     ->sortable()->color(fn(string $state): string => match ($state) {
                         'Down' => 'danger',
+                        'Failed' => 'gray',
                         'Up' => 'success',
                     })
                     ->weight(FontWeight::Bold)
                     ->description(fn(SiteMonitor $record): string => $record->ap1_last_up === null ? "Normal" : $record->ap1_last_up->since()),
+
                 Tables\Columns\TextColumn::make('ap2')->label('AP 2')
                     ->sortable()->color(fn(string $state): string => match ($state) {
                         'Down' => 'danger',
+                        'Failed' => 'gray',
                         'Up' => 'success',
                     })
                     ->weight(FontWeight::Bold)
