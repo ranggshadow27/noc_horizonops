@@ -82,6 +82,10 @@ class SiteMonitorResource extends Resource
     {
         return $table
             ->columns([
+
+                Tables\Columns\TextColumn::make('site_id')
+                    ->hidden(),
+
                 Tables\Columns\TextColumn::make('sitecode')
                     ->sortable()
                     ->label('Site ID')
@@ -98,9 +102,6 @@ class SiteMonitorResource extends Resource
                         return $state;
                     })
                     ->limit(40),
-
-                // Tables\Columns\TextColumn::make('sitecode')
-                //     ->hidden(),
 
                 Tables\Columns\TextColumn::make('site.province')
                     ->sortable()
