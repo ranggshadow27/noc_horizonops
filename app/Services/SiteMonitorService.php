@@ -182,10 +182,15 @@ class SiteMonitorService
     // Helper biar kode lebih bersih
     private function determineLastUp($currentStatus, $existingLastUp)
     {
-        if ($currentStatus === 'Down') {
+        if ($currentStatus === "Down") {
             return $existingLastUp ?? Carbon::now('Asia/Jakarta');
         }
-        return null; // Up = reset last_up
+
+        if ($currentStatus === "Up") {
+            return Carbon::now('Asia/Jakarta');
+        }
+
+        return Carbon::parse('1990-01-01 00:00:00');
     }
 
     private function validateOssToken(): bool
