@@ -187,7 +187,7 @@ class SiteMonitorService
         }
 
         if ($currentStatus === "Up") {
-            return Carbon::now('Asia/Jakarta');
+            return null;
         }
 
         return Carbon::parse('1990-01-01 00:00:00');
