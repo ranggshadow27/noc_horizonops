@@ -82,15 +82,25 @@ class SiteMonitorResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('site_id')
+                Tables\Columns\TextColumn::make('sitecode')
                     ->sortable()
                     ->label('Site ID')
                     ->copyable()
                     ->searchable(['site_id', 'sitecode'])
-                    ->description(fn(SiteMonitor $record): string => $record->site?->site_name ?? '-'),
+                    ->description(fn(SiteMonitor $record): string => $record->site_id, position: 'above')
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
 
-                Tables\Columns\TextColumn::make('sitecode')
-                    ->hidden(),
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        return $state;
+                    })
+                    ->limit(40),
+
+                // Tables\Columns\TextColumn::make('sitecode')
+                //     ->hidden(),
 
                 Tables\Columns\TextColumn::make('site.province')
                     ->sortable()

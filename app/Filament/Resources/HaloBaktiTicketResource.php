@@ -33,6 +33,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 
 class HaloBaktiTicketResource extends Resource
 {
@@ -228,6 +229,7 @@ class HaloBaktiTicketResource extends Resource
             ->columns([
                 TextColumn::make('hb_tt_number')
                     ->label("Ticket ID/Number")
+                    ->copyable()
                     ->description(fn($record): string => $record->ticket_id, 'above')
                     ->searchable(),
 
@@ -237,7 +239,18 @@ class HaloBaktiTicketResource extends Resource
 
                 TextColumn::make('site.site_name')
                     ->label('Site Name')
+                    ->copyable()
                     ->description(fn($record): string => $record->site_id, 'above')
+                    ->limit(30)
+                    ->tooltip(function (TextColumn $column): ?string {
+                        $state = $column->getState();
+
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+
+                        return $state;
+                    })
                     ->searchable(),
 
                 TextColumn::make('site.province')
@@ -257,8 +270,13 @@ class HaloBaktiTicketResource extends Resource
                 TextColumn::make('description')
                     ->limit(80),
 
+                TextColumn::make('pic_name')
+                    ->hidden()
+                    ->searchable(),
+
                 TextColumn::make('pic_number')
                     ->label("PIC Data")
+                    ->copyable()
                     ->description(fn($record): string => $record->pic_name ?? "Unknown", 'above')
                     ->copyable(),
 
@@ -301,6 +319,19 @@ class HaloBaktiTicketResource extends Resource
                         }
                         return $query->whereHas('site', fn($query) => $query->whereHas('area', fn($query) => $query->where('area', $state['value'])));
                     }),
+
+                SelectFilter::make('status')
+                    ->label("Status")
+                    ->options([
+                        'pending' => 'Pending',
+                        'on progress' => 'On Progress',
+                        'unresolved' => 'Unresolved',
+                        'closed' => 'Closed',
+                    ])
+                    ->native(false),
+
+                DateRangeFilter::make('created_at')
+                    ->label('Created Date'),
             ])
             ->actions([
                 ActionGroup::make([
