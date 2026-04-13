@@ -21,113 +21,94 @@ class SiteMonitorService
 
         Log::info('Token OSS valid. Memulai fetch SiteMonitor data...');
 
-        // URL API pertama
+        // URL API
         $url1 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h10/mhg';
-        // URL API kedua
         $url2 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h58/mhg';
-        // URL API ketiga
         $url3 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h47/mhg';
 
-        // Inisialisasi array untuk data
-        $data1 = [];
-        $data2 = [];
-        $data3 = [];
+        // Ambil data dari 3 API (hanya 3x HTTP request)
+        $data1 = $this->fetchApi($url1, 1);
+        $data2 = $this->fetchApi($url2, 2);
+        $data3 = $this->fetchApi($url3, 3);
 
-        // Ambil data dari API pertama
-        $response1 = Http::get($url1);
-        if ($response1->successful()) {
-            $data1 = $response1->json()['data'] ?? [];
-            Log::info('Fetched ' . count($data1) . ' records from API 1');
-        } else {
-            Log::error('Failed to fetch data from API 1', [
-                'url' => $url1,
-                'status' => $response1->status(),
-                'error' => $response1->body()
-            ]);
-        }
-
-        // Ambil data dari API kedua
-        $response2 = Http::get($url2);
-        if ($response2->successful()) {
-            $data2 = $response2->json()['data'] ?? [];
-            Log::info('Fetched ' . count($data2) . ' records from API 2');
-        } else {
-            Log::error('Failed to fetch data from API 2', [
-                'url' => $url2,
-                'status' => $response2->status(),
-                'error' => $response2->body()
-            ]);
-        }
-
-        // Ambil data dari API ketiga
-        $response3 = Http::get($url3);
-        if ($response3->successful()) {
-            $data3 = $response3->json()['data'] ?? [];
-            Log::info('Fetched ' . count($data3) . ' records from API 3');
-        } else {
-            Log::error('Failed to fetch data from API 3', [
-                'url' => $url3,
-                'status' => $response3->status(),
-                'error' => $response3->body()
-            ]);
-        }
-
-        // Gabungkan ketiga data dan hapus duplikasi berdasarkan terminal_id
+        // Gabungkan dan hapus duplikasi
         $data = array_merge($data1, $data2, $data3);
         $data = array_unique($data, SORT_REGULAR);
-        $data = array_values($data); // Reset indeks array
-        $totalData = count($data);
-        Log::info('Total unique records to process: ' . $totalData);
+        $data = array_values($data);
 
-        // REVISI: Ambil existing site_id dari SiteDetail, bukan SiteMonitor, supaya site_id baru bisa diproses
-        $existingSiteIds = SiteDetail::pluck('site_id')->toArray();
+        // Buat lookup map berdasarkan terminal_id (super cepat)
+        $apiDataMap = collect($data)->keyBy('terminal_id')->toArray();
+
+        // Ambil SEMUA site_id dari SiteDetail (sumber utama sekarang)
+        $siteIds = SiteDetail::pluck('site_id')->toArray();
+        $totalSites = count($siteIds);
+
+        Log::info("Total sites di SiteDetail yang akan diproses: {$totalSites}");
+
         $successfulUpdates = 0;
+        $chunkSize = 100;
 
-        // Proses data dalam batch
-        $chunkSize = 100; // Proses 100 data per batch
-        collect($data)->chunk($chunkSize)->each(function ($chunk) use ($existingSiteIds, &$successfulUpdates, $totalData) {
-            foreach ($chunk as $apiItem) {
-                $terminalId = $apiItem['terminal_id'] ?? null;
-
-                // REVISI: Cek apakah terminal_id ada di SiteDetail (bukan SiteMonitor)
-                if (!$terminalId || !in_array($terminalId, $existingSiteIds)) {
-                    Log::warning('Skipping data: terminal_id not found in SiteDetail or invalid', [
-                        'terminal_id' => $terminalId ?? 'Unknown'
-                    ]);
+        // Proses per batch
+        collect($siteIds)->chunk($chunkSize)->each(function ($chunk) use ($apiDataMap, &$successfulUpdates) {
+            foreach ($chunk as $terminalId) {
+                if (!$terminalId) {
                     continue;
                 }
 
                 try {
-                    // REVISI: Ambil data dari SiteMonitor (jika ada), tapi sekarang allow create jika belum ada
-                    $dbData = SiteMonitor::where('site_id', $terminalId)->first();
+                    $apiItem = $apiDataMap[$terminalId] ?? null;
+                    $dbData  = SiteMonitor::where('site_id', $terminalId)->first();
 
-                    $updateData = [
-                        'site_id' => $terminalId,
-                        'sitecode' => $apiItem['sitecode'] ?? 'Failed',
-                        'modem' => $apiItem['modem'] ?? 'Failed',
-                        'mikrotik' => $apiItem['mikrotik'] ?? 'Failed',
-                        'ap1' => $apiItem['AP1'] ?? 'Failed',
-                        'ap2' => $apiItem['AP2'] ?? 'Failed',
-                        'modem_last_up' => $this->determineLastUp($apiItem['modem'], $dbData?->modem_last_up),
-                        'mikrotik_last_up' => $this->determineLastUp($apiItem['mikrotik'], $dbData?->mikrotik_last_up),
-                        'ap1_last_up' => $this->determineLastUp($apiItem['AP1'], $dbData?->ap1_last_up),
-                        'ap2_last_up' => $this->determineLastUp($apiItem['AP2'], $dbData?->ap2_last_up),
-                    ];
+                    if ($apiItem !== null) {
+                        // Site DITEMUKAN di API
+                        $updateData = [
+                            'site_id'          => $terminalId,
+                            'sitecode'         => $apiItem['sitecode'] ?? 'Failed',
+                            'modem'            => $apiItem['modem'] ?? 'Failed',
+                            'mikrotik'         => $apiItem['mikrotik'] ?? 'Failed',
+                            'ap1'              => $apiItem['AP1'] ?? 'Failed',
+                            'ap2'              => $apiItem['AP2'] ?? 'Failed',
+                            'modem_last_up'    => $this->determineLastUp($apiItem['modem'] ?? null, $dbData?->modem_last_up),
+                            'mikrotik_last_up' => $this->determineLastUp($apiItem['mikrotik'] ?? null, $dbData?->mikrotik_last_up),
+                            'ap1_last_up'      => $this->determineLastUp($apiItem['AP1'] ?? null, $dbData?->ap1_last_up),
+                            'ap2_last_up'      => $this->determineLastUp($apiItem['AP2'] ?? null, $dbData?->ap2_last_up),
+                        ];
 
-                    // Update atau buat data baru
+                        Log::info('Processed from API', ['site_id' => $terminalId]);
+                    } else {
+                        // Site TIDAK DITEMUKAN di API → tandai sebagai missing
+                        $updateData = [
+                            'site_id'          => $terminalId,
+                            'sitecode'         => 'Failed',
+                            'modem'            => 'Failed',
+                            'mikrotik'         => 'Failed',
+                            'ap1'              => 'Failed',
+                            'ap2'              => 'Failed',
+                            'modem_last_up'    => Carbon::parse('1990-01-01 00:00:00'),
+                            'mikrotik_last_up' => Carbon::parse('1990-01-01 00:00:00'),
+                            'ap1_last_up'      => Carbon::parse('1990-01-01 00:00:00'),
+                            'ap2_last_up'      => Carbon::parse('1990-01-01 00:00:00'),
+                        ];
+
+                        Log::info('Site tidak ditemukan di API → ditandai missing (1990 last_up)', [
+                            'site_id' => $terminalId
+                        ]);
+                    }
+
+                    // Update atau Create
                     $dbData = SiteMonitor::updateOrCreate(
                         ['site_id' => $terminalId],
                         $updateData
                     );
 
-                    // REVISI: Log jika ini create baru
-                    if (!$dbData->wasRecentlyCreated) {
-                        Log::info('Updated existing SiteMonitor record', ['site_id' => $terminalId]);
+                    // Log create/update
+                    if ($dbData->wasRecentlyCreated) {
+                        Log::info('Created new SiteMonitor record', ['site_id' => $terminalId]);
                     } else {
-                        Log::info('Created new SiteMonitor record from API', ['site_id' => $terminalId]);
+                        Log::info('Updated existing SiteMonitor record', ['site_id' => $terminalId]);
                     }
 
-                    // Update status dan sensor_status
+                    // Update status & sensor_status
                     $this->updateStatus($dbData);
                     $this->updateSensorStatus($dbData);
 
@@ -135,20 +116,20 @@ class SiteMonitorService
                 } catch (\Exception $e) {
                     Log::error('Error processing SiteMonitor data', [
                         'site_id' => $terminalId ?? 'Unknown',
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                        'error'   => $e->getMessage(),
+                        'trace'   => $e->getTraceAsString()
                     ]);
                 }
             }
         });
 
-        // Log jumlah data yang berhasil diupdate
-        Log::info('Selesai memproses ' . $successfulUpdates . ' dari ' . $totalData . ' data');
-        if ($successfulUpdates < $totalData) {
-            Log::warning('Not all data were processed successfully', [
+        // Log akhir
+        Log::info("Selesai memproses {$successfulUpdates} dari {$totalSites} site di SiteDetail");
+
+        if ($successfulUpdates < $totalSites) {
+            Log::warning('Ada site yang gagal diproses', [
                 'processed' => $successfulUpdates,
-                'total' => $totalData,
-                'unprocessed' => $totalData - $successfulUpdates
+                'total'     => $totalSites,
             ]);
         }
 
@@ -159,6 +140,23 @@ class SiteMonitorService
                 'count' => $nullSensorStatusCount
             ]);
         }
+    }
+
+    private function fetchApi(string $url, int $apiNumber): array
+    {
+        $response = Http::get($url);
+        if ($response->successful()) {
+            $data = $response->json()['data'] ?? [];
+            Log::info("Fetched " . count($data) . " records from API {$apiNumber}");
+            return $data;
+        }
+
+        Log::error("Failed to fetch data from API {$apiNumber}", [
+            'url'    => $url,
+            'status' => $response->status(),
+            'error'  => $response->body()
+        ]);
+        return [];
     }
 
     private function updateStatus(SiteMonitor $dbData)
@@ -190,6 +188,7 @@ class SiteMonitorService
             return null;
         }
 
+        // Untuk kasus 'Failed' atau nilai lain yang tidak dikenali
         return Carbon::parse('1990-01-01 00:00:00');
     }
 
