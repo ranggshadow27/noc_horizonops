@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\SiteMonitorResource\Widgets;
 
 use App\Filament\Resources\SiteMonitorResource;
-use App\Models\SiteDetail;
 use App\Models\SiteMonitor;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -14,43 +13,33 @@ class SiteMonitorOverview extends BaseWidget
 
     protected function getStats(): array
     {
-        // Ambil semua gateway yang unik dari SiteDetails
-        $gateways = SiteDetail::select('gateway')
-            ->distinct()
-            ->whereNotIn('gateway', [
-                'PMT Not Completed',
-                'RELOKASI',
-                '-'
-            ])
-            ->orderBy('gateway', 'asc')
-            ->pluck('gateway');
+        $totalSites = SiteMonitor::count();
+        $totalModemUp = SiteMonitor::where('modem', '=', 'Up')->count();
+        $totalRouterUp = SiteMonitor::where('mikrotik', '=', 'Up')->count();
+        $totalAp1Up = SiteMonitor::where('ap1', '=', 'Up')->count();
+        $totalAp2Up = SiteMonitor::where('ap2', '=', 'Up')->count();
 
-        $stats = [];
+        $modemPercentage = $totalSites > 0 ? round(($totalModemUp / $totalSites) * 100, 2) : 0;
+        $routerPercentage = $totalSites > 0 ? round(($totalRouterUp / $totalSites) * 100, 2) : 0;
+        $ap1Percentage = $totalSites > 0 ? round(($totalAp1Up / $totalSites) * 100, 2) : 0;
+        $ap2Percentage = $totalSites > 0 ? round(($totalAp2Up / $totalSites) * 100, 2) : 0;
 
-        foreach ($gateways as $gateway) {
-            if (empty($gateway)) continue;
+        return [
+            Stat::make('Total Modem UP', $totalModemUp . " Site")
+                ->description("$modemPercentage% of modems are currently online")->color('primary')
+                ->descriptionIcon('phosphor-check-circle-duotone'),
 
-            // Total site di gateway ini
-            $totalSites = SiteDetail::where('gateway', $gateway)
-                ->count();
+            Stat::make('Total Router UP', $totalRouterUp . " Site")
+                ->description("$routerPercentage% of router sensors are online")->color('primary')
+                ->descriptionIcon('phosphor-check-circle-duotone'),
 
-            // Site yang modemnya "Up" (join ke SiteMonitor via site_id)
-            $onlineSites = SiteDetail::where('gateway', $gateway)
-                ->whereHas('siteMonitor', function ($query) {  // 'site' adalah nama relation di SiteDetails
-                    $query->where('modem', 'Up');     // sesuaikan kolom statusnya
-                })
-                ->count();
+            Stat::make('Total Access Point 1 UP', $totalAp1Up . " Site")
+                ->description("$ap1Percentage% of access point 1 sensors are online")->color('primary')
+                ->descriptionIcon('phosphor-check-circle-duotone'),
 
-            $percentage = $totalSites > 0
-                ? round(($onlineSites / $totalSites) * 100, 2)
-                : 0;
-
-            $stats[] = Stat::make("Gateway {$gateway}", "{$onlineSites} Site Online")
-                ->description("{$percentage}% of modems are currently online ")
-                ->descriptionIcon($percentage >= 70 ? 'heroicon-o-check-circle' : 'heroicon-o-exclamation-circle')
-                ->color($percentage >= 70 ? 'success' : ($percentage >= 50 ? 'warning' : 'danger'));
-        }
-
-        return $stats;
+            Stat::make('Total Access Point 2 UP', $totalAp2Up . " Site")
+                ->description("$ap2Percentage% of access point 2 sensors are online")->color('primary')
+                ->descriptionIcon('phosphor-check-circle-duotone'),
+        ];
     }
 }
