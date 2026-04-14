@@ -11,11 +11,6 @@ class SiteMonitorOverview extends BaseWidget
 {
     protected static ?string $pollingInterval = '10m';
 
-    function goToProject()
-    {
-        redirect('mahaga/site-monitors?tableFilters[modem_last_up][created_from]=2025-03-16');
-    }
-
     protected function getStats(): array
     {
         $totalSites = SiteMonitor::count();
@@ -32,12 +27,7 @@ class SiteMonitorOverview extends BaseWidget
         return [
             Stat::make('Total Modem UP', $totalModemUp . " Site")
                 ->description("$modemPercentage% of modems are currently online")->color('primary')
-                ->descriptionIcon('phosphor-check-circle-duotone')
-                // ->url('site-monitors')
-                ->extraAttributes([
-                    'class' => 'cursor-pointer',
-                    'wire:click' => 'goToProject()',
-                ]),
+                ->descriptionIcon('phosphor-check-circle-duotone'),
 
             Stat::make('Total Router UP', $totalRouterUp . " Site")
                 ->description("$routerPercentage% of router sensors are online")->color('primary')

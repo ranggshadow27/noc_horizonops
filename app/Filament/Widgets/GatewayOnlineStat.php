@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Widgets;
+namespace App\Filament\Resources\SiteMonitorResource\Widgets;
 
 use App\Models\SiteDetail;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -8,7 +8,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class GatewayOnlineStat extends BaseWidget
 {
-    protected static ?string $pollingInterval = '60s'; // refresh otomatis
+    protected static ?string $pollingInterval = '10m';
 
     protected function getStats(): array
     {
