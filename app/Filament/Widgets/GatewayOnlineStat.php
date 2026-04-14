@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\SiteMonitorResource\Widgets;
+namespace App\Filament\Widgets;
 
 use App\Models\SiteDetail;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
