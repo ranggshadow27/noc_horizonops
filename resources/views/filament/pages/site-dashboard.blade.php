@@ -4,9 +4,23 @@
             <b>NOC Dashboard Cuy~</b>
         </h2>
     </div> --}}
+    <div>
+        <p class="text-base">
+            <b>Site Online by Sensor</b>
+        </p>
+    </div>
+    <div>
+        @livewire(\App\Filament\Resources\SiteMonitorResource\Widgets\SiteMonitorOverview::class)
+    </div>
 
-    @livewire(\App\Filament\Resources\SiteMonitorResource\Widgets\SiteMonitorOverview::class)
-
+    <div>
+        <p class="text-base">
+            <b>Site Online by Gateway</b>
+        </p>
+    </div>
+    <div>
+        @livewire(\App\Filament\Widgets\GatewayOnlineStat::class)
+    </div>
 
     <div class="flex flex-wrap justify-center items-center gap-4 w-full">
         <div class="flex-1 sm:w-1/2">
