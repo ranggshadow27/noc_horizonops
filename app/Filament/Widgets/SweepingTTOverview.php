@@ -16,11 +16,6 @@ class SweepingTTOverview extends BaseWidget
     {
         $today = Carbon::today();
 
-        $unWarningOpen = SweepingTicket::whereDate('created_at', $today)
-            ->where('classification', 'UN WARNING')
-            ->whereNot('status', 'CLOSED')
-            ->count();
-
         $warningOpen = SweepingTicket::whereDate('created_at', $today)
             ->where('classification', 'WARNING')
             ->whereNot('status', 'CLOSED')
