@@ -84,7 +84,7 @@ class SiteMonitorService
                         // Site TIDAK DITEMUKAN di API → tandai sebagai missing
                         $updateData = [
                             'site_id'          => $terminalId,
-                            'sitecode'         => "[Data Not Found] {$dbData->sitecode}",
+                            'sitecode'         => $dbData->sitecode ?? "Not Found",
                             'modem'            => 'Failed',
                             'mikrotik'         => 'Failed',
                             'ap1'              => 'Failed',

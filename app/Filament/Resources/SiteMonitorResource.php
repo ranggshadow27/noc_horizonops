@@ -8,6 +8,7 @@ use App\Livewire\SiteMonitorTable;
 use App\Models\SiteDetail;
 use App\Models\SiteMonitor;
 use Carbon\Carbon;
+use DateTime;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Livewire;
@@ -138,7 +139,19 @@ class SiteMonitorResource extends Resource
                         'Up' => 'success',
                     })
                     ->weight(FontWeight::Bold)
-                    ->description(fn(SiteMonitor $record): string => $record->modem_last_up === null ? "Normal" : $record->modem_last_up->since()),
+                    ->description(function (SiteMonitor $record) {
+                        $date = new DateTime($record->modem_last_up);
+
+                        if ($date->format('Y-m-d H:i:s') === "1990-01-01 00:00:00") {
+                            return "Not Found";
+                        }
+
+                        if ($record->modem_last_up === null) {
+                            return "Normal";
+                        }
+
+                        return $record->modem_last_up->since();
+                    }),
 
                 Tables\Columns\TextColumn::make('mikrotik')->label('Router')
                     ->sortable()->color(fn(string $state): string => match ($state) {
@@ -147,7 +160,19 @@ class SiteMonitorResource extends Resource
                         'Up' => 'success',
                     })
                     ->weight(FontWeight::Bold)
-                    ->description(fn(SiteMonitor $record): string => $record->mikrotik_last_up === null ? "Normal" : $record->mikrotik_last_up->since()),
+                    ->description(function (SiteMonitor $record) {
+                        $date = new DateTime($record->mikrotik_last_up);
+
+                        if ($date->format('Y-m-d H:i:s') === "1990-01-01 00:00:00") {
+                            return "Not Found";
+                        }
+
+                        if ($record->mikrotik_last_up === null) {
+                            return "Normal";
+                        }
+
+                        return $record->mikrotik_last_up->since();
+                    }),
 
                 Tables\Columns\TextColumn::make('ap1')->label('AP 1')
                     ->sortable()->color(fn(string $state): string => match ($state) {
@@ -156,7 +181,19 @@ class SiteMonitorResource extends Resource
                         'Up' => 'success',
                     })
                     ->weight(FontWeight::Bold)
-                    ->description(fn(SiteMonitor $record): string => $record->ap1_last_up === null ? "Normal" : $record->ap1_last_up->since()),
+                    ->description(function (SiteMonitor $record) {
+                        $date = new DateTime($record->ap1_last_up);
+
+                        if ($date->format('Y-m-d H:i:s') === "1990-01-01 00:00:00") {
+                            return "Not Found";
+                        }
+
+                        if ($record->ap1_last_up === null) {
+                            return "Normal";
+                        }
+
+                        return $record->ap1_last_up->since();
+                    }),
 
                 Tables\Columns\TextColumn::make('ap2')->label('AP 2')
                     ->sortable()->color(fn(string $state): string => match ($state) {
@@ -165,7 +202,19 @@ class SiteMonitorResource extends Resource
                         'Up' => 'success',
                     })
                     ->weight(FontWeight::Bold)
-                    ->description(fn(SiteMonitor $record): string => $record->ap2_last_up === null ? "Normal" : $record->ap2_last_up->since()),
+                    ->description(function (SiteMonitor $record) {
+                        $date = new DateTime($record->ap2_last_up);
+
+                        if ($date->format('Y-m-d H:i:s') === "1990-01-01 00:00:00") {
+                            return "Not Found";
+                        }
+
+                        if ($record->ap2_last_up === null) {
+                            return "Normal";
+                        }
+
+                        return $record->ap2_last_up->since();
+                    }),
 
                 Tables\Columns\TextColumn::make('modem_last_up')
                     ->hidden()->since(),
