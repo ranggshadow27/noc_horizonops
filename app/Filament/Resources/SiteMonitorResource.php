@@ -302,21 +302,25 @@ class SiteMonitorResource extends Resource
                                 TextEntry::make('modem')->badge()->label("Modem")
                                     ->color(fn(string $state): string => match ($state) {
                                         'Down' => 'danger',
+                                        'Failed' => 'gray',
                                         'Up' => 'success',
                                     }),
                                 TextEntry::make('mikrotik')->badge()->label("Router")
                                     ->color(fn(string $state): string => match ($state) {
                                         'Down' => 'danger',
+                                        'Failed' => 'gray',
                                         'Up' => 'success',
                                     }),
                                 TextEntry::make('ap1')->badge()->label("Access slant 1")
                                     ->color(fn(string $state): string => match ($state) {
                                         'Down' => 'danger',
+                                        'Failed' => 'gray',
                                         'Up' => 'success',
                                     }),
                                 TextEntry::make('ap2')->badge()->label("Access Point 2")
                                     ->color(fn(string $state): string => match ($state) {
                                         'Down' => 'danger',
+                                        'Failed' => 'gray',
                                         'Up' => 'success',
                                     }),
                                 TextEntry::make('modem_last_up')->badge()->label("Modem Last Up")
@@ -356,6 +360,7 @@ class SiteMonitorResource extends Resource
                             };
                         })
                         ->openUrlInNewTab(),
+
                     Tables\Actions\Action::make('Copy Site Info')
                         ->label("Copy Site Info")
                         ->icon('phosphor-copy-duotone')
@@ -412,19 +417,72 @@ class SiteMonitorResource extends Resource
                 Section::make('')
                     // ->collapsed(true)
                     ->schema([
-                        TextEntry::make('site_id')
+                        TextEntry::make('site.site_id')
+                            // ->formatStateUsing(fn($record) => $record->site->site_name . " (" . $record->site_id . ") ")
                             ->label('Site ID'),
+
                         TextEntry::make('site.site_name')
+                            // ->formatStateUsing(fn($record) => $record->site->site_name . " (" . $record->site_id . ") ")
                             ->label('Site Name'),
-                        TextEntry::make('site.administrative_area')
-                            ->formatStateUsing(fn($record) => $record->site->administrative_area . ", " . $record->site->province)
-                            ->label('Address'),
-                        TextEntry::make('site.latitude')
-                            ->formatStateUsing(fn($record) => "Lat: " . $record->site->latitude . ", " . "Long: " . $record->site->longitude)
-                            ->label('Coordinate'),
+
+                        TextEntry::make('total_nmt')
+                            ->getStateUsing(function ($record) {
+                                return $record->site->siteLogs()
+                                    ->whereNot('nmt_ticket', '-')
+                                    ->where('site_id', $record->site_id)
+                                    ->where('created_at', '>=', now()->startOfYear())
+                                    ->count();
+                            })
+                            ->suffix(' Tickets')
+                            ->numeric()
+                            ->label('NMT Open (This Year)'),
+
+                        TextEntry::make('total_major')
+                            ->getStateUsing(function ($record) {
+                                // $record adalah data utama (misalnya Customer atau Order)
+                                return $record->site->sweepingTickets()
+                                    ->whereNot('classification', 'major')
+                                    ->where('site_id', $record->site_id)
+                                    ->where('created_at', '>=', now()->startOfYear())
+                                    ->count();
+                            })
+                            ->suffix(' Tickets')
+                            ->numeric()
+                            ->label('Major Open (This Year)'),
+
                         TextEntry::make('site.gateway')
                             ->formatStateUsing(fn($record) => $record->site->gateway . " (" . $record->site->spotbeam . ") " . " / " . $record->site->ip_hub)
                             ->label('Gateway'),
+
+                        TextEntry::make('site.latitude')
+                            ->formatStateUsing(fn($record) => "Lat: " . $record->site->latitude . ", Long: " . $record->site->longitude . ")")
+                            ->label('Coordinate'),
+
+                        TextEntry::make('site.administrative_area')
+                            ->formatStateUsing(fn($record) => $record->site->administrative_area . ", " . $record->site->province)
+                            ->label('Address'),
+
+                        TextEntry::make('modem_uptime')
+                            ->getStateUsing(function ($record) {
+                                return $record->site->siteLogs()
+                                    ->where('site_id', $record->site_id)
+                                    ->where('created_at', '>=', now()->startOfMonth())
+                                    ->sum('modem_uptime');
+                            })
+                            ->suffix(' Minutes')
+                            ->numeric()
+                            ->label('Modem Uptime (this Month)'),
+
+                        TextEntry::make('traffic_uptime')
+                            ->getStateUsing(function ($record) {
+                                return $record->site->siteLogs()
+                                    ->where('site_id', $record->site_id)
+                                    ->where('created_at', '>=', now()->startOfMonth())
+                                    ->sum('traffic_uptime');
+                            })
+                            ->suffix(' Minutes')
+                            ->numeric()
+                            ->label('Traffic Uptime (this Month)'),
                     ])
                     ->columns(5),
                 Section::make('Site Logs')
