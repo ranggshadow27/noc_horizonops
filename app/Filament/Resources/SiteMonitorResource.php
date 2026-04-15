@@ -196,7 +196,8 @@ class SiteMonitorResource extends Resource
                     }),
 
                 Tables\Columns\TextColumn::make('ap2')->label('AP 2')
-                    ->sortable()->color(fn(string $state): string => match ($state) {
+                    ->sortable()
+                    ->color(fn(string $state): string => match ($state) {
                         'Down' => 'danger',
                         'Failed' => 'gray',
                         'Up' => 'success',
@@ -435,6 +436,8 @@ class SiteMonitorResource extends Resource
                             })
                             ->suffix(' Tickets')
                             ->numeric()
+                            ->badge()
+                            ->color(fn($state) => $state >= 10 ? 'danger' : ($state >= 5 ? 'warning' : 'success'))
                             ->label('NMT Open (This Year)'),
 
                         TextEntry::make('total_major')
@@ -471,6 +474,8 @@ class SiteMonitorResource extends Resource
                             })
                             ->suffix(' Minutes')
                             ->numeric()
+                            ->badge()
+                            ->color(fn($state) => $state >= 70 ? 'success' : ($state >= 30 ? 'warning' : 'danger'))
                             ->label('Modem Uptime (this Month)'),
 
                         TextEntry::make('traffic_uptime')
@@ -482,6 +487,8 @@ class SiteMonitorResource extends Resource
                             })
                             ->suffix(' Minutes')
                             ->numeric()
+                            ->badge()
+                            ->color(fn($state) => $state >= 70 ? 'success' : ($state >= 30 ? 'warning' : 'danger'))
                             ->label('Traffic Uptime (this Month)'),
                     ])
                     ->columns(5),
