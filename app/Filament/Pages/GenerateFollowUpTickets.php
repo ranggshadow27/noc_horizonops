@@ -136,9 +136,8 @@ class GenerateFollowUpTickets extends Page
 
         // Mapping PO ke kabupaten untuk NTT/NTB
         $po_kabupaten_mapping = [
-            'Anjar' => ['sumba', 'lombok'],
-            'Firman' => ['kupang', 'malaka', 'timur tengah', 'timor tengah', 'belu', 'rote', 'sabu', 'raijua', 'alor',],
-            'Novan' => ['manggarai', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata',],
+            'Firman' => ['kupang', 'sumba', 'malaka', 'timur tengah', 'timor tengah', 'belu', 'rote', 'sabu', 'raijua', 'alor',],
+            'Novan' => ['manggarai', 'lombok', 'nagekeo', 'ngada', 'ende', 'sikka', 'flores', 'lembata',],
         ];
 
         // Logika PO
