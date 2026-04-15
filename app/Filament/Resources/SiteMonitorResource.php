@@ -438,20 +438,20 @@ class SiteMonitorResource extends Resource
                             ->numeric()
                             ->badge()
                             ->color(fn($state) => $state >= 10 ? 'danger' : ($state >= 5 ? 'warning' : 'success'))
-                            ->label('NMT Open (This Year)'),
+                            ->label('NMT Open (this Year)'),
 
                         TextEntry::make('total_major')
                             ->getStateUsing(function ($record) {
                                 // $record adalah data utama (misalnya Customer atau Order)
                                 return $record->site->sweepingTickets()
-                                    ->whereNot('classification', 'major')
+                                    ->where('classification', 'major')
                                     ->where('site_id', $record->site_id)
                                     ->where('created_at', '>=', now()->startOfYear())
                                     ->count();
                             })
                             ->suffix(' Tickets')
                             ->numeric()
-                            ->label('Major Open (This Year)'),
+                            ->label('Major Open (this Year)'),
 
                         TextEntry::make('site.gateway')
                             ->formatStateUsing(fn($record) => $record->site->gateway . " (" . $record->site->spotbeam . ") " . " / " . $record->site->ip_hub)
@@ -490,6 +490,19 @@ class SiteMonitorResource extends Resource
                             ->badge()
                             ->color(fn($state) => $state >= 70 ? 'success' : ($state >= 30 ? 'warning' : 'danger'))
                             ->label('Traffic Uptime (this Month)'),
+
+                        TextEntry::make('cboss_stat')
+                            ->getStateUsing(function ($record) {
+                                return $record->site->cbossTmo()
+                                    ->where('site_id', $record->site_id)
+                                    ->where('created_at', '>=', now()->startOfYear())
+                                    ->count();
+                            })
+                            ->suffix(' Tmo(s)')
+                            ->numeric()
+                            ->badge()
+                            ->color(fn($state) => $state >= 10 ? 'danger' : ($state >= 5 ? 'warning' : 'success'))
+                            ->label('Maintenance/Visit (this Year)'),
                     ])
                     ->columns(5),
                 Section::make('Site Logs')
