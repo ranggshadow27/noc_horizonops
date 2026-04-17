@@ -6,8 +6,10 @@ use App\Filament\Resources\HaloBaktiTicketResource\Pages;
 use App\Models\AreaList;
 use App\Models\HaloBaktiTicket;
 use App\Models\SiteDetail;
-use Filament\Tables\Actions\ActionGroup;
+use Carbon\Carbon;
 use Filament\Forms\Components\Actions;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Infolists;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
@@ -17,6 +19,10 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\View;
 use Filament\Forms\Form;
+use Filament\Tables;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\CreateAction;
@@ -241,7 +247,7 @@ class HaloBaktiTicketResource extends Resource
                     ->label('Site Name')
                     ->copyable()
                     ->description(fn($record): string => $record->site_id, 'above')
-                    ->limit(30)
+                    ->limit(20)
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
 
@@ -268,7 +274,7 @@ class HaloBaktiTicketResource extends Resource
                     ->searchable(),
 
                 TextColumn::make('description')
-                    ->limit(80),
+                    ->limit(40),
 
                 TextColumn::make('pic_name')
                     ->hidden()
@@ -334,24 +340,144 @@ class HaloBaktiTicketResource extends Resource
                     ->label('Created Date'),
             ])
             ->actions([
-                ActionGroup::make([
-                    ViewAction::make()
-                        ->label("View Ticket")
-                        ->icon("phosphor-eye-duotone")
-                        ->modal()
-                        ->visible(
-                            fn($record) =>
-                            $record->status === 'Closed' && auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4)
-                        ),
-                    EditAction::make()
-                        ->label("Update")
-                        ->icon("phosphor-pencil-simple-line-duotone")
-                        ->modal()
+                Tables\Actions\EditAction::make()
+                    ->label("Update")
+                    ->icon("phosphor-pencil-simple-line-duotone")
+                    ->modal()
+                    ->visible(
+                        fn($record) =>
+                        $record->status !== 'Closed' && auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4)
+                    ),
+
+                Tables\Actions\ViewAction::make()
+                    ->label("View Ticket")
+                    ->icon("phosphor-eye-duotone")
+                    ->modal()
+                    ->visible(
+                        fn($record) =>
+                        $record->status === 'Closed' && auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4)
+                    ),
+
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('Zabbix')
+                        ->icon('phosphor-monitor-duotone')
+                        ->url(fn(HaloBaktiTicket $record): string => "https://manager.zabbix-bakti.io/host/site-tree?site_uniq_id={$record->site_id}&site_type=LAYANAN")
+                        ->openUrlInNewTab()
                         ->visible(
                             fn($record) =>
                             $record->status !== 'Closed' && auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4)
                         ),
-                    DeleteAction::make()
+
+                    Tables\Actions\Action::make('Grafana')
+                        ->icon('phosphor-chart-line-duotone')
+                        ->url(function (HaloBaktiTicket $record) {
+                            $iphub = $record->site->ip_hub;
+
+                            if ($iphub == 'H58') {
+                                return "https://mon-rtgs.mahaga-pratama.co.id/d/-wTRuDqSz/rtgs-h58-remote-terminal-monitoring?orgId=1&refresh=30s&var-Terminal_id={$record->site_id}";
+                            };
+
+                            if ($iphub == 'H10') {
+                                return "https://mon-rtgs.mahaga-pratama.co.id/d/dGmoBucIk/rtgs-h10-remote-terminal-monitoring?orgId=1&var-Terminal_id={$record->site_id}";
+                            };
+
+                            if ($iphub == 'H47') {
+                                return "https://mon-rtgs.mahaga-pratama.co.id/d/ffpVJlbHk/rtgs-h47-remote-terminal-monitoring?orgId=1&var-Terminal_id={$record->site_id}";
+                            };
+                        })
+                        ->openUrlInNewTab()
+                        ->visible(
+                            fn($record) =>
+                            $record->status !== 'Closed' && auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4)
+                        ),
+
+                    Tables\Actions\Action::make('Details')
+                        ->icon('heroicon-c-arrow-up-left')
+                        ->label("Sensor Details")
+                        ->infolist([
+                            Infolists\Components\Section::make('Site Information')
+                                ->schema([
+                                    TextEntry::make('site_id')
+                                        ->label("Site ID"),
+
+                                    TextEntry::make('site.site_name')
+                                        ->label("Site Name"),
+
+                                    TextEntry::make('site.gateway')
+                                        ->label("Gateway"),
+
+                                    TextEntry::make('site.province')
+                                        ->label("Province"),
+                                ])
+                                ->columns(),
+
+                            Infolists\Components\Section::make('Device Status')
+                                ->schema([
+                                    TextEntry::make('site.siteMonitor.modem')->badge()->label("Modem")
+                                        ->color(fn(string $state): string => match ($state) {
+                                            'Down' => 'danger',
+                                            'Failed' => 'gray',
+                                            'Up' => 'success',
+                                        }),
+                                    TextEntry::make('site.siteMonitor.mikrotik')->badge()->label("Router")
+                                        ->color(fn(string $state): string => match ($state) {
+                                            'Down' => 'danger',
+                                            'Failed' => 'gray',
+                                            'Up' => 'success',
+                                        }),
+                                    TextEntry::make('site.siteMonitor.ap1')->badge()->label("Access Point 1")
+                                        ->color(fn(string $state): string => match ($state) {
+                                            'Down' => 'danger',
+                                            'Failed' => 'gray',
+                                            'Up' => 'success',
+                                        }),
+                                    TextEntry::make('site.siteMonitor.ap2')->badge()->label("Access Point 2")
+                                        ->color(fn(string $state): string => match ($state) {
+                                            'Down' => 'danger',
+                                            'Failed' => 'gray',
+                                            'Up' => 'success',
+                                        }),
+                                    TextEntry::make('site.siteMonitor.modem_last_up')->badge()->label("Modem Last Up")
+                                        ->dateTimeTooltip()->since()->default(Carbon::now()),
+                                    TextEntry::make('site.siteMonitor.mikrotik_last_up')->badge()->label("Router Last Up")
+                                        ->dateTimeTooltip()->since()->default(Carbon::now()),
+                                    TextEntry::make('site.siteMonitor.ap1_last_up')->badge()->label("Access Point 1 Last Up")
+                                        ->dateTimeTooltip()->since()->default(Carbon::now()),
+                                    TextEntry::make('site.siteMonitor.ap2_last_up')->badge()->label("Access Point 2 Last Up")
+                                        ->dateTimeTooltip()->since()->default(Carbon::now()),
+                                ])
+                                ->columns(4),
+                        ])
+                        ->modalSubmitAction(false)
+                        ->modalHeading('Site Details')
+                        ->visible(
+                            fn($record) =>
+                            $record->status !== 'Closed' && auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4)
+                        ),
+
+                    Tables\Actions\Action::make('Generate Autochat')
+                        ->label("Generate Autochat")
+                        ->icon('phosphor-copy-duotone')
+                        ->action(function (HaloBaktiTicket $record, $livewire) {
+                            $timeOfDay = now()->hour < 5 ? 'Malam' : (now()->hour < 11 ? 'Pagi' : (now()->hour < 15 ? 'Siang' : (now()->hour < 18 ? 'Sore' : 'Malam')));
+
+                            $report = "Selamat {$timeOfDay} Bapak/Ibu \n\n" .
+                                "Kami dari PT Mahaga Penyedia Wifi Bakti dilokasi *{$record->site?->site_name} - {$record->site?->province}* - Maluku Utara, Saat ini kami mendapat informasi kalau akses internet Wifi Bakti dilokasi sedang terkendala, benar Bapak/Ibu?";
+
+                            $livewire->js("navigator.clipboard.writeText(" . json_encode($report) . ");");
+
+                            Notification::make()
+                                ->title('Generate Autochat')
+                                ->body('Autochat Copied to Clipboard Successfully')
+                                ->success()
+                                ->send();
+                        })
+                        ->visible(
+                            fn($record) =>
+                            $record->status !== 'Closed' && auth()->user()->roles->pluck('id')->some(fn($id) => $id < 4)
+                        ),
+
+                    Tables\Actions\DeleteAction::make()
                         ->label("Delete")
                         ->icon("phosphor-trash-duotone")
                         ->visible(

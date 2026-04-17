@@ -312,7 +312,7 @@ class SiteMonitorResource extends Resource
                                         'Failed' => 'gray',
                                         'Up' => 'success',
                                     }),
-                                TextEntry::make('ap1')->badge()->label("Access slant 1")
+                                TextEntry::make('ap1')->badge()->label("Access Point 1")
                                     ->color(fn(string $state): string => match ($state) {
                                         'Down' => 'danger',
                                         'Failed' => 'gray',
@@ -343,6 +343,7 @@ class SiteMonitorResource extends Resource
                         ->icon('phosphor-monitor-duotone')
                         ->url(fn(SiteMonitor $record): string => "https://manager.zabbix-bakti.io/host/site-tree?site_uniq_id={$record->site_id}&site_type=LAYANAN")
                         ->openUrlInNewTab(),
+
                     Tables\Actions\Action::make('Grafana')
                         ->icon('phosphor-chart-line-duotone')
                         ->url(function (SiteMonitor $record) {
@@ -385,6 +386,7 @@ class SiteMonitorResource extends Resource
                                 ->success()
                                 ->send();
                         }),
+
                     Tables\Actions\Action::make('Request Optim')
                         ->label("Request Optim")
                         ->icon('phosphor-arrow-circle-up-duotone')
@@ -402,8 +404,6 @@ class SiteMonitorResource extends Resource
                     ->label('Monitoring Links')
                     ->icon('phosphor-link-duotone')
                     ->color('primary'),
-
-
             ])
             ->paginated([10, 25, 50, 100])
             ->deferLoading()
@@ -442,7 +442,6 @@ class SiteMonitorResource extends Resource
 
                         TextEntry::make('total_major')
                             ->getStateUsing(function ($record) {
-                                // $record adalah data utama (misalnya Customer atau Order)
                                 return $record->site->sweepingTickets()
                                     ->where('classification', 'major')
                                     ->where('site_id', $record->site_id)
