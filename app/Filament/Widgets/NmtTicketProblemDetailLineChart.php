@@ -158,7 +158,7 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
                 ],
 
                 [
-                    'name' => 'Bencana Alam',
+                    'name' => 'Bencana',
                     'data' => $bencanaCounts,
                 ],
 
