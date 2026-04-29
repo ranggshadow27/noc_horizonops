@@ -195,21 +195,22 @@ class SiteMonitorService
 
     private function determineLastUp($currentStatus, $existingLastUp)
     {
-        // Normalisasi dulu: ubah "null", null, empty, dll menjadi string lowercase
-        if (is_null($currentStatus) || $currentStatus === "" || $currentStatus === "null" || $currentStatus === "NULL") {
-            $currentStatus = "Failed";
-        }
+        // // Normalisasi dulu: ubah "null", null, empty, dll menjadi string lowercase
+        // if (is_null($currentStatus) || $currentStatus === "-" || $currentStatus === "" || $currentStatus === "null" || $currentStatus === "NULL") {
+        //     $currentStatus = Carbon::parse('1990-01-01 00:00:00');
+        // }
+        $formatedStatus = strtolower($currentStatus);
 
-        if ($currentStatus === "Down") {
+        if ($formatedStatus === "down") {
             return $existingLastUp ?? Carbon::now('Asia/Jakarta');
         }
 
-        if ($currentStatus === "Up") {
+        if ($formatedStatus === "up") {
             return null;
         }
 
         // Semua kasus lain (Failed, null, "null", unknown status) → dianggap tidak ada data
-        return Carbon::parse('1990-01-01 00:00:00');
+        return $existingLastUp ?? Carbon::now('Asia/Jakarta');
     }
 
     private function validateOssToken(): bool
