@@ -30,7 +30,7 @@ class SecondNmtTicketsOverview extends BaseWidget
         $ttAgingAvg = intval(NmtTickets::query()
             ->join('site_monitor', 'nmt_tickets.site_id', '=', 'site_monitor.site_id')
             ->where('nmt_tickets.status', 'OPEN')
-            ->where('site_monitor.sensor_status', 'All Sensor Down')
+            // ->where('site_monitor.sensor_status', 'All Sensor Down')
             ->average('nmt_tickets.aging') ?? 0);
 
         $closedbyNSO = NmtTickets::where('problem_detail', 'KUNJUNGAN')

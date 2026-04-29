@@ -41,7 +41,7 @@ class NmtTicketProblemDetailLineChart extends ApexChartWidget
     {
         return [
             DatePicker::make('date_start')
-                ->default(now()->subDays(14)->startOfDay()),
+                ->default(now()->subDays(7)->startOfDay()),
             DatePicker::make('date_end')
                 ->default(now()->endOfDay()),
         ];

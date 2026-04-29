@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\SiteMonitorResource\Pages;
 use App\Filament\Resources\SiteMonitorResource\RelationManagers;
 use App\Livewire\SiteMonitorTable;
+use App\Models\AreaList;
 use App\Models\SiteDetail;
 use App\Models\SiteMonitor;
 use Carbon\Carbon;
@@ -231,30 +232,38 @@ class SiteMonitorResource extends Resource
                     ->options([
                         'up' => 'Up',
                         'down' => 'Down',
+                        'failed' => 'Failed',
                     ])
                     ->label("Modem Status")
                     ->searchable(),
+
                 SelectFilter::make('mikrotik')
                     ->options([
                         'up' => 'Up',
                         'down' => 'Down',
+                        'failed' => 'Failed',
                     ])
                     ->label("Router Status")
                     ->searchable(),
+
                 SelectFilter::make('ap1')
                     ->options([
                         'up' => 'Up',
                         'down' => 'Down',
+                        'failed' => 'Failed',
                     ])
                     ->label("Access Point 1 Status")
                     ->searchable(),
+
                 SelectFilter::make('ap2')
                     ->options([
                         'up' => 'Up',
                         'down' => 'Down',
+                        'failed' => 'Failed',
                     ])
                     ->label("Access Point 2 Status")
                     ->searchable(),
+
                 Filter::make('modem_last_up')
                     ->form([
                         Forms\Components\DatePicker::make('created_from')->label("Modem Last Up"),
@@ -273,8 +282,20 @@ class SiteMonitorResource extends Resource
                         }
 
                         return $indicators;
-                    })
-            ], layout: FiltersLayout::Dropdown)
+                    }),
+
+                Tables\Filters\SelectFilter::make('Gateway')
+                    ->label("Gateway")
+                    ->options(fn() => SiteDetail::all()->pluck('gateway', 'gateway'))
+                    ->native(false)
+                    ->modifyQueryUsing(function (Builder $query, $state) {
+                        if (! $state['value']) {
+                            return $query;
+                        }
+                        return $query->whereHas('site', fn($query) => $query->where('gateway', $state['value']));
+                    }),
+            ], layout: FiltersLayout::Modal)
+            ->filtersFormColumns(2)
             ->bulkActions([
                 // Tables\Actions\DeleteBulkAction::make(),
                 // ExportBulkAction::make()

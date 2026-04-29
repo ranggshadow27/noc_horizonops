@@ -3,34 +3,34 @@
 namespace App\Filament\Widgets;
 
 use App\Models\NmtTickets;
-use Flowframe\Trend\Trend;
-use Illuminate\Support\Carbon;
-use Flowframe\Trend\TrendValue;
 use Filament\Forms\Components\DatePicker;
-use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Support\RawJs;
+use Flowframe\Trend\Trend;
+use Flowframe\Trend\TrendValue;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class NmtTicketStatusOverview extends ApexChartWidget
+class NmtAgingLineChart extends ApexChartWidget
 {
-    use HasWidgetShield;
     /**
      * Chart Id
      *
      * @var string
      */
-    protected static ?string $chartId = 'nmtTicketStatusOverview';
+    protected static ?string $chartId = 'nmtAgingLineChart';
 
     /**
      * Widget Title
      *
      * @var string|null
      */
-    protected static ?string $heading = 'NMT Ticket Status';
-    protected static ?string $subheading = 'Summary of NMT Ticket Status';
+    protected static ?string $heading = 'NMT Ticket Aging';
+    protected static ?string $subheading = 'Average Aging NMT Open';
 
     protected static ?string $pollingInterval = '60s';
     protected static bool $deferLoading = true;
+
 
     /**
      * Chart options (series, labels, types, size, animations...)
@@ -60,25 +60,14 @@ class NmtTicketStatusOverview extends ApexChartWidget
             ->perDay()
             ->count();
 
-
-        $closeTT = Trend::query(NmtTickets::where('status', 'CLOSED'))
-            ->between(
-                start: Carbon::parse($this->filterFormData['date_start'])->startOfDay(),
-                end: Carbon::parse($this->filterFormData['date_end'])->endOfDay(),
-            )
-            ->dateColumn('closed_date')
-            ->perDay()
-            ->count();
-
         $openCounts = [];
-        $liburCounts = [];
         $dates = [];
 
         $currentDate = Carbon::parse($this->filterFormData['date_start'])->startOfDay();
 
         while ($currentDate->lte(Carbon::parse($this->filterFormData['date_end'])->endOfDay())) {
             // Hitung jumlah tiket yang masih Open pada tanggal ini
-            $openTickets = NmtTickets::where('date_start', '<=', $currentDate)
+            $totalTickets = NmtTickets::where('date_start', '<=', $currentDate)
                 ->whereNot('problem_detail', 'LIKE', "%RENOVASI%")
                 // ->whereNot('problem_detail', 'LIKE', "%LIBUR%")
                 ->whereNot('problem_detail', 'LIKE', "%BENCANA%")
@@ -89,20 +78,18 @@ class NmtTicketStatusOverview extends ApexChartWidget
                 })
                 ->count();
 
-            $liburTickets = NmtTickets::where('date_start', '<=', $currentDate)
-                ->where('problem_detail', 'LIKE', "%LIBUR%")
+            $sumAging = NmtTickets::where('date_start', '<=', $currentDate)
+                ->whereNot('problem_detail', 'LIKE', "%RENOVASI%")
+                // ->whereNot('problem_detail', 'LIKE', "%LIBUR%")
+                ->whereNot('problem_detail', 'LIKE', "%BENCANA%")
+                ->whereNot('problem_classification', 'LIKE', "%RELOKASI%")
                 ->where(function ($query) use ($currentDate) {
                     $query->where('status', '=', 'OPEN')
                         ->orWhere('closed_date', '>=', $currentDate);
                 })
-                ->count();
+                ->sum('aging');
 
-            $todayLiburClose = NmtTickets::where('problem_detail', 'LIKE', "%LIBUR%")
-                ->where('closed_date', '>=', $currentDate)
-                ->where('closed_date', '<=', $currentDate->endOfDay())
-                ->count();
-
-            $openCounts[] = $openTickets - ($liburTickets - $todayLiburClose);
+            $openCounts[] = intval($sumAging / $totalTickets);
             $dates[] = $currentDate->format('d M');
 
             // Lanjut ke hari berikutnya
@@ -136,29 +123,8 @@ class NmtTicketStatusOverview extends ApexChartWidget
             'series' => [
                 [
                     'name' => 'Ticket Open',
-                    'data' => $openTT->map(fn(TrendValue $value) => $value->aggregate),
-                ],
-
-                [
-                    'name' => 'Closed Ticket',
-                    // 'data' => [7, 4, 6, 10, 14, 7, 5, 9, 10, 15, 13, 18],
-                    'data' => $closeTT->map(fn(TrendValue $value) => $value->aggregate),
-
-                    // 'data' => array_column($closeTT, 'total'),
-                ],
-
-                [
-                    'name' => 'Ticket Carry Over',
                     'data' => $openCounts,
                 ],
-
-                // [
-                //     'name' => 'Total Ticket',
-                //     // 'data' => [7, 4, 6, 10, 14, 7, 5, 9, 10, 15, 13, 18],
-                //     // 'data' => $closeTT->map(fn(TrendValue $value) => $value->aggregate),
-
-                //     'data' => array_column($totalTT, 'total'),
-                // ],
             ],
 
             'legend' => [
@@ -255,23 +221,5 @@ class NmtTicketStatusOverview extends ApexChartWidget
                 ],
             ],
         ];
-    }
-
-    protected function extraJsOptions(): ?RawJs
-    {
-        return RawJs::make(<<<'JS'
-        {
-            // theme: {
-            //     mode:'light',
-            //     palette: 'palette3',
-            // },
-
-            dataLabels: {
-                enabled: true,
-                formatter: function (value) {
-                    return value >= 5 ? value : "";
-                }
-            },        }
-        JS);
     }
 }

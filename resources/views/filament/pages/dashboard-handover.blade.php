@@ -33,6 +33,10 @@
         <div class="flex-1 sm:w-1/2">
             @livewire(\App\Filament\Widgets\NmtTicketProblemDetailLineChart::class)
         </div>
+
+        <div class="flex-1 sm:w-1/2">
+            @livewire(\App\Filament\Widgets\NmtAgingLineChart::class)
+        </div>
     </div>
 
     <div class="flex sm:flex-row flex-col gap-4 space-y-0">
