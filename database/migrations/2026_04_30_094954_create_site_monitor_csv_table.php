@@ -9,12 +9,10 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('service_providers', function (Blueprint $table) {
-            $table->string('sp_id', 50)->primary(); // PK manual, bukan auto inc
-            $table->string('sp_name');
-            $table->integer('total_site');
+        Schema::create('site_monitor_csv', function (Blueprint $table) {
+            $table->id();
             $table->timestamps();
         });
     }
@@ -24,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('service_providers');
+        Schema::dropIfExists('site_monitor_csv');
     }
 };
