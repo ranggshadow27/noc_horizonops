@@ -16,7 +16,9 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             $apiDataService = new \App\Services\SiteMonitorService();
             $apiDataService->fetchAndSaveData();
-        })->everyMinute();
+        })
+            ->everyMinute()
+            ->withoutOverlapping();
 
         // Update SiteLog setiap 10 menit, 1 menit setelah SiteMonitor
         $schedule->command('site:sync-logs')
@@ -25,7 +27,13 @@ class Kernel extends ConsoleKernel
                 return now()->minute % 10 === 1; // Jalan di menit ke-1 setiap 10 menit
             });
 
+        // Sync SiteMonitor Failed Device
+        $schedule->command('sync:failed-devices')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping();
+
         $schedule->command('ticket:summary:update')
+            ->withoutOverlapping()
             ->everyTwoHours();
 
         // Hapus notifikasi lama setiap hari

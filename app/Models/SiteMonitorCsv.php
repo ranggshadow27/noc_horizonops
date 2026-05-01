@@ -54,4 +54,14 @@ class SiteMonitorCsv extends Model
         'Critical',
         'Warning'
     ];
+
+    public function site()
+    {
+        return $this->belongsTo(SiteDetail::class, 'site_id', 'site_id');
+    }
+
+    public function siteMon()
+    {
+        return $this->belongsTo(SiteMonitor::class, 'site_id', 'site_id');
+    }
 }

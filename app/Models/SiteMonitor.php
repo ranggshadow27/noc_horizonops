@@ -38,4 +38,9 @@ class SiteMonitor extends Model
     {
         return $this->belongsTo(SiteDetail::class, 'site_id', 'site_id');
     }
+
+    public function siteMoncsv()
+    {
+        return $this->hasOne(SiteMonitorCsv::class, 'site_id', 'site_id');
+    }
 }
