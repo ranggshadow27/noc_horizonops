@@ -24,15 +24,16 @@ class SiteMonitorService
         // URL API
         $url1 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h10/mhg';
         $url2 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h58/mhg';
-        $url3 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h47/mhg';
+        // $url3 = 'https://api.snt.co.id/v2/api/mhg-rtgs/terminal-data-h47/mhg';
 
         // Ambil data dari 3 API (hanya 3x HTTP request)
         $data1 = $this->fetchApi($url1, 1);
         $data2 = $this->fetchApi($url2, 2);
-        $data3 = $this->fetchApi($url3, 3);
+        // $data3 = $this->fetchApi($url3, 3);
 
         // Gabungkan dan hapus duplikasi
-        $data = array_merge($data1, $data2, $data3);
+        // $data = array_merge($data1, $data2, $data3);
+        $data = array_merge($data1, $data2);
         $data = array_unique($data, SORT_REGULAR);
         $data = array_values($data);
 
