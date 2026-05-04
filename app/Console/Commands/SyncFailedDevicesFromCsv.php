@@ -31,7 +31,7 @@ class SyncFailedDevicesFromCsv extends Command
             'ap2',
         ]);
 
-        $this->info("failedSites : " . json_encode($failedSites));
+        $this->info("failedSites : " . count($failedSites));
 
 
         $count = 0;
