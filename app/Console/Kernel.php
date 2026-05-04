@@ -29,7 +29,10 @@ class Kernel extends ConsoleKernel
 
         // Sync SiteMonitor Failed Device
         $schedule->command('sync:failed-devices')
-            ->everyFifteenMinutes()
+            ->everyTenMinutes()
+            ->when(function () {
+                return now()->minute % 10 === 1; // Jalan di menit ke-1 setiap 10 menit
+            })
             ->name('sync:failed-devices')
             ->withoutOverlapping();
 
