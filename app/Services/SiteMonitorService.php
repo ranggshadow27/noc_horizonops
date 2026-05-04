@@ -83,16 +83,16 @@ class SiteMonitorService
                     } else {
                         // Site TIDAK DITEMUKAN di API → tandai sebagai missing
                         $updateData = [
-                            'site_id'          => $terminalId,
-                            'sitecode'         => $dbData->sitecode ?? "Not Found",
-                            'modem'            => 'Failed',
-                            'mikrotik'         => 'Failed',
-                            'ap1'              => 'Failed',
-                            'ap2'              => 'Failed',
-                            'modem_last_up'    => Carbon::parse('1990-01-01 00:00:00'),
-                            'mikrotik_last_up' => Carbon::parse('1990-01-01 00:00:00'),
-                            'ap1_last_up'      => Carbon::parse('1990-01-01 00:00:00'),
-                            'ap2_last_up'      => Carbon::parse('1990-01-01 00:00:00'),
+                            // 'site_id'          => $terminalId,
+                            // 'sitecode'         => $dbData->sitecode ?? "Not Found",
+                            // 'modem'            => 'Failed',
+                            // 'mikrotik'         => 'Failed',
+                            // 'ap1'              => 'Failed',
+                            // 'ap2'              => 'Failed',
+                            // 'modem_last_up'    => Carbon::parse('1990-01-01 00:00:00'),
+                            // 'mikrotik_last_up' => Carbon::parse('1990-01-01 00:00:00'),
+                            // 'ap1_last_up'      => Carbon::parse('1990-01-01 00:00:00'),
+                            // 'ap2_last_up'      => Carbon::parse('1990-01-01 00:00:00'),
                         ];
 
                         Log::info('Site tidak ditemukan di API → ditandai missing (1990 last_up)', [
