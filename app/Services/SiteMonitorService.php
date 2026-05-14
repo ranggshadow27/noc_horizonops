@@ -33,6 +33,7 @@ class SiteMonitorService
 
         // Gabungkan dan hapus duplikasi
         $data = array_merge($data1, $data2, $data3);
+        // $data = array_merge($data1);
         $data = array_unique($data, SORT_REGULAR);
         $data = array_values($data);
 
@@ -42,6 +43,8 @@ class SiteMonitorService
         // Ambil SEMUA site_id dari SiteDetail (sumber utama sekarang)
         $siteIds = SiteDetail::pluck('site_id')->toArray();
         $totalSites = count($siteIds);
+
+        Log::info("Api Data count: " . count($data));
 
         Log::info("Total sites di SiteDetail yang akan diproses: {$totalSites}");
 
@@ -58,6 +61,8 @@ class SiteMonitorService
                 try {
                     $apiItem = $apiDataMap[$terminalId] ?? null;
                     $dbData  = SiteMonitor::where('site_id', $terminalId)->first();
+
+                    // Log::info('Print Api Item', $apiItem ? ['site_id' => $terminalId, 'api_data' => $apiItem] : ['site_id' => $terminalId, 'api_data' => 'Not Found']);
 
                     if ($apiItem !== null) {
                         // Normalisasi data dari API
@@ -89,10 +94,10 @@ class SiteMonitorService
                             'mikrotik'         => 'Failed',
                             'ap1'              => 'Failed',
                             'ap2'              => 'Failed',
-                            'modem_last_up'    => Carbon::parse('1990-01-01 00:00:00'),
-                            'mikrotik_last_up' => Carbon::parse('1990-01-01 00:00:00'),
-                            'ap1_last_up'      => Carbon::parse('1990-01-01 00:00:00'),
-                            'ap2_last_up'      => Carbon::parse('1990-01-01 00:00:00'),
+                            'modem_last_up'    => Carbon::parse('1990-01-01 01:00:00'),
+                            'mikrotik_last_up' => Carbon::parse('1990-01-01 01:00:00'),
+                            'ap1_last_up'      => Carbon::parse('1990-01-01 01:00:00'),
+                            'ap2_last_up'      => Carbon::parse('1990-01-01 01:00:00'),
                         ];
 
                         Log::info('Site tidak ditemukan di API → ditandai missing (1990 last_up)', [

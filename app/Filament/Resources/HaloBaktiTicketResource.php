@@ -283,8 +283,7 @@ class HaloBaktiTicketResource extends Resource
                 TextColumn::make('pic_number')
                     ->label("PIC Data")
                     ->copyable()
-                    ->description(fn($record): string => $record->pic_name ?? "Unknown", 'above')
-                    ->copyable(),
+                    ->description(fn($record): string => $record->pic_name ?? "Unknown", 'above'),
 
                 TextColumn::make('status')
                     ->badge()

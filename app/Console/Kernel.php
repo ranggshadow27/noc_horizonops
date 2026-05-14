@@ -21,15 +21,15 @@ class Kernel extends ConsoleKernel
 
         // Update SiteLog setiap 10 menit, 1 menit setelah SiteMonitor
         $schedule->command('site:sync-logs')
-            ->everyFifteenMinutes()
+            ->everyTenMinutes()
             ->name('site:sync-logs');
 
         // Sync SiteMonitor Failed Device
         $schedule->command('sync:failed-devices')
-            ->everyTenMinutes()
-            ->when(function () {
-                return now()->minute % 10 === 1; // Jalan di menit ke-1 setiap 10 menit
-            })
+            ->everyFifteenMinutes()
+            // ->when(function () {
+            //     return now()->minute % 10 === 1; // Jalan di menit ke-1 setiap 10 menit
+            // })
             ->name('sync:failed-devices')
             ->withoutOverlapping();
 
