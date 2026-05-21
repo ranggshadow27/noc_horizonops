@@ -43,4 +43,20 @@ class SweepingTicket extends Model
     {
         return $this->hasMany(HaloBaktiTicket::class, 'site_id', 'site_id');
     }
+
+    public function followupLogs()
+    {
+        return $this->hasMany(SweepingTicketsFollowupLog::class, 'sweeping_id', 'sweeping_id');
+    }
+
+    public function getFollowupStatusAttribute()
+    {
+        $latest = $this->followupLogs()->latest('id')->first();
+        return $latest?->status ?? 'no_log';
+    }
+
+    public function getTotalAttemptsAttribute()
+    {
+        return $this->followupLogs()->sum('attempt');
+    }
 }

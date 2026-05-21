@@ -3,12 +3,14 @@
 namespace App\Jobs;
 
 use App\Models\SweepingTicketsFollowupLog;
+use App\Models\SiteMonitorCsv;           // pastikan import ini
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SendWaFollowupJob implements ShouldQueue
 {
@@ -27,12 +29,23 @@ class SendWaFollowupJob implements ShouldQueue
         $log->update(['last_attempt_at' => now()]);
 
         try {
-            $response = Http::timeout(30)  // safety timeout
-                ->post(env('WATZAP_BASE_URL') . '/send_message', [   // pastikan endpoint benar
+            // ==================== CEK SENSOR STATUS ====================
+            $shouldSkip = $this->shouldSkipBecauseOnline($log->sweeping_id);
+
+            if ($shouldSkip) {
+                $this->markAsSiteOnline($log);
+                return; // langsung keluar, tidak kirim WA
+            }
+
+            // ==================== KIRIM WA ====================
+            $cleanMessage = str_replace(['\\n', '\n'], "\n", $log->message);
+
+            $response = Http::timeout(30)
+                ->post(env('WATZAP_BASE_URL') . '/send_message', [
                     'api_key'    => env('WATZAP_API_KEY'),
                     'number_key' => $log->number_key,
                     'phone_no'   => $log->pic_phone,
-                    'message'    => $log->message,
+                    'message'    => $cleanMessage,
                 ]);
 
             $responseData = $response->json();
@@ -48,15 +61,53 @@ class SendWaFollowupJob implements ShouldQueue
                 'status'        => $status,
                 'error_message' => $status === 'failed' ? json_encode($responseData) : null,
             ]);
-
-            // $this->info("✅ Sukses kirim ke {$log->pic_phone}");
         } catch (\Exception $e) {
             $log->update([
                 'status'        => 'failed',
                 'error_message' => $e->getMessage(),
             ]);
-
-            // $this->error("❌ Gagal kirim ke {$log->pic_phone} - " . $e->getMessage());
         }
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    private function shouldSkipBecauseOnline(string $sweeping_id): bool
+    {
+        $monitor = SiteMonitorCsv::where('site_id', function ($query) use ($sweeping_id) {
+            $query->select('site_id')
+                ->from('sweeping_tickets')
+                ->where('sweeping_id', $sweeping_id);
+        })
+            ->first();
+
+        if (!$monitor) {
+            return false; // tidak ada data monitor → tetap kirim
+        }
+
+        return in_array($monitor->sensor_status, ['Online', 'AP1 Down', 'AP2 Down']);
+    }
+
+    private function markAsSiteOnline(SweepingTicketsFollowupLog $log): void
+    {
+        $fakeResponse = [
+            'ack'     => 'site-online',
+            'status'  => '200',
+            'message' => 'Site currently online - no need to follow up'
+        ];
+
+        // Update SEMUA log untuk sweeping_id yang sama
+        SweepingTicketsFollowupLog::where('sweeping_id', $log->sweeping_id)
+            ->where('broadcast_session_id', $log->broadcast_session_id)
+            ->where('status', 'pending')
+            ->update([
+                'status'        => 'read',
+                'api_response'  => $fakeResponse,
+                'last_attempt_at' => now(),
+            ]);
+
+        Log::info("Site online, skipped follow-up", [
+            'sweeping_id' => $log->sweeping_id,
+            'session_id'  => $log->broadcast_session_id
+        ]);
     }
 }

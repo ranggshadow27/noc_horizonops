@@ -3,12 +3,13 @@
 
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
-            <thead class="bg-gray-100">
+            <thead>
                 <tr>
                     <th class="px-4 py-3 text-left">Session Name</th>
                     <th class="px-4 py-3 text-left">Area</th>
                     <th class="px-4 py-3 text-left">Interval</th>
                     <th class="px-4 py-3 text-left">Progress</th>
+                    <th class="px-4 py-3 text-left">Failed</th>
                     <th class="px-4 py-3 text-left">Status</th>
                     <th class="px-4 py-3 text-left">Last Processed</th>
                     <th class="px-4 py-3 text-left">Action</th>
@@ -29,7 +30,11 @@
                                         : 0;
                             @endphp
 
-                            <p class="text-gray-600">{{ $session->sent_count }} / {{ $session->total_logs }}</p>
+                            <p>{{ $session->sent_count }} / {{ $session->total_logs }}</p>
+                        </td>
+
+                        <td class="px-4 py-3">
+                            <p>{{ $session->failed_count }}</p>
                         </td>
 
                         <td class="px-4 py-3">
@@ -47,7 +52,7 @@
                             </x-filament::badge>
                         </td>
 
-                        <td class="px-4 py-3 text-gray-600">
+                        <td class="px-4 py-3">
                             {{ $session->last_processed_at?->diffForHumans() ?? '-' }}
                         </td>
 
