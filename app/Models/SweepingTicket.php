@@ -33,4 +33,14 @@ class SweepingTicket extends Model
     {
         return $this->belongsTo(AreaList::class, 'site_province', 'province');
     }
+
+    public function cbossTmo()
+    {
+        return $this->hasMany(CbossTmo::class, 'site_id', 'site_id');
+    }
+
+    public function haloBaktiTicket()
+    {
+        return $this->hasMany(HaloBaktiTicket::class, 'site_id', 'site_id');
+    }
 }

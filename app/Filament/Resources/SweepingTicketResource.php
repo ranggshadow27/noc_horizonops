@@ -116,7 +116,7 @@ class SweepingTicketResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('problem_classification')
+                Tables\Filters\SelectFilter::make('classification')
                     ->label("Classification")
                     ->native(false)
                     ->options(fn() => SweepingTicket::query()->pluck('classification', 'classification')),
