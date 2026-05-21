@@ -6,6 +6,7 @@ use App\Filament\Resources\SweepingTicketResource\Pages;
 use App\Filament\Resources\SweepingTicketResource\RelationManagers;
 use App\Models\AreaList;
 use App\Models\SweepingTicket;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -28,6 +29,12 @@ class SweepingTicketResource extends Resource
     protected static bool $hasTitleCaseModelLabel = false;
     protected static ?string $pluralModelLabel = 'Sweeping Ticket';
     protected static ?string $modelLabel = 'Sweeping Ticket';
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('created_at', '>=', Carbon::now()->subMonths(6));
+    }
 
     public static function form(Form $form): Form
     {

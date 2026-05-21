@@ -94,6 +94,12 @@ class NmtTicketsResource extends Resource
         return parent::getTableQuery()->with(['site']);
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('date_start', '>=', Carbon::now()->subYear());
+    }
+
     public static function table(Table $table): Table
     {
         return $table

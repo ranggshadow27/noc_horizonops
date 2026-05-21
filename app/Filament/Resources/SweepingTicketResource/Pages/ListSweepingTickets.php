@@ -16,15 +16,57 @@ use Illuminate\Support\Facades\Artisan;
 use pxlrbt\FilamentExcel\Actions\Pages\ExportAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use Illuminate\Support\Facades\DB;
+use Filament\Resources\Components\Tab;
 
 class ListSweepingTickets extends ListRecords
 {
     protected static string $resource = SweepingTicketResource::class;
 
+    public function getTabs(): array
+    {
+        return [
+            'all' => Tab::make('Show All'), // Menampilkan total semua ticket
+
+            'major' => Tab::make('Major')
+                ->icon('phosphor-warning-duotone') // Opsional: tambah ikon
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('classification', 'MAJOR')->where('status', '!=', 'CLOSED'))
+                ->badge($this->getModel()::query()->where('classification', 'MAJOR')->count())
+                ->badgeColor('danger'),
+
+            'minor' => Tab::make('Minor')
+                ->icon('phosphor-warning-circle-duotone')
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('classification', 'MINOR')->where('status', '!=', 'CLOSED'))
+                ->badge($this->getModel()::query()->where('classification', 'MINOR')->count())
+                ->badgeColor('warning'),
+
+            'warning' => Tab::make('Warning')
+                ->icon('phosphor-bell-duotone')
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('classification', 'WARNING'))
+                ->badge($this->getModel()::query()->where('classification', 'WARNING')->count())
+                ->badgeColor('gray'),
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             // Actions\CreateAction::make(),
+            Actions\Action::make('live_broadcast')
+                ->label('Live Broadcast')
+                ->icon('heroicon-o-chart-bar')
+                ->color('info')
+                ->modalHeading('Live Broadcast Monitor')
+                ->modalWidth('7xl')
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Close')
+                ->form([
+                    \Filament\Forms\Components\View::make('filament.pages.broadcast-monitor')
+                        ->viewData([
+                            'sessions' => $this->getActiveSessions()
+                        ])
+                ])
+                ->action(fn() => null),   // tidak perlu action
+
             Actions\Action::make('auto_broadcast')
                 ->label('Auto Broadcast')
                 ->icon('heroicon-o-megaphone')
@@ -48,6 +90,7 @@ class ListSweepingTickets extends ListRecords
                                 'MAJOR' => 'MAJOR',
                                 'MINOR' => 'MINOR',
                             ])
+                            ->native(false)
                             ->required(),
                     ]),
 
@@ -55,16 +98,19 @@ class ListSweepingTickets extends ListRecords
                         ->label('Template Pesan WA')
                         ->rows(6)
                         ->required()
-                        ->placeholder("Halo {pic_name},\nSite {site_id} masih offline...\nMohon dibantu follow up-nya."),
+                        ->helperText("placeholder: {pic_name}, {site_id}, {site_name}, {province}")
+                        ->placeholder("Selamat Pagi Bapak/Ibu {pic_name},\n{site_name} - {province} masih offline, Mohon dibantu menyalakan Wifi Bakti nya."),
 
                     Select::make('interval_minutes')
                         ->label('Interval Kirim')
                         ->options([
+                            5  => '5 menit',
                             8  => '8 menit',
                             10 => '10 menit',
                             12 => '12 menit',
                             15 => '15 menit',
                         ])
+                        ->native(false)
                         ->default(10)
                         ->required(),
                 ])
@@ -73,6 +119,50 @@ class ListSweepingTickets extends ListRecords
                 })
                 ->successNotificationTitle('Broadcast Session berhasil dibuat!')
         ];
+    }
+
+    private function getActiveSessions()
+    {
+        return BroadcastSession::withCount([
+            'logs as sent_count' => function ($query) {
+                $query->whereNot('status', 'pending');
+            },
+            'logs as failed_count' => function ($query) {
+                $query->where('status', 'failed');
+            }
+        ])
+            ->whereIn('status', ['active', 'paused'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($session) {
+                // Tambahkan attribute dynamic untuk cek apakah sudah lewat 1 hari (24 jam)
+                $session->is_expired = $session->started_at
+                    ? Carbon::parse($session->started_at)->diffInHours(now()) >= 24
+                    : false;
+
+                return $session;
+            });
+    }
+
+    public function pauseSession($id)
+    {
+        BroadcastSession::where('id', $id)->update(['status' => 'paused']);
+        $this->js('window.location.reload()'); // refresh modal
+    }
+
+    public function resumeSession($id)
+    {
+        BroadcastSession::where('id', $id)->update(['status' => 'active']);
+        $this->js('window.location.reload()');
+    }
+
+    public function stopSession($id)
+    {
+        BroadcastSession::where('id', $id)->update([
+            'status' => 'stopped',
+            'completed_at' => now()
+        ]);
+        $this->js('window.location.reload()');
     }
 
     // Helper: Ambil site berdasarkan area
@@ -96,9 +186,9 @@ class ListSweepingTickets extends ListRecords
 
         try {
             $numberKeyMap = [
-                'Area 1' => 'BgHCbXKufj1ldJGG',   // GANTI dengan number_key asli lo
-                'Area 2' => 'Bi32gocKKZSctrak',
-                'Area 3' => 'azswas',
+                'Area 1' => env('WATZAP_AREA_1', 'BgHCbXKufj1ldJGG'),
+                'Area 2' => env('WATZAP_AREA_2', 'Bi32gocKKZSctrak'),
+                'Area 3' => env('WATZAP_AREA_3', 'RzdiWcizrpDgR6w0'),
             ];
 
             $number_key = $numberKeyMap[$data['area']] ?? null;
@@ -149,11 +239,13 @@ class ListSweepingTickets extends ListRecords
             }
 
             DB::commit();
-            // \Filament\Notifications\Notification::make()
-            //     ->title('Success')
-            //     ->body("Berhasil input data area {$data['area']} dengan total {count($logs)}")
-            //     ->success()
-            //     ->send();
+            $area = $data['area'] ?? 'N/A';
+
+            \Filament\Notifications\Notification::make()
+                ->title('Success')
+                ->body("Broadcast Session untuk area {$area} berhasil dibuat dengan {$session->total_logs} auto follow-up pesan.")
+                ->success()
+                ->send();
         } catch (\Exception $e) {
             DB::rollBack();
             \Filament\Notifications\Notification::make()
@@ -168,44 +260,54 @@ class ListSweepingTickets extends ListRecords
     {
         $pics = [];
 
-        // 1. Dari SiteDetails
+        // ======================
+        // 1. Dari SiteDetail (hanya 1)
+        // ======================
         if ($ticket->siteDetail) {
-            $phone = $this->normalizePhoneNumber($ticket->siteDetail->pic_number ?? '');
-            if (!empty($phone) && strlen($phone) >= 10) {
-                $pics[] = [
-                    'name'  => $ticket->siteDetail->pic_name ?? 'PIC',
-                    'phone' => $phone,
-                ];
-            }
+            $this->addNormalizedPic(
+                $pics,
+                $ticket->siteDetail->pic_name ?? 'PIC Site',
+                $ticket->siteDetail->pic_number ?? ''
+            );
         }
 
-        // 2. Dari HaloBaktiTicket (hasMany)
+        // ======================
+        // 2. Dari HaloBaktiTicket → ambil yang paling baru (latest)
+        // ======================
         if ($ticket->haloBaktiTicket && $ticket->haloBaktiTicket->count() > 0) {
-            foreach ($ticket->haloBaktiTicket as $hb) {
-                $phone = $this->normalizePhoneNumber($hb->pic_phone ?? $hb->pic_number ?? '');
-                if (!empty($phone) && strlen($phone) >= 10) {
-                    $pics[] = [
-                        'name'  => $hb->pic_name ?? 'PIC',
-                        'phone' => $phone,
-                    ];
-                }
+            $latestHb = $ticket->haloBaktiTicket->sortByDesc('created_at')->first();
+
+            if ($latestHb) {
+                $this->addNormalizedPic(
+                    $pics,
+                    $latestHb->pic_name ?? 'PIC HaloBakti',
+                    $latestHb->pic_phone ?? $latestHb->pic_number ?? ''
+                );
             }
         }
 
-        // 3. Dari CbossTmo (hasMany)
+        // ======================
+        // 3. Dari CbossTmo → ambil yang paling baru + support multiple nomor ( | atau / )
+        // ======================
         if ($ticket->cbossTmo && $ticket->cbossTmo->count() > 0) {
-            foreach ($ticket->cbossTmo as $cb) {
-                $phone = $this->normalizePhoneNumber($cb->pic_phone ?? $cb->pic_number ?? '');
-                if (!empty($phone) && strlen($phone) >= 10) {
-                    $pics[] = [
-                        'name'  => $cb->pic_name ?? 'PIC',
-                        'phone' => $phone,
-                    ];
+            $latestCb = $ticket->cbossTmo->sortByDesc('created_at')->first();
+
+            if ($latestCb) {
+                $rawPhone = $latestCb->pic_phone ?? $latestCb->pic_number ?? '';
+                $picName  = $latestCb->pic_name ?? 'PIC Cboss';
+
+                // Handle multiple numbers dipisah | atau /
+                $phoneList = preg_split('/[|\/]+/', $rawPhone);
+
+                foreach ($phoneList as $phone) {
+                    $this->addNormalizedPic($pics, $picName, trim($phone));
                 }
             }
         }
 
-        // Hapus duplikat berdasarkan nomor telepon
+        // ======================
+        // Hapus duplikat berdasarkan nomor
+        // ======================
         $uniquePics = collect($pics)
             ->unique('phone')
             ->values()
@@ -214,31 +316,38 @@ class ListSweepingTickets extends ListRecords
         return $uniquePics;
     }
 
-    private function renderTemplate(string $template, $ticket, array $pic): string
+    // Helper untuk normalisasi + validasi nomor
+    private function addNormalizedPic(array &$pics, string $name, string $rawPhone): void
     {
-        return str_replace([
-            '{pic_name}',
-            '{site_id}',
-            '{site_name}',
-        ], [
-            $pic['name'] ?? 'PIC',
-            $ticket->site_id ?? '',
-            $ticket->siteDetail->site_name ?? $ticket->site_id ?? '',
-        ], $template);
+        if (empty($rawPhone)) {
+            return;
+        }
+
+        $phone = $this->normalizePhoneNumber($rawPhone);
+
+        // Validasi: minimal 10 digit, maksimal 13 digit
+        if (strlen($phone) < 10 || strlen($phone) > 13) {
+            return; // skip nomor yang tidak valid
+        }
+
+        $pics[] = [
+            'name'  => $name,
+            'phone' => $phone,
+        ];
     }
 
-    // Normalisasi nomor WA Indonesia
+    // Normalisasi nomor
     private function normalizePhoneNumber(string $phone): string
     {
         $phone = trim($phone);
-        $phone = str_replace(['+', ' ', '-', '(', ')'], '', $phone); // bersihkan karakter aneh
+        $phone = str_replace(['+', ' ', '-', '(', ')', '.'], '', $phone);
 
-        // Kalau diawali 62, ganti jadi 0
+        // Ganti 62 jadi 0
         if (str_starts_with($phone, '62')) {
             $phone = '0' . substr($phone, 2);
         }
 
-        // Kalau diawali 8 (tanpa 0), tambahin 0 di depan
+        // Kalau mulai dengan 8, tambah 0
         if (str_starts_with($phone, '8')) {
             $phone = '0' . $phone;
         }
@@ -246,31 +355,25 @@ class ListSweepingTickets extends ListRecords
         return $phone;
     }
 
-    // Refresh site options
-    private function refreshSiteOptions(callable $set, ?string $area, ?string $classification)
+    private function renderTemplate(string $template, $ticket, array $pic): string
     {
-        if ($area && $classification) {
-            $sites = $this->getSitesByFilter($area, $classification);
-            $set('sites', $sites->pluck('sweeping_id')->toArray());
-        } else {
-            $set('sites', []);
-        }
-    }
-
-    // Ambil site options untuk dropdown
-    private function getSiteOptions(?string $area, ?string $classification)
-    {
-        if (!$area || !$classification) return [];
-
-        return $this->getSitesByFilter($area, $classification)
-            ->pluck('site_id', 'sweeping_id')
-            ->toArray();
+        return str_replace([
+            '{pic_name}',
+            '{site_id}',
+            '{site_name}',
+            '{province}',
+        ], [
+            $pic['name'] ?? 'PIC',
+            $ticket->site_id ?? '',
+            $ticket->siteDetail?->site_name ?? '',
+            $ticket->siteDetail?->province ?? '',
+        ], $template);
     }
 
     // Query utama
     private function getSitesByFilter(string $area, string $classification)
     {
-        $todayStart = Carbon::yesterday()->startOfDay();   // 00:00 hari ini
+        $todayStart = Carbon::now()->startOfDay();   // 00:00 hari ini
 
         return SweepingTicket::query()
             ->where('classification', $classification)
