@@ -334,7 +334,7 @@ class SweepingTicketResource extends Resource
                             ->required(),
 
                         Select::make('sites')
-                            ->label('Site yang akan di Follow-up')
+                            ->label('Select Sites')
                             ->multiple()
                             ->options(function (callable $get) {
                                 $area = $get('area');
@@ -348,8 +348,8 @@ class SweepingTicketResource extends Resource
                             })
                             ->preload()
                             ->searchable()
-                            ->helperText('Pilih / hapus site yang ingin difollow-up')
-                            ->required()
+                            ->helperText('select site you want to follow-up, leave it empty to follow-up all sites.')
+                            // ->required()
                             ->columnSpanFull()
                             ->live(),   // tambahkan ini
 
@@ -361,7 +361,7 @@ class SweepingTicketResource extends Resource
                             ->placeholder("Selamat Pagi Bapak/Ibu {pic_name},\n{site_name} - {province} masih offline, Mohon dibantu menyalakan Wifi Bakti nya."),
 
                         Select::make('interval_minutes')
-                            ->label('Sent Trigger Interval')
+                            ->label('Trigger Interval')
                             ->options([
                                 5  => '5 min',
                                 // 8  => '8 min',

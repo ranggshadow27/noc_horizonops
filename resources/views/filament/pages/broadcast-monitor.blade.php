@@ -3,7 +3,7 @@
 
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
-            <thead>
+            <thead class="bg-gray-200 dark:bg-white/5 rounded-lg">
                 <tr>
                     <th class="px-4 py-3 text-left">Session Name</th>
                     <th class="px-4 py-3 text-left">Area</th>
@@ -17,7 +17,7 @@
             </thead>
             <tbody class="divide-y">
                 @forelse($sessions ?? [] as $session)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-white/5">
                         <td class="px-4 py-3 font-medium">{{ $session->name }}</td>
                         <td class="px-4 py-3">{{ $session->area }}</td>
                         <td class="px-4 py-3">{{ $session->interval_minutes }} menit</td>
