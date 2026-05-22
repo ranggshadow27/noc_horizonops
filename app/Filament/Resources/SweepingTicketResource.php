@@ -305,6 +305,14 @@ class SweepingTicketResource extends Resource
                                 'Area 2' => 'Kalimantan, Sulawesi',
                                 'Area 3' => 'Nusa Tenggara, Maluku, Papua',
                             ])
+                            ->live()
+                            ->afterStateUpdated(function (string $state, callable $set) {
+                                $classification = request()->input('components.1.state.classification')
+                                    ?? null; // fallback
+                                if ($classification) {
+                                    $set('sites', SweepingTicketResource::getSiteOptions($state, $classification));
+                                }
+                            })
                             ->required(),
 
                         Select::make('classification')
@@ -313,8 +321,37 @@ class SweepingTicketResource extends Resource
                                 'MAJOR' => 'MAJOR',
                                 'MINOR' => 'MINOR',
                             ])
+                            ->live()
+                            ->afterStateUpdated(function (string $state, callable $set) {
+                                $area = request()->input('components.0.state.area')
+                                    ?? null;
+                                if ($area) {
+                                    $set('sites', SweepingTicketResource::getSiteOptions($area, $state));
+                                }
+                            })
+                            // ->default('MAJOR')
                             ->native(false)
                             ->required(),
+
+                        Select::make('sites')
+                            ->label('Site yang akan di Follow-up')
+                            ->multiple()
+                            ->options(function (callable $get) {
+                                $area = $get('area');
+                                $classification = $get('classification');
+
+                                if (!$area || !$classification) {
+                                    return [];
+                                }
+
+                                return SweepingTicketResource::getSiteOptions($area, $classification);
+                            })
+                            ->preload()
+                            ->searchable()
+                            ->helperText('Pilih / hapus site yang ingin difollow-up')
+                            ->required()
+                            ->columnSpanFull()
+                            ->live(),   // tambahkan ini
 
                         Textarea::make('template_message')
                             ->label('Whatsapp Template Message')
@@ -386,6 +423,27 @@ class SweepingTicketResource extends Resource
         $this->js('window.location.reload()');
     }
 
+    public static function getSiteOptions(?string $area, ?string $classification): array
+    {
+        if (!$area || !$classification) {
+            return [];
+        }
+
+        $tickets = self::getSitesByFilterStatic($area, $classification);
+
+        $data = $tickets->mapWithKeys(function ($ticket) {
+            $display = $ticket->siteDetail?->site_name
+                ? "{$ticket->site_id} - {$ticket->siteDetail->site_name}"
+                : $ticket->site_id;
+
+            return [$ticket->sweeping_id => $display];
+        })->toArray();
+
+        // dd($data);
+
+        return $data;
+    }
+
     // === METHOD STATIC UNTUK MODAL LIVE BROADCAST ===
     public static function getActiveSessionsForModal()
     {
@@ -418,7 +476,20 @@ class SweepingTicketResource extends Resource
 
             $number_key = $numberKeyMap[$data['area']] ?? null;
 
-            $tickets = self::getSitesByFilterStatic($data['area'], $data['classification']);
+            // === PERBAIKAN DISINI ===
+            if (!empty($data['sites'])) {
+                // Ambil hanya site yang dipilih user
+                $tickets = SweepingTicket::whereIn('sweeping_id', $data['sites'])
+                    ->with(['siteDetail', 'haloBaktiTicket', 'cbossTmo'])
+                    ->get();
+            } else {
+                // Fallback (kalau tidak ada pilihan)
+                $tickets = self::getSitesByFilterStatic($data['area'], $data['classification']);
+            }
+
+            if ($tickets->isEmpty()) {
+                throw new \Exception('Tidak ada data Sweeping Ticket yang sesuai.');
+            }
 
             if ($tickets->isEmpty()) {
                 throw new \Exception('Tidak ada data Sweeping Ticket yang sesuai filter.');
