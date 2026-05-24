@@ -498,6 +498,7 @@ class HaloBaktiTicketResource extends Resource
             ])
             ->heading('Halo Bakti RTGS BAKTI Ticket')
             ->description('Mahaga Halo Bakti Trouble Ticket - Network Operation Center.')
+            ->recordUrl(null)
             ->defaultPaginationPageOption(10)
             ->paginationPageOptions([5, 10, 20, 100])
             ->emptyStateHeading('No Assigned Ticket yet')

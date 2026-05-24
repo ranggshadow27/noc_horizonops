@@ -223,6 +223,7 @@ class SweepingTicketResource extends Resource
 
                 Tables\Filters\SelectFilter::make('area')
                     ->label("Area")
+                    ->native(false)
                     ->options(fn() => AreaList::all()->pluck('area', 'area'))
                     ->modifyQueryUsing(function (Builder $query, array $data) {
                         if (!empty($data['value'])) {
@@ -307,6 +308,8 @@ class SweepingTicketResource extends Resource
                             ])
                             ->live()
                             ->afterStateUpdated(function (string $state, callable $set) {
+                                $set('sites', []);
+
                                 $classification = request()->input('components.1.state.classification')
                                     ?? null; // fallback
                                 if ($classification) {
@@ -323,6 +326,8 @@ class SweepingTicketResource extends Resource
                             ])
                             ->live()
                             ->afterStateUpdated(function (string $state, callable $set) {
+                                $set('sites', []);
+
                                 $area = request()->input('components.0.state.area')
                                     ?? null;
                                 if ($area) {
@@ -386,6 +391,7 @@ class SweepingTicketResource extends Resource
             ->defaultPaginationPageOption(10)
             ->deferLoading()
             ->poll(null)
+            ->recordUrl(null)
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
@@ -476,23 +482,25 @@ class SweepingTicketResource extends Resource
 
             $number_key = $numberKeyMap[$data['area']] ?? null;
 
-            // === PERBAIKAN DISINI ===
-            if (!empty($data['sites'])) {
-                // Ambil hanya site yang dipilih user
+            $isAllSites = empty($data['sites']) || count($data['sites']) === 0;
+
+            if ($isAllSites) {
+                $tickets = self::getSitesByFilterStatic($data['area'], $data['classification']);
+                $siteCount = $tickets->count();
+
+                \Filament\Notifications\Notification::make()
+                    ->title('Info')
+                    ->body("Tidak ada site yang dipilih → Semua site ({$siteCount} site) akan difollow-up.")
+                    ->info()
+                    ->send();
+            } else {
                 $tickets = SweepingTicket::whereIn('sweeping_id', $data['sites'])
                     ->with(['siteDetail', 'haloBaktiTicket', 'cbossTmo'])
                     ->get();
-            } else {
-                // Fallback (kalau tidak ada pilihan)
-                $tickets = self::getSitesByFilterStatic($data['area'], $data['classification']);
             }
 
             if ($tickets->isEmpty()) {
                 throw new \Exception('Tidak ada data Sweeping Ticket yang sesuai.');
-            }
-
-            if ($tickets->isEmpty()) {
-                throw new \Exception('Tidak ada data Sweeping Ticket yang sesuai filter.');
             }
 
             $session = BroadcastSession::create([
