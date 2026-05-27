@@ -380,7 +380,7 @@ class SweepingTicketResource extends Resource
                             ->required(),
                     ])
                     ->action(fn(array $data) => static::createBroadcastSession($data))
-                    ->successNotificationTitle('Broadcast Session berhasil dibuat!')
+                    ->successNotificationTitle('Broadcast Session created successfully!')
             ])
             ->heading("Mahaga Sweeping Tickets")
             ->description("Sweeping Major Minor Warning Site - Network Operation Center. ")

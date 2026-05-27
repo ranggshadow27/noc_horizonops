@@ -433,15 +433,15 @@ class CbossTicketResource extends Resource
                             Storage::disk('local')->delete($csvPath);
 
                             \Filament\Notifications\Notification::make()
-                                ->title('Import Berhasil')
-                                ->body('Excel berhasil dikonversi ke CSV dan diimport.')
+                                ->title('Success')
+                                ->body('Ticket data imported successfully')
                                 ->success()
                                 ->send();
                         } catch (\Exception $e) {
                             Log::error('Import Error: ' . $e->getMessage());
 
                             \Filament\Notifications\Notification::make()
-                                ->title('Import Gagal')
+                                ->title('Import Failed')
                                 ->body($e->getMessage())
                                 ->danger()
                                 ->send();
