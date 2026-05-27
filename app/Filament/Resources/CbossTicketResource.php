@@ -368,77 +368,83 @@ class CbossTicketResource extends Resource
                 ]),
             ])
             ->headerActions([
-                // CopyAction::make('generate_report')
-                //     ->label('Generate TMO Report')
-                //     ->copyable(function () {
-                //         return static::generateTmoReport();
-                //     })
-                //     ->successNotificationTitle('TMO Report copied to clipboard!')
-                //     ->color('gray')
-                //     ->icon('phosphor-file-txt-duotone'),
-
                 Tables\Actions\Action::make('import_excel')
                     ->label('Import from Excel')
                     ->icon('phosphor-file-xls-duotone')
                     ->form([
                         \Filament\Forms\Components\FileUpload::make('excel_file')
-                            ->label('Excel File')
+                            ->label('Excel File (.xls / .xlsx)')
                             // ->acceptedFileTypes([
-                            //     'application/vnd.ms-excel', // .xls
-                            //     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                            //     'application/vnd.ms-excel',
+                            //     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                             // ])
-                            ->storeFiles(false) // Jangan simpan file permanen
+                            ->storeFiles(false)
                             ->required(),
                     ])
                     ->action(function (array $data) {
                         try {
                             $file = $data['excel_file'];
 
-                            if ($file instanceof \Illuminate\Http\UploadedFile) {
-                                // Simpan file sementara ke disk
-                                $tempPath = $file->store('temp', 'local');
-                                $fullPath = storage_path('app/' . $tempPath);
-
-                                // Log path file asli
-                                Log::info('Original file stored at: ' . $fullPath);
-
-                                // Baca file menggunakan PhpSpreadsheet
-                                $reader = IOFactory::createReaderForFile($fullPath);
-                                $reader->setReadDataOnly(true); // Optimasi untuk membaca data saja
-                                $spreadsheet = $reader->load($fullPath);
-
-                                // Simpan sebagai .xlsx
-                                $convertedPath = 'temp/converted_' . uniqid() . '.xlsx';
-                                $fullConvertedPath = storage_path('app/' . $convertedPath);
-                                $writer = new Xlsx($spreadsheet);
-                                $writer->save($fullConvertedPath);
-
-                                // Log path file yang dikonversi
-                                Log::info('Converted file stored at: ' . $fullConvertedPath);
-
-                                // Impor file yang dikonversi
-                                Excel::import(new CbossTicketImport, $fullConvertedPath);
-
-                                // Hapus file sementara
-                                Storage::disk('local')->delete($tempPath);
-                                Storage::disk('local')->delete($convertedPath);
-
-                                \Filament\Notifications\Notification::make()
-                                    ->title('Import Successful')
-                                    ->body('Data has been imported successfully.')
-                                    ->success()
-                                    ->send();
-                            } else {
+                            if (!$file instanceof \Illuminate\Http\UploadedFile) {
                                 throw new \Exception('Invalid file upload.');
                             }
-                        } catch (\Exception $e) {
+
+                            // Simpan file sementara
+                            $tempPath = $file->store('temp', 'local');
+                            $fullExcelPath = storage_path('app/' . $tempPath);
+
+                            Log::info('Original Excel file: ' . $fullExcelPath);
+
+                            // === CONVERT EXCEL TO CSV DENGAN PENANGANAN KHUSUS ===
+                            $csvPath = 'temp/converted_' . uniqid() . '.csv';
+                            $fullCsvPath = storage_path('app/' . $csvPath);
+
+                            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($fullExcelPath);
+                            $reader->setReadDataOnly(true);           // Hemat memory
+
+                            $spreadsheet = $reader->load($fullExcelPath);
+
+                            // Ambil sheet aktif (biasanya sheet pertama)
+                            $worksheet = $spreadsheet->getActiveSheet();
+
+                            // Optional: Hapus beberapa baris atas jika terlalu banyak judul (kalau perlu)
+                            // $worksheet->removeRow(1, 3); // hapus 3 baris pertama
+
+                            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Csv($spreadsheet);
+                            $writer->setDelimiter(',');           // koma
+                            $writer->setEnclosure('"');           // quote
+                            $writer->setLineEnding("\r\n");
+                            $writer->setSheetIndex(0);            // pastikan sheet pertama
+
+                            $writer->save($fullCsvPath);
+
+                            Log::info('Successfully converted to CSV: ' . $fullCsvPath);
+
+                            // === IMPORT PAKAI CSV ===
+                            Excel::import(
+                                new CbossTicketImport(),
+                                $fullCsvPath,
+                                null,
+                                \Maatwebsite\Excel\Excel::CSV
+                            );
+
+                            // Cleanup
+                            Storage::disk('local')->delete($tempPath);
+                            Storage::disk('local')->delete($csvPath);
+
                             \Filament\Notifications\Notification::make()
-                                ->title('Import Failed')
-                                ->body('Error: ' . $e->getMessage())
+                                ->title('Import Berhasil')
+                                ->body('Excel berhasil dikonversi ke CSV dan diimport.')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Log::error('Import Error: ' . $e->getMessage());
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Import Gagal')
+                                ->body($e->getMessage())
                                 ->danger()
                                 ->send();
-
-                            Log::error('Excel Import Error: ' . $e->getMessage());
                         }
                     }),
             ])
