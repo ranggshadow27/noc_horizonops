@@ -82,7 +82,7 @@ class CbossTicketImport implements ToModel, WithStartRow, WithChunkReading
             'trouble category'  => $row[18] ?? null,
             'detail action'     => $row[9] ?? null,
             'ticket status'     => $row[19] ?? null,
-            'ticket start'      => $row[13] ?? null,
+            'ticket start'      => $row[11] ?? null,
             'ticket end'        => $row[14] ?? null,
             'ticket last update' => $row[17] ?? null,
         ];
