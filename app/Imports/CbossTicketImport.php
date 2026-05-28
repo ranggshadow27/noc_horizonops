@@ -17,7 +17,7 @@ class CbossTicketImport implements ToModel, WithStartRow, WithChunkReading
 {
     public function startRow(): int
     {
-        return 5;
+        return 5; // mulai dari baris ke-5
     }
 
     public function chunkSize(): int
@@ -28,20 +28,9 @@ class CbossTicketImport implements ToModel, WithStartRow, WithChunkReading
     private function properCase(string $value = null): ?string
     {
         if (is_null($value) || trim($value) === '') {
-            return $value;
+            return null;
         }
         return Str::of($value)->lower()->title()->trim();
-    }
-
-    private function generateTicketId(): string
-    {
-        $lastTicket = CbossTicket::orderBy('ticket_id', 'desc')->first();
-        if (!$lastTicket) {
-            return 'TT00001';
-        }
-        $lastNumber = (int) substr($lastTicket->ticket_id, 2);
-        $newNumber = $lastNumber + 1;
-        return 'TT' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
     }
 
     private function parseExcelDate($value)
@@ -66,6 +55,14 @@ class CbossTicketImport implements ToModel, WithStartRow, WithChunkReading
         }
     }
 
+    private function cleanValue($value)
+    {
+        if (is_null($value) || $value === '' || strtolower(trim($value)) === 'nan') {
+            return null;
+        }
+        return $value;
+    }
+
     public function model(array $row)
     {
         Log::info('Processing row: ' . json_encode(array_slice($row, 0, 8)));
@@ -74,61 +71,53 @@ class CbossTicketImport implements ToModel, WithStartRow, WithChunkReading
             return null;
         }
 
+        $ticketId = trim($row[1] ?? ''); // Kolom B = Ticket ID
+
+        if (empty($ticketId) || strtolower($ticketId) === 'nan') {
+            return null;
+        }
+
         $mappedRow = [
-            'subscriber number' => trim($row[5] ?? ''),
-            'province'          => $this->properCase($row[27] ?? null),
-            'spk number'        => $row[2] ?? null,
-            'problem map'       => $row[8] ?? null,
-            'trouble category'  => $row[18] ?? null,
-            'detail action'     => $row[9] ?? null,
-            'ticket status'     => $row[19] ?? null,
-            'ticket start'      => $row[11] ?? null,
-            'ticket end'        => $row[14] ?? null,
-            'ticket last update' => $row[17] ?? null,
+            'ticket_id'         => $ticketId,
+            'subscriber number' => trim($row[5] ?? ''),   // site_id
+            'province'          => $this->properCase($this->cleanValue($row[27] ?? null)),
+            'spk number'        => $this->cleanValue($row[2] ?? null),
+            'problem map'       => $this->cleanValue($row[8] ?? null),
+            'trouble category'  => $this->cleanValue($row[18] ?? null),  // sesuaikan index kalau perlu
+            'detail action'     => $this->cleanValue($row[9] ?? null),
+            'ticket status'     => $this->cleanValue($row[19] ?? null),
+            'ticket start'      => $this->cleanValue($row[13] ?? null),
+            'ticket end'        => $this->cleanValue($row[14] ?? null),
+            'ticket last update' => $this->cleanValue($row[17] ?? null),
         ];
 
         if (empty($mappedRow['subscriber number'])) {
             return null;
         }
 
-        // Cek SiteDetail dulu
+        // Cek SiteDetail
         if (!SiteDetail::where('site_id', $mappedRow['subscriber number'])->exists()) {
             Log::info('SKIP - Site ID not found: ' . $mappedRow['subscriber number']);
             return null;
         }
 
-        $formatTicketStart   = $this->parseExcelDate($mappedRow['ticket start']);
-        $formatTicketEnd     = $this->parseExcelDate($mappedRow['ticket end']);
-        $formatTicketLastUpdate = $this->parseExcelDate($mappedRow['ticket last update']);
+        $ticketStart     = $this->parseExcelDate($mappedRow['ticket start'])?->format('Y-m-d H:i:s');
+        $ticketEnd       = $this->parseExcelDate($mappedRow['ticket end'])?->format('Y-m-d H:i:s');
+        $ticketLastUpdate = $this->parseExcelDate($mappedRow['ticket last update'])?->format('Y-m-d H:i:s');
 
-        $ticketStart     = $formatTicketStart?->format('Y-m-d H:i:s');
-        $ticketEnd       = $formatTicketEnd?->format('Y-m-d H:i:s');
-        $ticketLastUpdate = $formatTicketLastUpdate?->format('Y-m-d H:i:s');
-
-        // Validasi
+        // Validasi minimal
         $validator = Validator::make($mappedRow, [
             'subscriber number' => 'required|string',
-            'province'          => 'required|string',
+            'ticket_id'         => 'required|string',
         ]);
 
         if ($validator->fails()) {
-            Log::warning('Validation failed for site: ' . $mappedRow['subscriber number']);
+            Log::warning('Validation failed for ticket: ' . $ticketId);
             return null;
         }
 
         try {
-            $existingTicket = $ticketStart
-                ? CbossTicket::where('ticket_start', $ticketStart)
-                ->where('site_id', $mappedRow['subscriber number'])
-                ->first()
-                : null;
-
-            if ($existingTicket && strtolower($existingTicket->status ?? '') === 'closed') {
-                return null;
-            }
-
-            $ticketId = $existingTicket ? $existingTicket->ticket_id : $this->generateTicketId();
-
+            // Update or Create berdasarkan ticket_id
             return CbossTicket::updateOrCreate(
                 ['ticket_id' => $ticketId],
                 [
@@ -146,17 +135,14 @@ class CbossTicketImport implements ToModel, WithStartRow, WithChunkReading
                 ]
             );
         } catch (QueryException $e) {
-            // Tangkap error Foreign Key Constraint
             if ($e->getCode() == '23000' || str_contains($e->getMessage(), 'foreign key constraint')) {
-                Log::warning("SKIP - Foreign Key Error for site_id: " . $mappedRow['subscriber number'] . " | " . $e->getMessage());
+                Log::warning("SKIP - Foreign Key Error for site_id: " . $mappedRow['subscriber number']);
                 return null;
             }
-
-            // Error lain tetap di-throw
-            Log::error("Unexpected DB Error: " . $e->getMessage());
+            Log::error("DB Error for ticket " . $ticketId . ": " . $e->getMessage());
             throw $e;
         } catch (\Exception $e) {
-            Log::error("General Error for site " . $mappedRow['subscriber number'] . ": " . $e->getMessage());
+            Log::error("General Error for ticket " . $ticketId . ": " . $e->getMessage());
             return null;
         }
     }
