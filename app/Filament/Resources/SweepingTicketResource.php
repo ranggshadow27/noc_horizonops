@@ -545,25 +545,47 @@ class SweepingTicketResource extends Resource
     {
         $pics = [];
 
-        // SiteDetail
+        // ======================
+        // 1. Dari SiteDetail (hanya 1)
+        // ======================
         if ($ticket->siteDetail) {
-            self::addNormalizedPicStatic($pics, $ticket->siteDetail->pic_name ?? 'PIC Site', $ticket->siteDetail->pic_number ?? '');
-        }
+            $rawPhone = $ticket->siteDetail->pic_number ?? '';
 
-        // HaloBakti (latest)
-        if ($ticket->haloBaktiTicket?->count() > 0) {
-            $latest = $ticket->haloBaktiTicket->sortByDesc('created_at')->first();
-            if ($latest) {
-                self::addNormalizedPicStatic($pics, $latest->pic_name ?? 'PIC HaloBakti', $latest->pic_phone ?? $latest->pic_number ?? '');
+            // Skip nomor yang mengandung 991091
+            if (!str_contains($rawPhone, '991091')) {
+                self::addNormalizedPicStatic(
+                    $pics,
+                    $ticket->siteDetail->pic_name ?? 'PIC Site',
+                    $rawPhone
+                );
             }
         }
 
-        // CbossTmo (latest + multiple phone)
+        // ======================
+        // 2. Dari HaloBaktiTicket → ambil yang paling baru
+        // ======================
+        if ($ticket->haloBaktiTicket?->count() > 0) {
+            $latestHb = $ticket->haloBaktiTicket->sortByDesc('created_at')->first();
+
+            if ($latestHb) {
+                self::addNormalizedPicStatic(
+                    $pics,
+                    $latestHb->pic_name ?? 'PIC HaloBakti',
+                    $latestHb->pic_phone ?? $latestHb->pic_number ?? ''
+                );
+            }
+        }
+
+        // ======================
+        // 3. Dari CbossTmo → ambil yang paling baru + support multiple nomor
+        // ======================
         if ($ticket->cbossTmo?->count() > 0) {
-            $latest = $ticket->cbossTmo->sortByDesc('created_at')->first();
-            if ($latest) {
-                $rawPhone = $latest->pic_phone ?? $latest->pic_number ?? '';
-                $picName  = $latest->pic_name ?? 'PIC Cboss';
+            $latestCb = $ticket->cbossTmo->sortByDesc('created_at')->first();
+
+            if ($latestCb) {
+                $rawPhone = $latestCb->pic_phone ?? $latestCb->pic_number ?? '';
+                $picName  = $latestCb->pic_name ?? 'PIC Cboss';
+
                 $phoneList = preg_split('/[|\/]+/', $rawPhone);
 
                 foreach ($phoneList as $phone) {
@@ -572,6 +594,7 @@ class SweepingTicketResource extends Resource
             }
         }
 
+        // Hapus duplikat
         return collect($pics)->unique('phone')->values()->all();
     }
 
