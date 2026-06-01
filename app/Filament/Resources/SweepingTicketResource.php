@@ -268,22 +268,7 @@ class SweepingTicketResource extends Resource
                 // Tables\Actions\DeleteAction::make(),
             ])
             ->headerActions([
-                Action::make('live_broadcast')
-                    ->label('Broadcast Management')
-                    ->icon('phosphor-gear-duotone')
-                    ->color('gray')
-                    ->button()
-                    ->modalHeading('Whatsapp Broadcast Management')
-                    ->modalWidth('7xl')
-                    ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Close')
-                    ->form([
-                        \Filament\Forms\Components\View::make('filament.pages.broadcast-monitor')
-                            ->viewData([
-                                'sessions' => static::getActiveSessionsForModal()   // pakai static
-                            ])
-                    ])
-                    ->action(fn() => null),   // tidak perlu action
+
 
                 Action::make('auto_broadcast')
                     ->label('Start Auto-Broadcast')
@@ -368,6 +353,7 @@ class SweepingTicketResource extends Resource
                         Select::make('interval_minutes')
                             ->label('Trigger Interval')
                             ->options([
+                                2  => '2 min',
                                 5  => '5 min',
                                 // 8  => '8 min',
                                 10 => '10 min',
@@ -408,26 +394,7 @@ class SweepingTicketResource extends Resource
         ];
     }
 
-    public function pauseSession($id)
-    {
-        BroadcastSession::where('id', $id)->update(['status' => 'paused']);
-        $this->js('window.location.reload()'); // refresh modal
-    }
 
-    public function resumeSession($id)
-    {
-        BroadcastSession::where('id', $id)->update(['status' => 'active']);
-        $this->js('window.location.reload()');
-    }
-
-    public function stopSession($id)
-    {
-        BroadcastSession::where('id', $id)->update([
-            'status' => 'stopped',
-            'completed_at' => now()
-        ]);
-        $this->js('window.location.reload()');
-    }
 
     public static function getSiteOptions(?string $area, ?string $classification): array
     {

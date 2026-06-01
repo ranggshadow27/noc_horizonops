@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\SweepingTicketResource\Pages;
 
 use App\Filament\Resources\SweepingTicketResource;
-
+use App\Models\BroadcastSession;
 use Filament\Actions;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\{Radio, Select, Textarea, Grid};
@@ -113,7 +113,62 @@ class ListSweepingTickets extends ListRecords
                 })
                 ->requiresConfirmation()
                 ->modalHeading('Confirm to Fetch Data')
-                ->modalDescription('Are you sure to Fetch data from Gsheet?.')
+                ->modalDescription('Are you sure to Fetch data from Gsheet?.'),
+
+            Actions\Action::make('live_broadcast')
+                ->label('Broadcast Management')
+                ->icon('phosphor-gear-duotone')
+                ->color('gray')
+                ->button()
+                ->modalHeading('Whatsapp Broadcast Management')
+                ->modalWidth('7xl')
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Close')
+                ->form([
+                    \Filament\Forms\Components\View::make('filament.pages.broadcast-monitor')
+                        ->viewData([
+                            'sessions' => $this->getActiveSessions()   // pakai $this karena ini di Page
+                        ])
+                ])
+                ->action(fn() => null),   // tidak perlu action
         ];
+    }
+
+    public function pauseSession($id)
+    {
+        BroadcastSession::where('id', $id)->update(['status' => 'paused']);
+        $this->js('window.location.reload()'); // refresh modal
+    }
+
+    public function resumeSession($id)
+    {
+        BroadcastSession::where('id', $id)->update(['status' => 'active']);
+        $this->js('window.location.reload()');
+    }
+
+    public function stopSession($id)
+    {
+        BroadcastSession::where('id', $id)->update([
+            'status' => 'stopped',
+            'completed_at' => now()
+        ]);
+        $this->js('window.location.reload()');
+    }
+
+    public function getActiveSessions()
+    {
+        return BroadcastSession::withCount([
+            'logs as sent_count' => fn($query) => $query->whereNot('status', 'pending'),
+            'logs as failed_count' => fn($query) => $query->where('status', 'failed'),
+        ])
+            ->whereIn('status', ['active', 'paused'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($session) {
+                $session->is_expired = $session->started_at
+                    ? Carbon::parse($session->started_at)->diffInHours(now()) >= 24
+                    : false;
+                return $session;
+            });
     }
 }
