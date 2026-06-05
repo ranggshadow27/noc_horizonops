@@ -211,10 +211,20 @@ class SweepingTicketResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                // Tables\Filters\SelectFilter::make('classification')
-                //     ->label("Classification")
-                //     ->native(false)
-                //     ->options(fn() => SweepingTicket::query()->pluck('classification', 'classification')),
+                Tables\Filters\SelectFilter::make('classification')
+                    ->label("Classification")
+                    ->native(false)
+                    ->options(function () {
+                        return SweepingTicket::query()
+                            ->select('classification')
+                            ->distinct()
+                            ->pluck('classification')
+                            ->mapWithKeys(function ($cls) {
+                                $formatted = ucfirst(strtoupper($cls));
+                                return [$cls => $formatted];
+                            })
+                            ->toArray();
+                    }),
 
                 Tables\Filters\SelectFilter::make('status')
                     ->label("Status")
@@ -268,8 +278,6 @@ class SweepingTicketResource extends Resource
                 // Tables\Actions\DeleteAction::make(),
             ])
             ->headerActions([
-
-
                 Action::make('auto_broadcast')
                     ->label('Start Auto-Broadcast')
                     ->icon('phosphor-broadcast-duotone')
@@ -305,10 +313,17 @@ class SweepingTicketResource extends Resource
 
                         Select::make('classification')
                             ->label('Classification')
-                            ->options([
-                                'MAJOR' => 'MAJOR',
-                                'MINOR' => 'MINOR',
-                            ])
+                            ->options(function () {
+                                return SweepingTicket::query()
+                                    ->select('classification')
+                                    ->distinct()
+                                    ->pluck('classification')
+                                    ->mapWithKeys(function ($cls) {
+                                        $formatted = ucfirst(strtoupper($cls));
+                                        return [$cls => $formatted];
+                                    })
+                                    ->toArray();
+                            })
                             ->live()
                             ->afterStateUpdated(function (string $state, callable $set) {
                                 $set('sites', []);
@@ -319,7 +334,6 @@ class SweepingTicketResource extends Resource
                                     $set('sites', SweepingTicketResource::getSiteOptions($area, $state));
                                 }
                             })
-                            // ->default('MAJOR')
                             ->native(false)
                             ->required(),
 
@@ -404,15 +418,18 @@ class SweepingTicketResource extends Resource
 
         $tickets = self::getSitesByFilterStatic($area, $classification);
 
-        $data = $tickets->mapWithKeys(function ($ticket) {
+        // Sort A-Z berdasarkan site_name
+        $sortedTickets = $tickets->sortBy(function ($ticket) {
+            return $ticket->siteDetail?->site_name ?? $ticket->site_id;
+        });
+
+        $data = $sortedTickets->mapWithKeys(function ($ticket) {
             $display = $ticket->siteDetail?->site_name
                 ? "{$ticket->site_id} - {$ticket->siteDetail->site_name}"
                 : $ticket->site_id;
 
             return [$ticket->sweeping_id => $display];
         })->toArray();
-
-        // dd($data);
 
         return $data;
     }

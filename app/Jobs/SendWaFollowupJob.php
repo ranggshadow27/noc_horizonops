@@ -73,6 +73,17 @@ class SendWaFollowupJob implements ShouldQueue
 
     private function shouldSkipBecauseOnline(string $sweeping_id): bool
     {
+        // Ambil classification dari sweeping ticket
+        $ticket = \App\Models\SweepingTicket::select('classification')
+            ->where('sweeping_id', $sweeping_id)
+            ->first();
+
+        // Jika bukan MAJOR atau MINOR → JANGAN SKIP (selalu kirim WA)
+        if (!$ticket || !in_array(strtoupper($ticket->classification), ['MAJOR', 'MINOR'])) {
+            return false;
+        }
+
+        // Hanya untuk MAJOR/MINOR baru cek status monitor
         $monitor = SiteMonitorCsv::where('site_id', function ($query) use ($sweeping_id) {
             $query->select('site_id')
                 ->from('sweeping_tickets')
