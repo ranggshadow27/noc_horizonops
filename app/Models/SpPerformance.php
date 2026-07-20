@@ -9,7 +9,7 @@ class SpPerformance extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['sp_perf_id', 'sp_id', 'today_ticket', 'created_at'];
+    protected $fillable = ['sp_perf_id', 'sp_id', 'today_ticket', 'today_rank', 'created_at'];
     public $incrementing = false;
     protected $primaryKey = 'sp_perf_id';
 }

@@ -15,13 +15,12 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 class SPPerformanceTrendChart extends ApexChartWidget
 {
     protected static ?string $chartId = 'spPerformanceTrendChart';
-    protected static ?string $heading = 'Daily Ticket Percentage by Service Provider';
-    protected static ?string $subheading = 'Daily Ticket Percentage by Service Provider';
+    protected static ?string $heading = 'Daily Tickets & Ranking by Service Provider';
+    protected static ?string $subheading = 'Daily Tickets & Ranking by Service Provider';
 
     protected int | string | array $columnSpan = 'full';
     protected static ?string $pollingInterval = '300s';
     protected static bool $deferLoading = true;
-
 
     protected function getHeading(): ?string
     {
@@ -34,7 +33,6 @@ class SPPerformanceTrendChart extends ApexChartWidget
 
         $sps = ServiceProvider::whereIn('sp_id', $selectedSpIds)->get();
         $names = $sps->pluck('sp_name')->implode(' vs ');
-        // $totalSites = $sps->sum('total_site');
 
         return "{$names}";
     }
@@ -54,12 +52,12 @@ class SPPerformanceTrendChart extends ApexChartWidget
 
             DatePicker::make('date_start')
                 ->label('Start Date')
-                ->default(now()->subDays(60)->startOfDay())
+                ->default(now()->subDays(7)->startOfDay())
                 ->reactive(),
 
             DatePicker::make('date_end')
                 ->label('End Date')
-                ->default(now()->subDays(50)->endOfDay())
+                ->default(now()->endOfDay())
                 ->reactive(),
         ];
     }
@@ -89,6 +87,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
 
         $series = [];
         $colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+        $maxTicketInFilteredData = 0;
 
         foreach ($selectedSpIds as $spId) {
             $sp = ServiceProvider::find($spId);
@@ -96,29 +95,50 @@ class SPPerformanceTrendChart extends ApexChartWidget
 
             $totalSite = $sp->total_site;
 
-            // PAKAI Trend
-            $trend = Trend::query(SpPerformance::where('sp_id', $spId))
+            // Trend untuk Ticket (sum today_ticket)
+            $ticketTrend = Trend::query(SpPerformance::where('sp_id', $spId))
                 ->between($start, $end)
                 ->perDay()
                 ->sum('today_ticket');
 
-            // UBAH TrendValue → array primitif
-            $trendData = $trend->map(fn(TrendValue $value) => [
+            // Trend untuk Rank (max/avg today_rank)
+            $rankTrend = Trend::query(SpPerformance::where('sp_id', $spId))
+                ->between($start, $end)
+                ->perDay()
+                ->max('today_rank');
+
+            $ticketData = $ticketTrend->map(fn(TrendValue $value) => [
                 'date' => $value->date,
                 'value' => $value->aggregate,
             ])->pluck('value', 'date')->toArray();
 
-            // Isi semua tanggal, kosong = 0
-            $percentages = collect($dates)->map(function ($date) use ($trendData, $totalSite) {
-                $total = $trendData[$date] ?? 0;
+            $rankData = $rankTrend->map(fn(TrendValue $value) => [
+                'date' => $value->date,
+                'value' => $value->aggregate,
+            ])->pluck('value', 'date')->toArray();
 
-                // KALAU TOTAL = 0 → return null, bukan 0.0
-                return $total > 0 ? round(($total / $totalSite) * 100, 2) : null;
-            })->values()->toArray();
+            $formattedData = [];
+            foreach ($dates as $date) {
+                $ticket = $ticketData[$date] ?? 0;
+                $rank = $rankData[$date] ?? null;
+
+                if ($ticket > $maxTicketInFilteredData) {
+                    $maxTicketInFilteredData = $ticket;
+                }
+
+                $pct = ($ticket > 0 && $totalSite > 0) ? round(($ticket / $totalSite) * 100, 2) : 0;
+
+                $formattedData[] = [
+                    'x' => Carbon::parse($date)->translatedFormat('d M'),
+                    'y' => $ticket,
+                    'rank' => $rank,
+                    'pct' => $pct,
+                ];
+            }
 
             $series[] = [
-                'name' => $sp->sp_name . ' (%)',
-                'data' => $percentages,
+                'name' => $sp->sp_name,
+                'data' => $formattedData,
             ];
         }
 
@@ -127,9 +147,14 @@ class SPPerformanceTrendChart extends ApexChartWidget
             ->values()
             ->toArray();
 
+        // Threshold Atas (+5%)
+        $yMaxThreshold = $maxTicketInFilteredData > 0
+            ? ceil($maxTicketInFilteredData * 1.05)
+            : null;
+
         return [
             'chart' => [
-                'type' => 'line',
+                'type' => 'bar',
                 'height' => 625,
                 'fontFamily' => 'inherit',
                 'toolbar' => [
@@ -145,38 +170,30 @@ class SPPerformanceTrendChart extends ApexChartWidget
                     ]
                 ],
             ],
+            'plotOptions' => [
+                'bar' => [
+                    'horizontal' => false,
+                    'columnWidth' => '55%',
+                    'borderRadius' => 10,
+                    'borderRadiusApplication' => 'end',
+                    'dataLabels' => [
+                        'position' => 'center', // Posisi label didalam bar
+                        'orientation' => 'vertical',
+                    ],
+                ],
+            ],
             'series' => $series,
             'xaxis' => [
                 'categories' => $categories,
             ],
-            // 'yaxis' => [
-            //     'min' => 0,
-            //     'max' => 100,
-            //     'labels' => [
-            //         'formatter' => RawJs::make("function(v) { return v + '%'; }"),
-            //     ],
-            // ],
-            'stroke' => [
-                'curve' => 'smooth',
-                'width' => 6,
-            ],
-            'markers' => [
-                'size' => 5,
-                'strokeWidth' => 2,
-                'strokeColors' => '#ffffff', // Warna garis luar
-
+            'yaxis' => [
+                'min' => 0,
+                'max' => $yMaxThreshold,
             ],
             'colors' => array_slice($colors, 0, count($series)),
             'legend' => [
                 'position' => 'top',
             ],
-            // 'tooltip' => [
-            //     'shared' => true,
-            //     'intersect' => false,
-            //     'y' => [
-            //         'formatter' => RawJs::make("function(v) { return v + '%'; }"),
-            //     ],
-            // ],
             'grid' => [
                 'show' => true,
                 'borderColor' => '#e5e7eb',
@@ -189,45 +206,64 @@ class SPPerformanceTrendChart extends ApexChartWidget
     {
         return RawJs::make(<<<JS
         {
-            chart: {
-                dropShadow: {
-                    enabled: true,
-                    color: '#000',
-                    top: 12,
-                    left: 7,
-                    blur: 10,
-                    opacity: 0.1
-                },
-            },
             dataLabels: {
                 enabled: true,
-                formatter: function (val) {
-                    return val > 0 ? val.toFixed(1) + '%' : '';
+                // orientation: 'vertical', // Membuat teks vertikal searah batang bar
+                formatter: function (val, opts) {
+                    if (!val || val === 0) {
+                        return '';
+                    }
+
+                    let rank = '';
+                    let pct = 0;
+
+                    try {
+                        let dataObj = opts.w.config.series[opts.seriesIndex].data[opts.dataPointIndex];
+                        rank = dataObj && dataObj.rank ? '#' + dataObj.rank : '';
+                        pct = dataObj && dataObj.pct ? dataObj.pct : 0;
+                    } catch (e) {}
+
+                    if (rank !== '') {
+                        return rank + ' (' + pct + '%)';
+                    } else {
+                        return pct + '%';
+                    }
                 },
-                offsetY: -5,
+                offsetY: 0,
                 style: {
-                    fontSize: '14px',
+                    fontSize: '11px',
                     fontWeight: 'bold',
-                    // colors: ['#1f2937']
+                    colors: ['#ffffff'] // Warna teks putih agar kontras di dalam bar
                 },
                 background: {
-                    enabled: false,
-                    foreColor: '#fff',
-                    borderRadius: 2,
-                    padding: 4,
-                    opacity: 0.9,
-                    borderWidth: 1,
-                    borderColor: '#e5e7eb'
+                    enabled: false
                 }
             },
-            fill: {
-                opacity: .4
+            tooltip: {
+                enabled: true,
+                y: {
+                    formatter: function(val, opts) {
+                        if (!val && val !== 0) return val;
+
+                        let rank = '-';
+                        let pct = '0%';
+
+                        try {
+                            let dataObj = opts.w.config.series[opts.seriesIndex].data[opts.dataPointIndex];
+                            if (dataObj) {
+                                rank = dataObj.rank ? '#' + dataObj.rank : '-';
+                                pct = (dataObj.pct || 0) + '%';
+                            }
+                        } catch (e) {}
+
+                        return val + ' Ticket | ' + pct + ' | Rank: ' + rank;
+                    }
+                }
             }
         }
         JS);
     }
 
-    // KUNCI UTAMA: PAKSA LIVEWIRE HANYA SIMPAN ARRAY PRIMITIF
     protected function dehydrateStateUsing(): array
     {
         return [
