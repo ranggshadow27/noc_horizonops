@@ -41,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
         NmtTickets::observe(NmtTicketObserver::class);
 
         Livewire::component('site-monitor-table', \App\Livewire\SiteMonitorTable::class);
+        Livewire::component('sp-rank-trend-chart', \App\Filament\Widgets\SPRankTrendChart::class);
 
         FilamentColor::register([
             'danger' => Color::Red,

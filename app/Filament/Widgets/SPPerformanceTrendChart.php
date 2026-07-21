@@ -155,7 +155,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
         return [
             'chart' => [
                 'type' => 'bar',
-                'height' => 625,
+                'height' => 400,
                 'fontFamily' => 'inherit',
                 'toolbar' => [
                     'autoSelected' => "pan",
