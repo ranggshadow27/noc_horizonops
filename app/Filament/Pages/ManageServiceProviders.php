@@ -15,7 +15,7 @@ use App\Models\ServiceProvider;
 use App\Models\SpPerformance;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\EditAction; // Tambahkan EditAction
+use Filament\Tables\Actions\EditAction;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\ActionSize;
@@ -26,7 +26,6 @@ use Illuminate\Support\Carbon;
 class ManageServiceProviders extends Page implements HasTable, HasActions
 {
     use HasPageShield;
-
     use InteractsWithTable;
 
     protected static ?string $navigationLabel = 'SP Performance';
@@ -39,7 +38,8 @@ class ManageServiceProviders extends Page implements HasTable, HasActions
 
     public function table(Table $table): Table
     {
-        $sps = ServiceProvider::all(); // Ambil semua SP buat default repeater
+        $allSps = ServiceProvider::all(); // Untuk pilihan opsi Select
+
         return $table
             ->recordTitleAttribute('sp_name')
             ->query(ServiceProvider::query())
@@ -68,7 +68,7 @@ class ManageServiceProviders extends Page implements HasTable, HasActions
                         ])
                         ->action(function (array $data) {
                             try {
-                                ServiceProvider::create($data); // sp_id otomatis dari model
+                                ServiceProvider::create($data);
                                 Notification::make()->success()->title('SP Created')->send();
                             } catch (\Exception $e) {
                                 Notification::make()->danger()->title('Error')->body($e->getMessage())->send();
@@ -94,23 +94,41 @@ class ManageServiceProviders extends Page implements HasTable, HasActions
                                         ->label('SP Name')
                                         ->native(false)
                                         ->searchable()
-                                        ->options($sps->pluck('sp_name', 'sp_id'))
+                                        ->options($allSps->pluck('sp_name', 'sp_id'))
                                         ->required(),
                                     TextInput::make('today_ticket')
                                         ->label('Today Ticket')
-                                        ->required()->integer(),
+                                        ->required()
+                                        ->numeric()
+                                        ->default(0),
                                     TextInput::make('today_rank')
                                         ->label('Today Rank')
-                                        ->required()->integer(),
+                                        ->required()
+                                        ->numeric(),
                                 ])
-                                // ->default(function () use ($sps) {
-                                //     return $sps->map(fn($sp) => [
-                                //         'sp_id' => $sp->sp_id,
-                                //         'today_ticket' => 0, // Default 0 atau kosong
-                                //     ])->toArray();
-                                // })
+                                // DEFAULT ITEMS AUTO-FILL
+                                ->default(function () {
+                                    // 1. Tentukan SPID spesifik yang diinginkan
+                                    $defaultSpIds = ['SPID-019', 'SPID-026', 'SPID-046', 'SPID-009', 'SPID-029', 'SPID-040', 'SPID-026', 'SPID-017'];
+
+                                    // 2. Ambil data SP tersebut dari DB sesuai urutan array
+                                    $sps = ServiceProvider::whereIn('sp_id', $defaultSpIds)
+                                        ->get()
+                                        ->sortBy(fn($sp) => array_search($sp->sp_id, $defaultSpIds))
+                                        ->values();
+
+                                    // 3. Mapping data default untuk Repeater (Rank di-autofill 1, 2, 3...)
+                                    return $sps->map(function ($sp, $index) {
+                                        return [
+                                            'sp_id' => $sp->sp_id,
+                                            'today_ticket' => 0,
+                                            'today_rank' => $index + 1, // Auto-fill hirearki rank (1, 2, 3...)
+                                        ];
+                                    })->toArray();
+                                })
                                 ->columns(3)
-                                ->collapsible(),
+                                ->collapsible()
+                                ->addActionLabel('Add Item Performance'), // Tombol tambah item manual tetap ada!
                         ])
                         ->action(function (array $data) {
                             $date = $data['performance_date'];
@@ -118,6 +136,8 @@ class ManageServiceProviders extends Page implements HasTable, HasActions
 
                             foreach ($data['performances'] as $perf) {
                                 $sp = ServiceProvider::find($perf['sp_id']);
+                                if (!$sp) continue;
+
                                 $prefix = Str::upper($sp->sp_name);
                                 $sp_perf_id = $prefix . '-' . $formattedDate;
 
@@ -129,6 +149,8 @@ class ManageServiceProviders extends Page implements HasTable, HasActions
                                     'created_at' => $date,
                                 ]);
                             }
+
+                            Notification::make()->success()->title('Performance Data Saved')->send();
                         })
                         ->modalHeading('Add Performances')
                         ->modalSubmitActionLabel('Submit'),
@@ -154,7 +176,7 @@ class ManageServiceProviders extends Page implements HasTable, HasActions
                                 ->integer(),
                         ]),
                 ])
-                    ->icon('phosphor-dots-three-vertical-duotone') // Menggunakan icon dots-three-vertical phosphor duotone
+                    ->icon('phosphor-dots-three-vertical-duotone')
                     ->color('gray')
                     ->tooltip('Actions')
             ])
