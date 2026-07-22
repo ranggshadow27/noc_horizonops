@@ -154,7 +154,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
 
         return [
             'chart' => [
-                'type' => 'bar',
+                'type' => 'line', // Dikembalikan ke Line Chart
                 'height' => 400,
                 'fontFamily' => 'inherit',
                 'toolbar' => [
@@ -170,17 +170,14 @@ class SPPerformanceTrendChart extends ApexChartWidget
                     ]
                 ],
             ],
-            'plotOptions' => [
-                'bar' => [
-                    'horizontal' => false,
-                    'columnWidth' => '55%',
-                    'borderRadius' => 10,
-                    'borderRadiusApplication' => 'end',
-                    'dataLabels' => [
-                        'position' => 'center', // Posisi label didalam bar
-                        'orientation' => 'vertical',
-                    ],
-                ],
+            'stroke' => [
+                'curve' => 'smooth',
+                'width' => 4,
+            ],
+            'markers' => [
+                'size' => 6,
+                'strokeWidth' => 2,
+                'strokeColors' => '#ffffff',
             ],
             'series' => $series,
             'xaxis' => [
@@ -208,7 +205,6 @@ class SPPerformanceTrendChart extends ApexChartWidget
         {
             dataLabels: {
                 enabled: true,
-                // orientation: 'vertical', // Membuat teks vertikal searah batang bar
                 formatter: function (val, opts) {
                     if (!val || val === 0) {
                         return '';
@@ -229,14 +225,20 @@ class SPPerformanceTrendChart extends ApexChartWidget
                         return pct + '%';
                     }
                 },
-                offsetY: 0,
+                offsetY: -8,
                 style: {
                     fontSize: '11px',
                     fontWeight: 'bold',
-                    colors: ['#ffffff'] // Warna teks putih agar kontras di dalam bar
+                    colors: ['#374151']
                 },
                 background: {
-                    enabled: false
+                    enabled: true,
+                    foreColor: '#ffffff',
+                    borderRadius: 4,
+                    padding: 4,
+                    opacity: 0.9,
+                    borderWidth: 1,
+                    borderColor: '#e5e7eb'
                 }
             },
             tooltip: {

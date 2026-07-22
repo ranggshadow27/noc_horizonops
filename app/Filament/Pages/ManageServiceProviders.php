@@ -103,6 +103,12 @@ class ManageServiceProviders extends Page implements HasTable, HasActions
                                         ->label('Today Rank')
                                         ->required()->integer(),
                                 ])
+                                // ->default(function () use ($sps) {
+                                //     return $sps->map(fn($sp) => [
+                                //         'sp_id' => $sp->sp_id,
+                                //         'today_ticket' => 0, // Default 0 atau kosong
+                                //     ])->toArray();
+                                // })
                                 ->columns(3)
                                 ->collapsible(),
                         ])
