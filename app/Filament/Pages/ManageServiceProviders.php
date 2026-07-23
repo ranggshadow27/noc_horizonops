@@ -141,16 +141,27 @@ class ManageServiceProviders extends Page implements HasTable, HasActions
                                 $prefix = Str::upper($sp->sp_name);
                                 $sp_perf_id = $prefix . '-' . $formattedDate;
 
-                                SpPerformance::create([
-                                    'sp_perf_id' => $sp_perf_id,
-                                    'sp_id' => $perf['sp_id'],
-                                    'today_ticket' => $perf['today_ticket'],
-                                    'today_rank' => $perf['today_rank'],
-                                    'created_at' => $date,
-                                ]);
+                                // Gunakan updateOrCreate agar tidak eror Duplicate Entry
+                                SpPerformance::updateOrCreate(
+                                    // Parameter 1: Kriteria pencarian data eksisting
+                                    [
+                                        'sp_id' => $perf['sp_id'],
+                                        'created_at' => Carbon::parse($date)->startOfDay(), // atau sesuaikan dengan kolom tanggal di DB kamu
+                                    ],
+                                    // Parameter 2: Field yang akan di-insert atau di-update dari form
+                                    [
+                                        'sp_perf_id'   => $sp_perf_id,
+                                        'today_ticket' => $perf['today_ticket'],
+                                        'today_rank'   => $perf['today_rank'],
+                                    ]
+                                );
                             }
 
-                            Notification::make()->success()->title('Performance Data Saved')->send();
+                            Notification::make()
+                                ->success()
+                                ->title('Performance Data Saved')
+                                ->body('Data berhasil disimpan/diperbarui!')
+                                ->send();
                         })
                         ->modalHeading('Add Performances')
                         ->modalSubmitActionLabel('Submit'),

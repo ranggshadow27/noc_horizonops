@@ -92,7 +92,7 @@ class SPRankTrendChart extends ApexChartWidget
             ],
             'series' => [
                 [
-                    'name' => 'Rank (SPID-019)',
+                    'name' => 'Rank (MAHAGA)',
                     'data' => $ranks,
                 ],
             ],
