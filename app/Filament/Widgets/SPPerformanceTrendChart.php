@@ -220,7 +220,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
                     } catch (e) {}
 
                     if (rank !== '') {
-                        return rank + ' (' + pct + '%)';
+                        return rank;
                     } else {
                         return pct + '%';
                     }
