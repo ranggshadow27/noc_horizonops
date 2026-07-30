@@ -62,6 +62,8 @@ class SPPerformanceTrendChart extends ApexChartWidget
         ];
     }
 
+    // File: SPPerformanceTrendChart.php
+
     protected function getOptions(): array
     {
         $filterData = $this->filterFormData;
@@ -77,7 +79,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
         $start = Carbon::parse($filterData['date_start'])->startOfDay();
         $end = Carbon::parse($filterData['date_end'])->endOfDay();
 
-        // Generate semua tanggal
+        // 1. Generate semua tanggal dalam rentang filter
         $dates = [];
         $current = $start->copy();
         while ($current->lte($end)) {
@@ -95,13 +97,13 @@ class SPPerformanceTrendChart extends ApexChartWidget
 
             $totalSite = $sp->total_site;
 
-            // Trend untuk Ticket (sum today_ticket)
+            // Trend Ticket
             $ticketTrend = Trend::query(SpPerformance::where('sp_id', $spId))
                 ->between($start, $end)
                 ->perDay()
                 ->sum('today_ticket');
 
-            // Trend untuk Rank (max/avg today_rank)
+            // Trend Rank
             $rankTrend = Trend::query(SpPerformance::where('sp_id', $spId))
                 ->between($start, $end)
                 ->perDay()
@@ -122,12 +124,19 @@ class SPPerformanceTrendChart extends ApexChartWidget
                 $ticket = $ticketData[$date] ?? 0;
                 $rank = $rankData[$date] ?? null;
 
+                // --- PERUBAHAN DI SINI ---
+                // Jika ticket == 0 ATAU null (atau tidak ada rank), LOMPATI tanggal ini!
+                if ($ticket == 0 && empty($rank)) {
+                    continue;
+                }
+
                 if ($ticket > $maxTicketInFilteredData) {
                     $maxTicketInFilteredData = $ticket;
                 }
 
                 $pct = ($ticket > 0 && $totalSite > 0) ? round(($ticket / $totalSite) * 100, 2) : 0;
 
+                // ApexCharts bisa menerima x-value langsung berupa label tanggal di dalam object data
                 $formattedData[] = [
                     'x' => Carbon::parse($date)->translatedFormat('d M'),
                     'y' => $ticket,
@@ -142,11 +151,6 @@ class SPPerformanceTrendChart extends ApexChartWidget
             ];
         }
 
-        $categories = collect($dates)
-            ->map(fn($d) => Carbon::parse($d)->translatedFormat('d M'))
-            ->values()
-            ->toArray();
-
         // Threshold Atas (+5%)
         $yMaxThreshold = $maxTicketInFilteredData > 0
             ? ceil($maxTicketInFilteredData * 1.05)
@@ -154,9 +158,9 @@ class SPPerformanceTrendChart extends ApexChartWidget
 
         return [
             'chart' => [
-                'type' => 'line', // Dikembalikan ke Line Chart
+                'type' => 'line',
                 'height' => 400,
-                'fontFamily' => 'inherit',
+                'fontFamily' => 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
                 'toolbar' => [
                     'autoSelected' => "pan",
                     'tools' => [
@@ -180,8 +184,9 @@ class SPPerformanceTrendChart extends ApexChartWidget
                 'strokeColors' => '#ffffff',
             ],
             'series' => $series,
+            // HAPUS / JANGAN GUNAKAN 'xaxis' => ['categories' => $categories] KARENA TIAP TANGGAL SUDAH DI-MAP LEWAT 'x' DI ATAS
             'xaxis' => [
-                'categories' => $categories,
+                'type' => 'category',
             ],
             'yaxis' => [
                 'min' => 0,
@@ -193,7 +198,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
             ],
             'grid' => [
                 'show' => true,
-                'borderColor' => '#e5e7eb',
+                'borderColor' => 'rgba(156, 163, 175, 0.2)',
                 'strokeDashArray' => 5,
             ],
         ];

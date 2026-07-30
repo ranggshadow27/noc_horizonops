@@ -191,8 +191,8 @@ class ManageServiceProviders extends Page implements HasTable, HasActions
                     ->color('gray')
                     ->tooltip('Actions')
             ])
-            ->paginated([2, 5, 10])
-            ->defaultPaginationPageOption(5)
+            ->paginated([2, 5, 10, 15])
+            ->defaultPaginationPageOption(15)
             ->bulkActions([]);
     }
 }

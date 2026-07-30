@@ -35,6 +35,8 @@ class SPRankTrendChart extends ApexChartWidget
         ];
     }
 
+    // File: SPRankTrendChart.php
+
     protected function getOptions(): array
     {
         $filterData = $this->filterFormData;
@@ -42,7 +44,7 @@ class SPRankTrendChart extends ApexChartWidget
         $start = Carbon::parse($filterData['date_start'] ?? now()->subDays(14))->startOfDay();
         $end = Carbon::parse($filterData['date_end'] ?? now())->endOfDay();
 
-        // Generate rentang tanggal
+        // 1. Generate rentang tanggal
         $dates = [];
         $current = $start->copy();
         while ($current->lte($end)) {
@@ -61,22 +63,29 @@ class SPRankTrendChart extends ApexChartWidget
             'value' => $value->aggregate,
         ])->pluck('value', 'date')->toArray();
 
-        // Ubah null menjadi 0 atau angka murni agar Livewire tidak error saat serialize array
-        $ranks = collect($dates)->map(function ($date) use ($rankData) {
-            $val = $rankData[$date] ?? null;
-            return $val !== null ? (int) $val : null;
-        })->values()->toArray();
+        // 2. Format data & SKIP tanggal jika rank null / 0
+        $formattedSeriesData = [];
 
-        $categories = collect($dates)
-            ->map(fn($d) => Carbon::parse($d)->translatedFormat('d M'))
-            ->values()
-            ->toArray();
+        foreach ($dates as $date) {
+            $rank = $rankData[$date] ?? null;
+
+            // --- FILTER DI SINI ---
+            // Skip jika rank bernilai null, empty, atau <= 0
+            if (empty($rank) || $rank <= 0) {
+                continue;
+            }
+
+            $formattedSeriesData[] = [
+                'x' => Carbon::parse($date)->translatedFormat('d M'),
+                'y' => (int) $rank,
+            ];
+        }
 
         return [
             'chart' => [
                 'type' => 'line',
                 'height' => 400,
-                'fontFamily' => 'inherit',
+                'fontFamily' => 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', // Sekaligus set font sans-serif agar rapi saat export PNG
                 'toolbar' => [
                     'autoSelected' => 'pan',
                     'tools' => [
@@ -93,11 +102,11 @@ class SPRankTrendChart extends ApexChartWidget
             'series' => [
                 [
                     'name' => 'Rank (MAHAGA)',
-                    'data' => $ranks,
+                    'data' => $formattedSeriesData, // Gunakan array yang sudah di-filter
                 ],
             ],
             'xaxis' => [
-                'categories' => $categories,
+                'type' => 'category',
             ],
             'yaxis' => [
                 'reversed' => true, // Rank #1 paling atas
@@ -115,7 +124,7 @@ class SPRankTrendChart extends ApexChartWidget
             'colors' => ['#3B82F6'],
             'grid' => [
                 'show' => true,
-                'borderColor' => '#e5e7eb',
+                'borderColor' => 'rgba(156, 163, 175, 0.2)',
                 'strokeDashArray' => 5,
             ],
         ];
