@@ -1,62 +1,94 @@
-<div>
-    <!-- CSS Gridstack -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@9.2.0/dist/gridstack.min.css" />
+<div x-data="{
+    fullscreenWidget: null,
+    toggleFullscreen(widgetId) {
+        if (this.fullscreenWidget === widgetId) {
+            this.fullscreenWidget = null;
+        } else {
+            this.fullscreenWidget = widgetId;
+        }
 
-    <!-- Gridstack Container khusus Charts -->
-    <div class="grid-stack" id="charts-gridstack">
+        // Memicu pemicuan ulang (resize) dengan delay kecil agar class CSS selesai berganti lebih dahulu
+        $nextTick(() => {
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 150);
+        });
+    }
+}"
+    @keydown.escape.window="
+    if (fullscreenWidget) {
+        fullscreenWidget = null;
+        $nextTick(() => {
+            setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 150);
+        });
+    }
+">
+
+    <div class="space-y-6 w-full overflow-hidden">
+
         <!-- Widget 1: SP Performance Trend -->
-        <div class="grid-stack-item" gs-x="0" gs-y="0" gs-w="12" gs-h="4" gs-id="widget_perf"
-            wire:ignore>
-            <div class="grid-stack-item-content p-2 bg-white dark:bg-gray-900 rounded-xl shadow">
+        <div
+            :class="fullscreenWidget === 'perf'
+                ?
+                'fixed inset-0 z-50 p-6 bg-white dark:bg-gray-900 overflow-y-auto flex flex-col justify-between' :
+                'relative bg-white dark:bg-gray-900 p-4 rounded-xl shadow  w-full overflow-hidden'">
+            <!-- Header Action -->
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Performance Chart</span>
+                <button type="button" @click="toggleFullscreen('perf')"
+                    class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                    <template x-if="fullscreenWidget !== 'perf'">
+                        <div class="flex items-center gap-1">
+                            <x-heroicon-m-arrows-pointing-out class="w-4 h-4" />
+                            <span>Fullscreen</span>
+                        </div>
+                    </template>
+                    <template x-if="fullscreenWidget === 'perf'">
+                        <div class="flex items-center gap-1 text-danger-600">
+                            <x-heroicon-m-x-mark class="w-5 h-5" />
+                            <span>Exit Fullscreen (ESC)</span>
+                        </div>
+                    </template>
+                </button>
+            </div>
+
+            <!-- Content Livewire Chart -->
+            <div class="flex-1 w-full min-w-0 overflow-hidden" wire:ignore>
                 @livewire(\App\Filament\Widgets\SPPerformanceTrendChart::class)
             </div>
         </div>
 
         <!-- Widget 2: SP Rank Trend -->
-        <div class="grid-stack-item" gs-x="0" gs-y="4" gs-w="12" gs-h="4" gs-id="widget_rank"
-            wire:ignore>
-            <div class="grid-stack-item-content p-2 bg-white dark:bg-gray-900 rounded-xl shadow">
+        <div
+            :class="fullscreenWidget === 'rank'
+                ?
+                'fixed inset-0 z-50 p-6 bg-white dark:bg-gray-900 overflow-y-auto flex flex-col justify-between' :
+                'relative bg-white dark:bg-gray-900 p-4 rounded-xl shadow w-full overflow-hidden'">
+            <!-- Header Action -->
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Rank Chart</span>
+                <button type="button" @click="toggleFullscreen('rank')"
+                    class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                    <template x-if="fullscreenWidget !== 'rank'">
+                        <div class="flex items-center gap-1">
+                            <x-heroicon-m-arrows-pointing-out class="w-4 h-4" />
+                            <span>Fullscreen</span>
+                        </div>
+                    </template>
+                    <template x-if="fullscreenWidget === 'rank'">
+                        <div class="flex items-center gap-1 text-danger-600">
+                            <x-heroicon-m-x-mark class="w-5 h-5" />
+                            <span>Exit Fullscreen (ESC)</span>
+                        </div>
+                    </template>
+                </button>
+            </div>
+
+            <!-- Content Livewire Chart -->
+            <div class="flex-1 w-full min-w-0 overflow-hidden" wire:ignore>
                 @livewire(\App\Filament\Widgets\SPRankTrendChart::class)
             </div>
         </div>
+
     </div>
-
-    <!-- JS Gridstack -->
-    <script src="https://cdn.jsdelivr.net/npm/gridstack@9.2.0/dist/gridstack-all.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let grid = GridStack.init({
-                float: true,
-                column: 12,
-                resizable: {
-                    handles: 'e, se, s, sw, w'
-                },
-            }, '#charts-gridstack');
-
-            // Restore layout
-            let savedLayout = localStorage.getItem('user_charts_layout');
-            if (savedLayout) {
-                try {
-                    let items = JSON.parse(savedLayout);
-                    items.forEach(item => {
-                        let el = document.querySelector(`[gs-id="${item.id}"]`);
-                        if (el) {
-                            grid.update(el, {
-                                x: item.x,
-                                y: item.y,
-                                w: item.w,
-                                h: item.h
-                            });
-                        }
-                    });
-                } catch (e) {}
-            }
-
-            // Save layout
-            grid.on('change', function(event, items) {
-                let layout = grid.save(false);
-                localStorage.setItem('user_charts_layout', JSON.stringify(layout));
-            });
-        });
-    </script>
 </div>

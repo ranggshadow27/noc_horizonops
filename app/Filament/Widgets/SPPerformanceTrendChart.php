@@ -165,6 +165,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
             'chart' => [
                 'type' => 'line',
                 'height' => 400,
+                'background' => 'rgba(0,0,0,0)',
                 'fontFamily' => 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
                 'toolbar' => [
                     'autoSelected' => "pan",
@@ -212,68 +213,68 @@ class SPPerformanceTrendChart extends ApexChartWidget
     protected function extraJsOptions(): ?RawJs
     {
         return RawJs::make(<<<JS
-        {
-            dataLabels: {
-                enabled: true,
-                formatter: function (val, opts) {
-                    if (!val || val === 0) {
-                        return '';
-                    }
+    {
+        dataLabels: {
+            enabled: true,
+            formatter: function (val, opts) {
+                if (!val || val === 0) {
+                    return '';
+                }
 
-                    let rank = '';
-                    let pct = 0;
+                let rank = '';
+                let pct = 0;
+
+                try {
+                    let dataObj = opts.w.config.series[opts.seriesIndex].data[opts.dataPointIndex];
+                    rank = dataObj && dataObj.rank ?  dataObj.rank : '';
+                    pct = dataObj && dataObj.pct ? dataObj.pct : 0;
+                } catch (e) {}
+
+                if (rank !== '') {
+                    return rank;
+                } else {
+                    return pct + '%';
+                }
+            },
+            offsetY: -8,
+            style: {
+                fontSize: '11px',
+                fontWeight: 'bold',
+                colors: ['#374151']
+            },
+            background: {
+                enabled: true,
+                foreColor: '#ffffff',
+                borderRadius: 4,
+                padding: 4,
+                opacity: 0.9,
+                borderWidth: 1,
+                borderColor: '#e5e7eb'
+            }
+        },
+        tooltip: {
+            enabled: true,
+            y: {
+                formatter: function(val, opts) {
+                    if (!val && val !== 0) return val;
+
+                    let rank = '-';
+                    let pct = '0%';
 
                     try {
                         let dataObj = opts.w.config.series[opts.seriesIndex].data[opts.dataPointIndex];
-                        rank = dataObj && dataObj.rank ?  dataObj.rank : '';
-                        pct = dataObj && dataObj.pct ? dataObj.pct : 0;
+                        if (dataObj) {
+                            rank = dataObj.rank ?  dataObj.rank : '-';
+                            pct = (dataObj.pct || 0) + '%';
+                        }
                     } catch (e) {}
 
-                    if (rank !== '') {
-                        return rank;
-                    } else {
-                        return pct + '%';
-                    }
-                },
-                offsetY: -8,
-                style: {
-                    fontSize: '11px',
-                    fontWeight: 'bold',
-                    colors: ['#374151']
-                },
-                background: {
-                    enabled: true,
-                    foreColor: '#ffffff',
-                    borderRadius: 4,
-                    padding: 4,
-                    opacity: 0.9,
-                    borderWidth: 1,
-                    borderColor: '#e5e7eb'
-                }
-            },
-            tooltip: {
-                enabled: true,
-                y: {
-                    formatter: function(val, opts) {
-                        if (!val && val !== 0) return val;
-
-                        let rank = '-';
-                        let pct = '0%';
-
-                        try {
-                            let dataObj = opts.w.config.series[opts.seriesIndex].data[opts.dataPointIndex];
-                            if (dataObj) {
-                                rank = dataObj.rank ?  dataObj.rank : '-';
-                                pct = (dataObj.pct || 0) + '%';
-                            }
-                        } catch (e) {}
-
-                        return val + ' Ticket | ' + pct + ' | Rank: ' + rank;
-                    }
+                    return val + ' Ticket | ' + pct + ' | Rank: ' + rank;
                 }
             }
         }
-        JS);
+    }
+    JS);
     }
 
     protected function dehydrateStateUsing(): array
