@@ -53,7 +53,7 @@
             </div>
 
             <!-- Content Livewire Chart -->
-            <div class="flex-1 w-full min-w-0 overflow-hidden" wire:ignore>
+            <div class="flex-1 w-full min-w-0 overflow-hidden touch-pan-y" wire:ignore>
                 @livewire(\App\Filament\Widgets\SPPerformanceTrendChart::class)
             </div>
         </div>

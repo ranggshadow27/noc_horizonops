@@ -180,6 +180,12 @@ class SPPerformanceTrendChart extends ApexChartWidget
                     ]
                 ],
             ],
+            'animations' => [
+                'enabled' => true,
+                'dynamicAnimation' => [
+                    'enabled' => false // Matikan animasi dinamis saat kalkulasi zoom/scroll
+                ]
+            ],
             'stroke' => [
                 'curve' => 'smooth',
                 'width' => 4,
