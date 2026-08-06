@@ -43,7 +43,12 @@ class SPPerformanceTrendChart extends ApexChartWidget
             Select::make('sp_ids')
                 ->label('Service Providers')
                 ->multiple()
-                ->options(ServiceProvider::orderBy('sp_name')->pluck('sp_name', 'sp_id'))
+                // ->options(ServiceProvider::orderBy('sp_name')->pluck('sp_name', 'sp_id'))
+                ->options(
+                    ServiceProvider::whereIn('sp_name', ['DUTAKOM', 'KTP', 'MAHAGA', 'PIM', 'PSN', 'TELENET', 'XL'])
+                        ->orderBy('sp_name')
+                        ->pluck('sp_name', 'sp_id')
+                )
                 ->default(fn() => ServiceProvider::whereIn('sp_name', ['PSN', 'MAHAGA'])->pluck('sp_id')->toArray())
                 ->searchable()
                 ->reactive()
