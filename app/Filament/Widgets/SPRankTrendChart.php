@@ -138,14 +138,14 @@ class SPRankTrendChart extends ApexChartWidget
             yaxis: {
                 labels: {
                     formatter: function (val) {
-                        return val ? '#' + Math.round(val) : '';
+                        return val ? Math.round(val) : '';
                     }
                 }
             },
             dataLabels: {
                 enabled: true,
                 formatter: function (val) {
-                    return val ? '#' + val : '';
+                    return val ? val : '';
                 },
                 offsetY: -8,
                 style: {

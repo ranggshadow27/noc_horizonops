@@ -220,7 +220,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
 
                     try {
                         let dataObj = opts.w.config.series[opts.seriesIndex].data[opts.dataPointIndex];
-                        rank = dataObj && dataObj.rank ? '#' + dataObj.rank : '';
+                        rank = dataObj && dataObj.rank ?  dataObj.rank : '';
                         pct = dataObj && dataObj.pct ? dataObj.pct : 0;
                     } catch (e) {}
 
@@ -258,7 +258,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
                         try {
                             let dataObj = opts.w.config.series[opts.seriesIndex].data[opts.dataPointIndex];
                             if (dataObj) {
-                                rank = dataObj.rank ? '#' + dataObj.rank : '-';
+                                rank = dataObj.rank ?  dataObj.rank : '-';
                                 pct = (dataObj.pct || 0) + '%';
                             }
                         } catch (e) {}
