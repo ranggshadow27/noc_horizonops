@@ -165,7 +165,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
             'chart' => [
                 'type' => 'line',
                 'height' => 400,
-                'background' => 'rgba(0,0,0,0)',
+                'background' => '#ffffff00',
                 'fontFamily' => 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
                 'toolbar' => [
                     'autoSelected' => "pan",

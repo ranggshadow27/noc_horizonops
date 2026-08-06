@@ -84,8 +84,8 @@ class SPRankTrendChart extends ApexChartWidget
         return [
             'chart' => [
                 'type' => 'line',
-                'height' => 400,
-                'background' => 'rgba(0,0,0,0)',
+                'height' => 295,
+                'background' => '#ffffff00',
                 'fontFamily' => 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', // Sekaligus set font sans-serif agar rapi saat export PNG
                 'toolbar' => [
                     'autoSelected' => 'pan',
@@ -136,7 +136,6 @@ class SPRankTrendChart extends ApexChartWidget
         // Masukkan kode JavaScript untuk formatter di sini agar aman dari serialisasi Livewire
         return RawJs::make(<<<JS
         {
-
             yaxis: {
                 labels: {
                     formatter: function (val) {
