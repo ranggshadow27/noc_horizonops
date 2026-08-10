@@ -2,8 +2,10 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\ServiceProvider;
 use App\Models\SpPerformance;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Support\RawJs;
 use Flowframe\Trend\Trend;
 use Flowframe\Trend\TrendValue;
@@ -14,15 +16,44 @@ class SPRankTrendChart extends ApexChartWidget
 {
     protected static ?string $chartId = 'spRankTrendChart';
     protected static ?string $heading = 'Daily Rank Trend';
-    protected static ?string $subheading = 'Daily Ranking TT Mahaga';
+    protected static ?string $subheading = 'Daily Ranking by Service Provider';
 
     protected int | string | array $columnSpan = 'full';
     protected static ?string $pollingInterval = '300s';
     protected static bool $deferLoading = true;
 
+    protected function getHeading(): ?string
+    {
+        $filterData = $this->filterFormData;
+        $selectedSpIds = $filterData['sp_ids'] ?? [];
+
+        if (empty($selectedSpIds)) {
+            return 'SP Rank Overview';
+        }
+
+        // $sps = ServiceProvider::whereIn('sp_id', $selectedSpIds)->get();
+        // $names = $sps->pluck('sp_name')->implode(' vs ');
+
+        return 'SP Rank Overview';
+    }
+
     protected function getFormSchema(): array
     {
         return [
+            Select::make('sp_ids')
+                ->label('Service Providers')
+                ->multiple()
+                ->options(
+                    ServiceProvider::whereIn('sp_name', ['DUTAKOM', 'KTP', 'MAHAGA', 'PIM', 'PSN', 'TELENET', 'XL'])
+                        ->orderBy('sp_name')
+                        ->pluck('sp_name', 'sp_id')
+                )
+                ->default(fn() => ServiceProvider::whereIn('sp_name', ['DUTAKOM', 'KTP', 'MAHAGA', 'PIM', 'PSN', 'TELENET', 'XL'])->pluck('sp_id')->toArray())
+                ->searchable()
+                ->reactive()
+                ->placeholder('Pilih SP...')
+                ->required(),
+
             DatePicker::make('date_start')
                 ->label('Start Date')
                 ->default(now()->subDays(7)->startOfDay())
@@ -35,13 +66,19 @@ class SPRankTrendChart extends ApexChartWidget
         ];
     }
 
-    // File: SPRankTrendChart.php
-
     protected function getOptions(): array
     {
         $filterData = $this->filterFormData;
+        $selectedSpIds = $filterData['sp_ids'] ?? [];
 
-        $start = Carbon::parse($filterData['date_start'] ?? now()->subDays(14))->startOfDay();
+        if (empty($selectedSpIds)) {
+            return [
+                'series' => [],
+                'xaxis' => ['categories' => []],
+            ];
+        }
+
+        $start = Carbon::parse($filterData['date_start'] ?? now()->subDays(7))->startOfDay();
         $end = Carbon::parse($filterData['date_end'] ?? now())->endOfDay();
 
         // 1. Generate rentang tanggal
@@ -52,41 +89,54 @@ class SPRankTrendChart extends ApexChartWidget
             $current->addDay();
         }
 
-        // Query Trend Khusus SPID-019 untuk today_rank
-        $rankTrend = Trend::query(SpPerformance::where('sp_id', 'SPID-019'))
-            ->between($start, $end)
-            ->perDay()
-            ->max('today_rank');
+        $series = [];
+        $colors = ['#8B5CF6', '#EF4444', '#10B981', '#F59E0B', '#3B82F6', '#EC4899', '#005921'];
 
-        $rankData = $rankTrend->map(fn(TrendValue $value) => [
-            'date' => $value->date,
-            'value' => $value->aggregate,
-        ])->pluck('value', 'date')->toArray();
+        // Loop untuk setiap SP yang dipilih di filter
+        foreach ($selectedSpIds as $spId) {
+            $sp = ServiceProvider::find($spId);
+            if (!$sp) continue;
 
-        // 2. Format data & SKIP tanggal jika rank null / 0
-        $formattedSeriesData = [];
+            // Query Trend today_rank per SP
+            $rankTrend = Trend::query(SpPerformance::where('sp_id', $spId))
+                ->between($start, $end)
+                ->perDay()
+                ->max('today_rank');
 
-        foreach ($dates as $date) {
-            $rank = $rankData[$date] ?? null;
+            $rankData = $rankTrend->map(fn(TrendValue $value) => [
+                'date' => $value->date,
+                'value' => $value->aggregate,
+            ])->pluck('value', 'date')->toArray();
 
-            // --- FILTER DI SINI ---
-            // Skip jika rank bernilai null, empty, atau <= 0
-            if (empty($rank) || $rank <= 0) {
-                continue;
+            // 2. Format data & SKIP tanggal jika rank null / 0 (Pertahankan Logika Asli)
+            $formattedSeriesData = [];
+
+            foreach ($dates as $date) {
+                $rank = $rankData[$date] ?? null;
+
+                // --- FILTER PERTAHANKAN LOGIKA ASLI ---
+                if (empty($rank) || $rank <= 0) {
+                    continue;
+                }
+
+                $formattedSeriesData[] = [
+                    'x' => Carbon::parse($date)->translatedFormat('d M'),
+                    'y' => (int) $rank,
+                ];
             }
 
-            $formattedSeriesData[] = [
-                'x' => Carbon::parse($date)->translatedFormat('d M'),
-                'y' => (int) $rank,
+            $series[] = [
+                'name' => $sp->sp_name,
+                'data' => $formattedSeriesData,
             ];
         }
 
         return [
             'chart' => [
                 'type' => 'line',
-                'height' => 295,
+                'height' => 350,
                 'background' => '#ffffff00',
-                'fontFamily' => 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', // Sekaligus set font sans-serif agar rapi saat export PNG
+                'fontFamily' => 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                 'toolbar' => [
                     'autoSelected' => 'pan',
                     'tools' => [
@@ -100,12 +150,7 @@ class SPRankTrendChart extends ApexChartWidget
                     ]
                 ],
             ],
-            'series' => [
-                [
-                    'name' => 'Rank (MAHAGA)',
-                    'data' => $formattedSeriesData, // Gunakan array yang sudah di-filter
-                ],
-            ],
+            'series' => $series,
             'xaxis' => [
                 'type' => 'category',
             ],
@@ -122,7 +167,10 @@ class SPRankTrendChart extends ApexChartWidget
                 'strokeWidth' => 2,
                 'strokeColors' => '#ffffff',
             ],
-            'colors' => ['#3B82F6'],
+            'colors' => array_slice($colors, 0, count($series)),
+            'legend' => [
+                'position' => 'top',
+            ],
             'grid' => [
                 'show' => true,
                 'borderColor' => 'rgba(156, 163, 175, 0.2)',
@@ -133,7 +181,6 @@ class SPRankTrendChart extends ApexChartWidget
 
     protected function extraJsOptions(): ?RawJs
     {
-        // Masukkan kode JavaScript untuk formatter di sini agar aman dari serialisasi Livewire
         return RawJs::make(<<<JS
         {
             yaxis: {
@@ -152,7 +199,7 @@ class SPRankTrendChart extends ApexChartWidget
                 style: {
                     fontSize: '12px',
                     fontWeight: 'bold',
-                    colors: ['#3B82F6']
+                    colors: ['#374151']
                 },
                 background: {
                     enabled: true,
@@ -161,26 +208,18 @@ class SPRankTrendChart extends ApexChartWidget
                     padding: 4,
                     opacity: 0.9,
                     borderWidth: 1,
-                    borderColor: '#3B82F6'
+                    borderColor: '#e5e7eb'
                 }
             },
             tooltip: {
                 enabled: true,
                 y: {
                     formatter: function(val) {
-                        return val ? 'Rank #' + val : 'No Data';
+                        return val ? val : 'No Data';
                     }
                 }
             }
         }
         JS);
-    }
-
-    // PAKSA LIVEWIRE HANYA SIMPAN ARRAY PRIMITIF
-    protected function dehydrateStateUsing(): array
-    {
-        return [
-            'options' => $this->getOptions(),
-        ];
     }
 }

@@ -49,7 +49,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
                         ->orderBy('sp_name')
                         ->pluck('sp_name', 'sp_id')
                 )
-                ->default(fn() => ServiceProvider::whereIn('sp_name', ['PSN', 'MAHAGA'])->pluck('sp_id')->toArray())
+                ->default(fn() => ServiceProvider::whereIn('sp_name', ['DUTAKOM', 'KTP', 'MAHAGA', 'PIM', 'PSN', 'TELENET', 'XL'])->pluck('sp_id')->toArray())
                 ->searchable()
                 ->reactive()
                 ->placeholder('Pilih SP...')
@@ -93,7 +93,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
         }
 
         $series = [];
-        $colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+        $colors = ['#8B5CF6', '#EF4444', '#10B981', '#F59E0B', '#3B82F6', '#EC4899', '#005921'];
         $maxTicketInFilteredData = 0;
 
         foreach ($selectedSpIds as $spId) {
