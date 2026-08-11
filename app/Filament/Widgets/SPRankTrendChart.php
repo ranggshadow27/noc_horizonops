@@ -10,6 +10,7 @@ use Filament\Support\RawJs;
 use Flowframe\Trend\Trend;
 use Flowframe\Trend\TrendValue;
 use Illuminate\Support\Carbon;
+use Filament\Forms\Components\Toggle;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class SPRankTrendChart extends ApexChartWidget
@@ -40,6 +41,7 @@ class SPRankTrendChart extends ApexChartWidget
     protected function getFormSchema(): array
     {
         return [
+
             Select::make('sp_ids')
                 ->label('Service Providers')
                 ->multiple()
@@ -63,6 +65,11 @@ class SPRankTrendChart extends ApexChartWidget
                 ->label('End Date')
                 ->default(now()->endOfDay())
                 ->reactive(),
+
+            Toggle::make('show_data_labels')
+                ->label('Show Data Labels')
+                ->default(false) // Default aktif/terlihat
+                ->reactive(),
         ];
     }
 
@@ -70,6 +77,9 @@ class SPRankTrendChart extends ApexChartWidget
     {
         $filterData = $this->filterFormData;
         $selectedSpIds = $filterData['sp_ids'] ?? [];
+
+        // Cek status toggle show_data_labels (default true)
+        $showDataLabels = $filterData['show_data_labels'] ?? true;
 
         if (empty($selectedSpIds)) {
             return [
@@ -134,7 +144,7 @@ class SPRankTrendChart extends ApexChartWidget
         return [
             'chart' => [
                 'type' => 'line',
-                'height' => 350,
+                'height' => 500,
                 'background' => '#ffffff00',
                 'fontFamily' => 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                 'toolbar' => [
@@ -151,11 +161,32 @@ class SPRankTrendChart extends ApexChartWidget
                 ],
             ],
             'series' => $series,
+
+            // --- TAMBAHKAN KODE DATALABELS DI SINI ---
+            'dataLabels' => [
+                'enabled' => (bool) $showDataLabels, // Nilai boolean dinamis dari toggle
+                'offsetY' => -8,
+                'style' => [
+                    'fontSize' => '12px',
+                    'fontWeight' => 'bold',
+                    'colors' => ['#374151']
+                ],
+                'background' => [
+                    'enabled' => true,
+                    'foreColor' => '#ffffff',
+                    'borderRadius' => 4,
+                    'padding' => 4,
+                    'opacity' => 0.9,
+                    'borderWidth' => 1,
+                    'borderColor' => '#e5e7eb'
+                ]
+            ],
+
             'xaxis' => [
                 'type' => 'category',
             ],
             'yaxis' => [
-                'reversed' => true, // Rank #1 paling atas
+                'reversed' => true,
                 'min' => 1,
             ],
             'stroke' => [
@@ -182,44 +213,28 @@ class SPRankTrendChart extends ApexChartWidget
     protected function extraJsOptions(): ?RawJs
     {
         return RawJs::make(<<<JS
-        {
-            yaxis: {
-                labels: {
-                    formatter: function (val) {
-                        return val ? Math.round(val) : '';
-                    }
-                }
-            },
-            dataLabels: {
-                enabled: true,
+    {
+        yaxis: {
+            labels: {
                 formatter: function (val) {
-                    return val ? val : '';
-                },
-                offsetY: -8,
-                style: {
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    colors: ['#374151']
-                },
-                background: {
-                    enabled: true,
-                    foreColor: '#ffffff',
-                    borderRadius: 4,
-                    padding: 4,
-                    opacity: 0.9,
-                    borderWidth: 1,
-                    borderColor: '#e5e7eb'
+                    return val ? Math.round(val) : '';
                 }
-            },
-            tooltip: {
-                enabled: true,
-                y: {
-                    formatter: function(val) {
-                        return val ? val : 'No Data';
-                    }
+            }
+        },
+        dataLabels: {
+            formatter: function (val) {
+                return val ? val : '';
+            }
+        },
+        tooltip: {
+            enabled: true,
+            y: {
+                formatter: function(val) {
+                    return val ? val : 'No Data';
                 }
             }
         }
-        JS);
+    }
+    JS);
     }
 }

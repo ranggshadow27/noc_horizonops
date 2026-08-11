@@ -10,6 +10,7 @@ use Filament\Support\RawJs;
 use Flowframe\Trend\Trend;
 use Flowframe\Trend\TrendValue;
 use Illuminate\Support\Carbon;
+use Filament\Forms\Components\Toggle;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class SPPerformanceTrendChart extends ApexChartWidget
@@ -64,6 +65,11 @@ class SPPerformanceTrendChart extends ApexChartWidget
                 ->label('End Date')
                 ->default(now()->endOfDay())
                 ->reactive(),
+
+            Toggle::make('show_data_labels')
+                ->label('Show Data Labels')
+                ->default(false) // Default aktif/terlihat
+                ->reactive(),
         ];
     }
 
@@ -80,6 +86,9 @@ class SPPerformanceTrendChart extends ApexChartWidget
                 'xaxis' => ['categories' => []],
             ];
         }
+
+        // Cek status toggle show_data_labels (default true)
+        $showDataLabels = $filterData['show_data_labels'] ?? true;
 
         $start = Carbon::parse($filterData['date_start'])->startOfDay();
         $end = Carbon::parse($filterData['date_end'])->endOfDay();
@@ -164,7 +173,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
         return [
             'chart' => [
                 'type' => 'line',
-                'height' => 400,
+                'height' => 500,
                 'background' => '#ffffff00',
                 'fontFamily' => 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
                 'toolbar' => [
@@ -179,6 +188,24 @@ class SPPerformanceTrendChart extends ApexChartWidget
                         'reset' => false,
                     ]
                 ],
+            ],
+            'dataLabels' => [
+                'enabled' => (bool) $showDataLabels, // Nilai boolean dinamis dari toggle
+                'offsetY' => -8,
+                'style' => [
+                    'fontSize' => '12px',
+                    'fontWeight' => 'bold',
+                    'colors' => ['#374151']
+                ],
+                'background' => [
+                    'enabled' => true,
+                    'foreColor' => '#ffffff',
+                    'borderRadius' => 4,
+                    'padding' => 4,
+                    'opacity' => 0.9,
+                    'borderWidth' => 1,
+                    'borderColor' => '#e5e7eb'
+                ]
             ],
             'animations' => [
                 'enabled' => true,
@@ -221,7 +248,6 @@ class SPPerformanceTrendChart extends ApexChartWidget
         return RawJs::make(<<<JS
     {
         dataLabels: {
-            enabled: true,
             formatter: function (val, opts) {
                 if (!val || val === 0) {
                     return '';
@@ -242,21 +268,6 @@ class SPPerformanceTrendChart extends ApexChartWidget
                     return pct + '%';
                 }
             },
-            offsetY: -8,
-            style: {
-                fontSize: '11px',
-                fontWeight: 'bold',
-                colors: ['#374151']
-            },
-            background: {
-                enabled: true,
-                foreColor: '#ffffff',
-                borderRadius: 4,
-                padding: 4,
-                opacity: 0.9,
-                borderWidth: 1,
-                borderColor: '#e5e7eb'
-            }
         },
         tooltip: {
             enabled: true,
