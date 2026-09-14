@@ -53,8 +53,8 @@
             </div>
 
             <!-- Content Livewire Chart -->
-            <div class="flex-1 w-full min-w-0 overflow-hidden " wire:ignore>
-                @livewire(\App\Filament\Widgets\SPPerformanceTrendChart::class)
+            <div class="flex-1 w-full min-w-0 overflow-hidden" wire:ignore>
+                @livewire(\App\Filament\Widgets\SPRankTrendChart::class)
             </div>
         </div>
 
@@ -85,8 +85,8 @@
             </div>
 
             <!-- Content Livewire Chart -->
-            <div class="flex-1 w-full min-w-0 overflow-hidden" wire:ignore>
-                @livewire(\App\Filament\Widgets\SPRankTrendChart::class)
+            <div class="flex-1 w-full min-w-0 overflow-hidden " wire:ignore>
+                @livewire(\App\Filament\Widgets\SPPerformanceTrendChart::class)
             </div>
         </div>
 
