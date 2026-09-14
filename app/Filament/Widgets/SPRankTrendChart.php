@@ -186,7 +186,7 @@ class SPRankTrendChart extends ApexChartWidget
                 'type' => 'category',
             ],
             'yaxis' => [
-                'reversed' => true,
+                // 'reversed' => true,
                 'min' => 1,
             ],
             'stroke' => [
