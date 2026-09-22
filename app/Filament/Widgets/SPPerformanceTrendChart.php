@@ -172,7 +172,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
 
         return [
             'chart' => [
-                'type' => 'line',
+                'type' => 'area',
                 'height' => 500,
                 'background' => '#ffffff00',
                 'fontFamily' => 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -207,6 +207,19 @@ class SPPerformanceTrendChart extends ApexChartWidget
                     'borderColor' => '#e5e7eb'
                 ]
             ],
+            'fill' => [
+                'type' => 'gradient',
+                'gradient' => [
+                    'shade' => 'light',
+                    'type' => 'vertical',
+                    'shadeIntensity' => 1,
+                    'inverseColors' => false,
+                    'opacityFrom' => 0.45, // Tipis transparan di bagian atas
+                    'opacityTo' => 0.05,   // Hampir 100% transparan di bagian bawah
+                    'stops' => [5, 50, 100, 100],
+                ],
+            ],
+
             'animations' => [
                 'enabled' => true,
                 'dynamicAnimation' => [
@@ -218,10 +231,13 @@ class SPPerformanceTrendChart extends ApexChartWidget
                 'width' => 4,
             ],
             'markers' => [
-                'size' => 6,
-                'strokeWidth' => 2,
-                'strokeColors' => '#ffffff',
+                'size' => 0,
             ],
+            // 'markers' => [
+            //     'size' => 6,
+            //     'strokeWidth' => 2,
+            //     'strokeColors' => '#ffffff',
+            // ],
             'series' => $series,
             // HAPUS / JANGAN GUNAKAN 'xaxis' => ['categories' => $categories] KARENA TIAP TANGGAL SUDAH DI-MAP LEWAT 'x' DI ATAS
             'xaxis' => [
@@ -229,6 +245,7 @@ class SPPerformanceTrendChart extends ApexChartWidget
             ],
             'yaxis' => [
                 'min' => 0,
+                'stepSize' => 20,
                 'max' => $yMaxThreshold,
             ],
             'colors' => array_slice($colors, 0, count($series)),

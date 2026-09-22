@@ -143,7 +143,7 @@ class SPRankTrendChart extends ApexChartWidget
 
         return [
             'chart' => [
-                'type' => 'line',
+                'type' => 'area', // 1. Ubah type menjadi 'area' agar bisa menggunakan fill gradient
                 'height' => 500,
                 'background' => '#ffffff00',
                 'fontFamily' => 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -162,9 +162,8 @@ class SPRankTrendChart extends ApexChartWidget
             ],
             'series' => $series,
 
-            // --- TAMBAHKAN KODE DATALABELS DI SINI ---
             'dataLabels' => [
-                'enabled' => (bool) $showDataLabels, // Nilai boolean dinamis dari toggle
+                'enabled' => (bool) $showDataLabels,
                 'offsetY' => -8,
                 'style' => [
                     'fontSize' => '12px',
@@ -186,18 +185,32 @@ class SPRankTrendChart extends ApexChartWidget
                 'type' => 'category',
             ],
             'yaxis' => [
-                // 'reversed' => true,
-                'min' => 1,
+                'forceNiceScale' => true,
             ],
             'stroke' => [
                 'curve' => 'smooth',
-                'width' => 4,
+                'width' => 3, // Sedikit ditebalkan/disesuaikan agar garis tetap jelas
             ],
+
+            // 2. Hilangkan dot/marker dengan set size ke 0
             'markers' => [
-                'size' => 6,
-                'strokeWidth' => 2,
-                'strokeColors' => '#ffffff',
+                'size' => 0,
             ],
+
+            // 3. Konfigurasi Gradasi Tipis ke Transparan (Otomatis memakai array $colors)
+            'fill' => [
+                'type' => 'gradient',
+                'gradient' => [
+                    'shade' => 'light',
+                    'type' => 'vertical',
+                    'shadeIntensity' => 1,
+                    'inverseColors' => false,
+                    'opacityFrom' => 0.45, // Tipis transparan di bagian atas
+                    'opacityTo' => 0.05,   // Hampir 100% transparan di bagian bawah
+                    'stops' => [5, 50, 100, 100],
+                ],
+            ],
+
             'colors' => array_slice($colors, 0, count($series)),
             'legend' => [
                 'position' => 'top',
@@ -219,7 +232,7 @@ class SPRankTrendChart extends ApexChartWidget
                 formatter: function (val) {
                     return val ? Math.round(val) : '';
                 }
-            }
+            },
         },
         dataLabels: {
             formatter: function (val) {
