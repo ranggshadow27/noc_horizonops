@@ -96,7 +96,7 @@ class SPRankTrendChart extends ApexChartWidget
         }
 
         $totalDays = count($allDates);
-        $maxPoints = 14; // Maksimal 14 titik data di chart
+        $maxPoints = 30; // Maksimal 14 titik data di chart
 
         $dates = [];
 
