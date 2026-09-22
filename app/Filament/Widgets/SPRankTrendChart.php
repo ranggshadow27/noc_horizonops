@@ -87,7 +87,7 @@ class SPRankTrendChart extends ApexChartWidget
         $start = Carbon::parse($filterData['date_start'] ?? now()->subDays(7))->startOfDay();
         $end = Carbon::parse($filterData['date_end'] ?? now())->endOfDay();
 
-        // 1. Generate seluruh rentang tanggal harian
+        // 1. Generate seluruh rentang tanggal harian dari Start Date ke End Date
         $allDates = [];
         $current = $start->copy();
         while ($current->lte($end)) {
@@ -96,22 +96,23 @@ class SPRankTrendChart extends ApexChartWidget
         }
 
         $totalDays = count($allDates);
-        $maxPoints = 20;
+        $maxPoints = 25; // Maksimal 14 titik data di chart
 
         $dates = [];
 
         if ($totalDays <= $maxPoints) {
-            // Jika data <= 14 hari, ambil semua tanggal secara presisi
+            // Jika selisih hari <= 14, tampilkan semua hari apa adanya
             $dates = $allDates;
         } else {
-            // Jika data > 14 hari, buat 14 titik terdistribusi rata dari Start Date sampai End Date
+            // Jika selisih hari > 14, buat 14 titik terdistribusi merata:
+            // - Indeks 0 pasti Start Date
+            // - Indeks terakhir pasti End Date
             for ($i = 0; $i < $maxPoints; $i++) {
-                // Hitung indeks secara proporsional dari 0 hingga $totalDays - 1
                 $index = (int) round(($i / ($maxPoints - 1)) * ($totalDays - 1));
                 $dates[] = $allDates[$index];
             }
 
-            // Hapus duplikat tanggal jika ada (menjaga urutan)
+            // Hapus duplikasi jika rentang tanggal sangat pendek
             $dates = array_values(array_unique($dates));
         }
 
@@ -135,7 +136,7 @@ class SPRankTrendChart extends ApexChartWidget
                 'value' => $value->aggregate,
             ])->pluck('value', 'date')->toArray();
 
-            // 2. Format data sesuai array $dates yang sudah terdistribusi rata
+            // 2. Format data sesuai array $dates terpilih (14 titik)
             $formattedSeriesData = [];
 
             foreach ($dates as $date) {
@@ -164,7 +165,7 @@ class SPRankTrendChart extends ApexChartWidget
         }
 
         // Tentukan batas Y max: Nilai Max Terbesar + 5
-        $yMaxBoundary = $globalMaxY > 0 ? ($globalMaxY + 2) : 10;
+        $yMaxBoundary = $globalMaxY > 0 ? ($globalMaxY + 5) : 10;
 
         return [
             'chart' => [
