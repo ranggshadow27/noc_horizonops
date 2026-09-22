@@ -32,9 +32,6 @@ class SPRankTrendChart extends ApexChartWidget
             return 'SP Rank Overview';
         }
 
-        // $sps = ServiceProvider::whereIn('sp_id', $selectedSpIds)->get();
-        // $names = $sps->pluck('sp_name')->implode(' vs ');
-
         return 'SP Rank Overview';
     }
 
@@ -68,7 +65,7 @@ class SPRankTrendChart extends ApexChartWidget
 
             Toggle::make('show_data_labels')
                 ->label('Show Data Labels')
-                ->default(false) // Default aktif/terlihat
+                ->default(false)
                 ->reactive(),
         ];
     }
@@ -78,7 +75,6 @@ class SPRankTrendChart extends ApexChartWidget
         $filterData = $this->filterFormData;
         $selectedSpIds = $filterData['sp_ids'] ?? [];
 
-        // Cek status toggle show_data_labels (default true)
         $showDataLabels = $filterData['show_data_labels'] ?? true;
 
         if (empty($selectedSpIds)) {
@@ -102,6 +98,9 @@ class SPRankTrendChart extends ApexChartWidget
         $series = [];
         $colors = ['#8B5CF6', '#EF4444', '#10B981', '#F59E0B', '#3B82F6', '#EC4899', '#005921'];
 
+        // Variabel untuk melacak nilai Y maksimum di seluruh series
+        $globalMaxY = 0;
+
         // Loop untuk setiap SP yang dipilih di filter
         foreach ($selectedSpIds as $spId) {
             $sp = ServiceProvider::find($spId);
@@ -118,20 +117,26 @@ class SPRankTrendChart extends ApexChartWidget
                 'value' => $value->aggregate,
             ])->pluck('value', 'date')->toArray();
 
-            // 2. Format data & SKIP tanggal jika rank null / 0 (Pertahankan Logika Asli)
+            // 2. Format data & SKIP tanggal jika rank null / 0
             $formattedSeriesData = [];
 
             foreach ($dates as $date) {
                 $rank = $rankData[$date] ?? null;
 
-                // --- FILTER PERTAHANKAN LOGIKA ASLI ---
                 if (empty($rank) || $rank <= 0) {
                     continue;
                 }
 
+                $rankValue = (int) $rank;
+
+                // Hitung nilai maksimum global dari data terpilih
+                if ($rankValue > $globalMaxY) {
+                    $globalMaxY = $rankValue;
+                }
+
                 $formattedSeriesData[] = [
                     'x' => Carbon::parse($date)->translatedFormat('d M'),
-                    'y' => (int) $rank,
+                    'y' => $rankValue,
                 ];
             }
 
@@ -141,9 +146,12 @@ class SPRankTrendChart extends ApexChartWidget
             ];
         }
 
+        // Tentukan batas Y max: Nilai Max Terbesar + 5 (Jika tidak ada data, default ke 10)
+        $yMaxBoundary = $globalMaxY > 0 ? ($globalMaxY + 3) : 10;
+
         return [
             'chart' => [
-                'type' => 'area', // 1. Ubah type menjadi 'area' agar bisa menggunakan fill gradient
+                'type' => 'area',
                 'height' => 500,
                 'background' => '#ffffff00',
                 'fontFamily' => 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -152,11 +160,11 @@ class SPRankTrendChart extends ApexChartWidget
                     'tools' => [
                         'download' => true,
                         'selection' => false,
-                        'zoom' => false,
-                        'zoomin' => false,
-                        'pan' => false,
-                        'zoomout' => false,
-                        'reset' => false,
+                        'zoom' => true,
+                        'zoomin' => true,
+                        'pan' => true,
+                        'zoomout' => true,
+                        'reset' => true,
                     ]
                 ],
             ],
@@ -185,19 +193,19 @@ class SPRankTrendChart extends ApexChartWidget
                 'type' => 'category',
             ],
             'yaxis' => [
-                'forceNiceScale' => true,
+                'min' => 0,
+                'max' => $yMaxBoundary, // Batas atas dinamis (Max Value + 5)
+                'stepSize' => 5,        // Kelipatan 5 untuk sumbu Y
             ],
             'stroke' => [
                 'curve' => 'smooth',
-                'width' => 3, // Sedikit ditebalkan/disesuaikan agar garis tetap jelas
+                'width' => 3,
             ],
 
-            // 2. Hilangkan dot/marker dengan set size ke 0
             'markers' => [
-                'size' => 0,
+                'size' => 0, // Tanpa dot/marker
             ],
 
-            // 3. Konfigurasi Gradasi Tipis ke Transparan (Otomatis memakai array $colors)
             'fill' => [
                 'type' => 'gradient',
                 'gradient' => [
@@ -205,8 +213,8 @@ class SPRankTrendChart extends ApexChartWidget
                     'type' => 'vertical',
                     'shadeIntensity' => 1,
                     'inverseColors' => false,
-                    'opacityFrom' => 0.45, // Tipis transparan di bagian atas
-                    'opacityTo' => 0.05,   // Hampir 100% transparan di bagian bawah
+                    'opacityFrom' => 0.45,
+                    'opacityTo' => 0.05,
                     'stops' => [5, 50, 100, 100],
                 ],
             ],
@@ -227,6 +235,30 @@ class SPRankTrendChart extends ApexChartWidget
     {
         return RawJs::make(<<<JS
     {
+        chart: {
+            zoom: {
+                enabled: true,
+                type: 'x',
+                autoScaleYaxis: false
+            }
+        },
+        xaxis: {
+            // Tampilkan maksimal 30 titik data terakhir saat render awal jika data > 30 hari
+            min: function(ctx) {
+                let categories = ctx.w.globals.labels;
+                if (categories && categories.length > 30) {
+                    return categories.length - 30;
+                }
+                return undefined;
+            },
+            max: function(ctx) {
+                let categories = ctx.w.globals.labels;
+                if (categories && categories.length > 30) {
+                    return categories.length;
+                }
+                return undefined;
+            }
+        },
         yaxis: {
             labels: {
                 formatter: function (val) {
