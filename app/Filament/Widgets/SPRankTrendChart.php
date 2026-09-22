@@ -87,18 +87,36 @@ class SPRankTrendChart extends ApexChartWidget
         $start = Carbon::parse($filterData['date_start'] ?? now()->subDays(7))->startOfDay();
         $end = Carbon::parse($filterData['date_end'] ?? now())->endOfDay();
 
-        // 1. Generate rentang tanggal
-        $dates = [];
+        // 1. Generate seluruh rentang tanggal harian
+        $allDates = [];
         $current = $start->copy();
         while ($current->lte($end)) {
-            $dates[] = $current->format('Y-m-d');
+            $allDates[] = $current->format('Y-m-d');
             $current->addDay();
+        }
+
+        $totalDays = count($allDates);
+        $maxPoints = 20;
+
+        $dates = [];
+
+        if ($totalDays <= $maxPoints) {
+            // Jika data <= 14 hari, ambil semua tanggal secara presisi
+            $dates = $allDates;
+        } else {
+            // Jika data > 14 hari, buat 14 titik terdistribusi rata dari Start Date sampai End Date
+            for ($i = 0; $i < $maxPoints; $i++) {
+                // Hitung indeks secara proporsional dari 0 hingga $totalDays - 1
+                $index = (int) round(($i / ($maxPoints - 1)) * ($totalDays - 1));
+                $dates[] = $allDates[$index];
+            }
+
+            // Hapus duplikat tanggal jika ada (menjaga urutan)
+            $dates = array_values(array_unique($dates));
         }
 
         $series = [];
         $colors = ['#8B5CF6', '#EF4444', '#10B981', '#F59E0B', '#3B82F6', '#EC4899', '#005921'];
-
-        // Variabel untuk melacak nilai Y maksimum di seluruh series
         $globalMaxY = 0;
 
         // Loop untuk setiap SP yang dipilih di filter
@@ -117,7 +135,7 @@ class SPRankTrendChart extends ApexChartWidget
                 'value' => $value->aggregate,
             ])->pluck('value', 'date')->toArray();
 
-            // 2. Format data & SKIP tanggal jika rank null / 0
+            // 2. Format data sesuai array $dates yang sudah terdistribusi rata
             $formattedSeriesData = [];
 
             foreach ($dates as $date) {
@@ -129,7 +147,6 @@ class SPRankTrendChart extends ApexChartWidget
 
                 $rankValue = (int) $rank;
 
-                // Hitung nilai maksimum global dari data terpilih
                 if ($rankValue > $globalMaxY) {
                     $globalMaxY = $rankValue;
                 }
@@ -146,8 +163,8 @@ class SPRankTrendChart extends ApexChartWidget
             ];
         }
 
-        // Tentukan batas Y max: Nilai Max Terbesar + 5 (Jika tidak ada data, default ke 10)
-        $yMaxBoundary = $globalMaxY > 0 ? ($globalMaxY + 3) : 10;
+        // Tentukan batas Y max: Nilai Max Terbesar + 5
+        $yMaxBoundary = $globalMaxY > 0 ? ($globalMaxY + 2) : 10;
 
         return [
             'chart' => [
@@ -160,11 +177,11 @@ class SPRankTrendChart extends ApexChartWidget
                     'tools' => [
                         'download' => true,
                         'selection' => false,
-                        'zoom' => true,
-                        'zoomin' => true,
-                        'pan' => true,
-                        'zoomout' => true,
-                        'reset' => true,
+                        'zoom' => false,
+                        'zoomin' => false,
+                        'pan' => false,
+                        'zoomout' => false,
+                        'reset' => false,
                     ]
                 ],
             ],
@@ -194,8 +211,8 @@ class SPRankTrendChart extends ApexChartWidget
             ],
             'yaxis' => [
                 'min' => 0,
-                'max' => $yMaxBoundary, // Batas atas dinamis (Max Value + 5)
-                'stepSize' => 5,        // Kelipatan 5 untuk sumbu Y
+                'max' => $yMaxBoundary,
+                'stepSize' => 5,
             ],
             'stroke' => [
                 'curve' => 'smooth',
@@ -203,7 +220,7 @@ class SPRankTrendChart extends ApexChartWidget
             ],
 
             'markers' => [
-                'size' => 0, // Tanpa dot/marker
+                'size' => 0,
             ],
 
             'fill' => [
@@ -235,30 +252,6 @@ class SPRankTrendChart extends ApexChartWidget
     {
         return RawJs::make(<<<JS
     {
-        chart: {
-            zoom: {
-                enabled: true,
-                type: 'x',
-                autoScaleYaxis: false
-            }
-        },
-        xaxis: {
-            // Tampilkan maksimal 30 titik data terakhir saat render awal jika data > 30 hari
-            min: function(ctx) {
-                let categories = ctx.w.globals.labels;
-                if (categories && categories.length > 30) {
-                    return categories.length - 30;
-                }
-                return undefined;
-            },
-            max: function(ctx) {
-                let categories = ctx.w.globals.labels;
-                if (categories && categories.length > 30) {
-                    return categories.length;
-                }
-                return undefined;
-            }
-        },
         yaxis: {
             labels: {
                 formatter: function (val) {
