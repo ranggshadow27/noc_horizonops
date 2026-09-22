@@ -96,7 +96,7 @@ class SPRankTrendChart extends ApexChartWidget
         }
 
         $totalDays = count($allDates);
-        $maxPoints = 25; // Maksimal 14 titik data di chart
+        $maxPoints = 14; // Maksimal 14 titik data di chart
 
         $dates = [];
 
@@ -165,7 +165,7 @@ class SPRankTrendChart extends ApexChartWidget
         }
 
         // Tentukan batas Y max: Nilai Max Terbesar + 5
-        $yMaxBoundary = $globalMaxY > 0 ? ($globalMaxY + 5) : 10;
+        $yMaxBoundary = $globalMaxY > 0 ? ($globalMaxY + 2) : 10;
 
         return [
             'chart' => [
