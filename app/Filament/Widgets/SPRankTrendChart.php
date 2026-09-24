@@ -87,33 +87,12 @@ class SPRankTrendChart extends ApexChartWidget
         $start = Carbon::parse($filterData['date_start'] ?? now()->subDays(7))->startOfDay();
         $end = Carbon::parse($filterData['date_end'] ?? now())->endOfDay();
 
-        // 1. Generate seluruh rentang tanggal harian dari Start Date ke End Date
-        $allDates = [];
+        // 1. Generate SELURUH rentang tanggal harian (semua data tetap di-load)
+        $dates = [];
         $current = $start->copy();
         while ($current->lte($end)) {
-            $allDates[] = $current->format('Y-m-d');
+            $dates[] = $current->format('Y-m-d');
             $current->addDay();
-        }
-
-        $totalDays = count($allDates);
-        $maxPoints = 30; // Maksimal 14 titik data di chart
-
-        $dates = [];
-
-        if ($totalDays <= $maxPoints) {
-            // Jika selisih hari <= 14, tampilkan semua hari apa adanya
-            $dates = $allDates;
-        } else {
-            // Jika selisih hari > 14, buat 14 titik terdistribusi merata:
-            // - Indeks 0 pasti Start Date
-            // - Indeks terakhir pasti End Date
-            for ($i = 0; $i < $maxPoints; $i++) {
-                $index = (int) round(($i / ($maxPoints - 1)) * ($totalDays - 1));
-                $dates[] = $allDates[$index];
-            }
-
-            // Hapus duplikasi jika rentang tanggal sangat pendek
-            $dates = array_values(array_unique($dates));
         }
 
         $series = [];
@@ -136,7 +115,7 @@ class SPRankTrendChart extends ApexChartWidget
                 'value' => $value->aggregate,
             ])->pluck('value', 'date')->toArray();
 
-            // 2. Format data sesuai array $dates terpilih (14 titik)
+            // 2. Format data harian penuh tanpa ada yang di-skip di backend
             $formattedSeriesData = [];
 
             foreach ($dates as $date) {
@@ -209,6 +188,8 @@ class SPRankTrendChart extends ApexChartWidget
 
             'xaxis' => [
                 'type' => 'category',
+                // Sembunyikan garis penanda (ticks) berlebih agar tidak padat
+                'tickAmount' => 14,
             ],
             'yaxis' => [
                 'min' => 0,
@@ -253,6 +234,39 @@ class SPRankTrendChart extends ApexChartWidget
     {
         return RawJs::make(<<<JS
     {
+        xaxis: {
+            labels: {
+                formatter: function (val, timestamp, opts) {
+                    if (!val) return '';
+
+                    // Ambil total titik data yang ada di chart saat ini
+                    let totalCategories = opts && opts.w && opts.w.globals.labels ? opts.w.globals.labels.length : 0;
+                    let currentIndex = opts ? opts.i : -1;
+
+                    // Jika data <= 14, tampilkan semua label tanggal
+                    if (totalCategories <= 14) {
+                        return val;
+                    }
+
+                    // Tentukan max 14 label teks yang boleh muncul
+                    let maxLabels = 14;
+
+                    // Selalu tampilkan label pertama (Start Date) dan label terakhir (End Date)
+                    if (currentIndex === 0 || currentIndex === totalCategories - 1) {
+                        return val;
+                    }
+
+                    // Hitung kelipatan indeks agar label terdistribusi merata maks 14 label
+                    let step = Math.floor(totalCategories / (maxLabels - 1));
+                    if (step > 0 && currentIndex % step === 0) {
+                        return val;
+                    }
+
+                    // Jika bukan titik interval, kosongkan teks labelnya (namun titik valuenya tetap ada di chart)
+                    return '';
+                }
+            }
+        },
         yaxis: {
             labels: {
                 formatter: function (val) {
